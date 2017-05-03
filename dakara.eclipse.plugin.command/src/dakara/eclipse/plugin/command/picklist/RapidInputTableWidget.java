@@ -6,6 +6,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.LocalResourceManager;
@@ -31,7 +32,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
@@ -56,8 +56,8 @@ public class RapidInputTableWidget<T> {
 		this.listContentProvider = listContentProvider;
 	}
 	
-	public void addColumn(Function<T, String> columnContentFn) {
-		createTableViewerColumn(tableViewer, "", 200, columnContentFn);
+	public ColumnOptions addColumn(Function<T, String> columnContentFn) {
+		return new ColumnOptions(createTableViewerColumn(tableViewer, columnContentFn).getColumn());
 	}
 	
 	public void setSelectionAction(Consumer<T> handleSelectFn) {
@@ -133,13 +133,8 @@ public class RapidInputTableWidget<T> {
 		return itemSelection.equals(itemUnderMouse);
 	}
 	
-    private TableViewerColumn createTableViewerColumn(TableViewer tableViewer, String title, int bound, Function<T, String> nameFn) {
+    private TableViewerColumn createTableViewerColumn(TableViewer tableViewer, Function<T, String> nameFn) {
         final TableViewerColumn viewerColumn = new TableViewerColumn(tableViewer, SWT.NONE);
-        final TableColumn column = viewerColumn.getColumn();
-        column.setText(title);
-        column.setWidth(bound);
-        column.setResizable(true);
-        
         viewerColumn.setLabelProvider(new StyledCellLabelProvider() {
         	@SuppressWarnings("unchecked")
 			@Override
@@ -152,6 +147,10 @@ public class RapidInputTableWidget<T> {
 		});
         return viewerColumn;
     }	
+    
+    public int getTotalColumnWidth() {
+    	return Stream.of(table.getColumns()).map(column -> column.getWidth()).reduce((width1, width2) -> width1 + width2).orElse(400);
+    }
     
     private StyleRange[] createStyles(List<Integer> matches) {
     	List<StyleRange> styles = new ArrayList<StyleRange>();

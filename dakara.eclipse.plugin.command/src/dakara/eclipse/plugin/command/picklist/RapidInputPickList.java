@@ -11,6 +11,7 @@ import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.util.Util;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -29,9 +30,8 @@ public class RapidInputPickList<T> extends PopupDialog {
 		super(ProgressManagerUtil.getDefaultParent(), SWT.RESIZE, true, true, false, true, true, null, "Central Command");
 		// persistedSettings = new CommandDialogPersistedSettings();
 		rapidInputTableWidget = new RapidInputTableWidget<T>(RapidInputPickList.this);
-
-		// persistedSettings.loadSettings();
 		create();
+		// persistedSettings.loadSettings();
 	}
 
 	@Override
@@ -64,15 +64,24 @@ public class RapidInputPickList<T> extends PopupDialog {
 
 	@Override
 	protected Point getDefaultSize() {
-		return new Point(400, 400);
+		return new Point(rapidInputTableWidget.getTotalColumnWidth(), 400);
+	}
+	
+	@Override
+	protected void adjustBounds() {
+		Point size = getDefaultSize();
+		Point location = getInitialLocation(size);
+		// Add 30 to width to include edge with scroll bar
+		// TODO figure out how to set size precisely
+		getShell().setBounds(getConstrainedShellBounds(new Rectangle(location.x, location.y, size.x + 30, size.y)));
 	}
 
 	public void setResolvedAction(Consumer<T> handleSelectFn) {
 		rapidInputTableWidget.setSelectionAction(handleSelectFn);
 	}
 
-	public void addColumn(Function<T, String> columnContentFn) {
-		rapidInputTableWidget.addColumn(columnContentFn);
+	public ColumnOptions addColumn(Function<T, String> columnContentFn) {
+		return rapidInputTableWidget.addColumn(columnContentFn);
 	}
 
 	public void setListContentProvider(Function<String, List<T>> listContentProvider) {

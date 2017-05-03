@@ -49,7 +49,7 @@ public class CommandProvider extends QuickAccessProvider {
 	public QuickAccessElement[] getElements() {
 		return Arrays.stream(commandService.getDefinedCommands())
 			  .map(command -> new ParameterizedCommand(command, null))
-			  .filter(paramCommand -> ehandlerService.canExecute(paramCommand))
+			  .filter(ehandlerService::canExecute)
 			  .flatMap(paramCommand -> getCombinations(paramCommand.getCommand()).stream().filter( item -> item != null) )
 			  .map(paramCommand -> new CommandElement((ParameterizedCommand) paramCommand, paramCommand.getId(), this))
 			  .collect(Collectors.toList())

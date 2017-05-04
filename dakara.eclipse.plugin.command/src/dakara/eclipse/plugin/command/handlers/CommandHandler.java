@@ -4,7 +4,6 @@ import javax.inject.Named;
 
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.services.IServiceConstants;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 
@@ -19,8 +18,8 @@ public class CommandHandler {
 	public void execute(@Named(IServiceConstants.ACTIVE_SHELL) Shell shell) {
 		EclipseCommandProvider eclipseCommandProvider = new EclipseCommandProvider();
 		RapidInputPickList<QuickAccessElement> rapidInputPickList = new RapidInputPickList<>();
-		rapidInputPickList.addColumn(item -> item.getLabel()).setWidth(300);
-		rapidInputPickList.addColumn(item -> item.getProvider().getName()).setWidth(200).setAlignment(SWT.RIGHT);
+		rapidInputPickList.addColumn(item -> item.getLabel()).width(420);
+		rapidInputPickList.addColumn(item -> item.getProvider().getName()).width(85).right().italic().fontColor(150, 150, 150).backgroundColor(250, 250, 250);
 		rapidInputPickList.setListContentProvider(filter -> eclipseCommandProvider.getAllCommands());
 		rapidInputPickList.setListRankingStrategy((item, filter) -> StringScore.contains(filter, item.getLabel()));
 		rapidInputPickList.setResolvedAction(item -> shell.getDisplay().asyncExec(item::execute));

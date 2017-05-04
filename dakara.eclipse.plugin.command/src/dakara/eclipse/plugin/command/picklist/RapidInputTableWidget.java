@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.eclipse.jface.resource.FontDescriptor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.LocalResourceManager;
 import org.eclipse.jface.viewers.ILazyContentProvider;
@@ -27,6 +28,7 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
@@ -57,7 +59,25 @@ public class RapidInputTableWidget<T> {
 	}
 	
 	public ColumnOptions addColumn(Function<T, String> columnContentFn) {
-		return new ColumnOptions(createTableViewerColumn(tableViewer, columnContentFn).getColumn());
+		final ColumnOptions options = new ColumnOptions();
+		StyledCellLabelProvider labelProvider = new StyledCellLabelProvider(StyledCellLabelProvider.COLORS_ON_SELECTION) {
+        	@SuppressWarnings("unchecked")
+			@Override
+        	public void update(ViewerCell cell) {
+        		Display display = cell.getControl().getDisplay();
+        		cell.setForeground(new Color(display, options.getFontColor()));
+        		cell.setBackground(new Color(display, options.getBackgroundColor()));
+        		FontDescriptor fontDescriptor = FontDescriptor.createFrom(cell.getFont()).setStyle(options.getFontStyle());
+        		Font font = fontDescriptor.createFont(cell.getControl().getDisplay());
+        		cell.setFont(font);
+        		final RapidInputTableItem<T> rapidInputTableItem = (RapidInputTableItem<T>) cell.getElement();
+                cell.setText(columnContentFn.apply(rapidInputTableItem.dataItem));
+                cell.setStyleRanges(createStyles(rapidInputTableItem.score.matches));
+                super.update(cell);
+        	}
+		};		
+		options.setColumn(createTableViewerColumn(tableViewer, labelProvider).getColumn());
+		return options;
 	}
 	
 	public void setSelectionAction(Consumer<T> handleSelectFn) {
@@ -133,18 +153,9 @@ public class RapidInputTableWidget<T> {
 		return itemSelection.equals(itemUnderMouse);
 	}
 	
-    private TableViewerColumn createTableViewerColumn(TableViewer tableViewer, Function<T, String> nameFn) {
+    private TableViewerColumn createTableViewerColumn(TableViewer tableViewer, StyledCellLabelProvider labelProvider) {
         final TableViewerColumn viewerColumn = new TableViewerColumn(tableViewer, SWT.NONE);
-        viewerColumn.setLabelProvider(new StyledCellLabelProvider() {
-        	@SuppressWarnings("unchecked")
-			@Override
-        	public void update(ViewerCell cell) {
-        		final RapidInputTableItem<T> rapidInputTableItem = (RapidInputTableItem<T>) cell.getElement();
-                cell.setText(nameFn.apply(rapidInputTableItem.dataItem));
-                cell.setStyleRanges(createStyles(rapidInputTableItem.score.matches));
-                super.update(cell);
-        	}
-		});
+        viewerColumn.setLabelProvider(labelProvider);
         return viewerColumn;
     }	
     

@@ -1,4 +1,4 @@
-package dakara.eclipse.plugin.command.picklist;
+package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -18,18 +18,18 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.internal.progress.ProgressManagerUtil;
 
 import dakara.eclipse.plugin.command.handlers.CommandDialogPersistedSettings;
-import dakara.eclipse.plugin.command.handlers.StringScore.Score;
+import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 @SuppressWarnings("restriction")
-public class RapidInputPickList<T> extends PopupDialog {
+public class KaviPickListDialog<T> extends PopupDialog {
 	private CommandDialogPersistedSettings persistedSettings;
-	private RapidInputTableWidget<T> rapidInputTableWidget;
+	private KaviList<T> rapidInputTableWidget;
 	private Text listFilterInputControl;
 
-	public RapidInputPickList() {
+	public KaviPickListDialog() {
 		super(ProgressManagerUtil.getDefaultParent(), SWT.RESIZE, true, true, false, true, true, null, "Central Command");
 		// persistedSettings = new CommandDialogPersistedSettings();
-		rapidInputTableWidget = new RapidInputTableWidget<T>(RapidInputPickList.this);
+		rapidInputTableWidget = new KaviList<T>(KaviPickListDialog.this);
 		create();
 		// persistedSettings.loadSettings();
 	}

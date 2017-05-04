@@ -1,4 +1,4 @@
-package dakara.eclipse.plugin.command.picklist;
+package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.function.Function;
 

@@ -1,4 +1,4 @@
-package dakara.eclipse.plugin.command.handlers;
+package dakara.eclipse.plugin.stringscore;
 
 import java.util.Collections;
 import java.util.List;

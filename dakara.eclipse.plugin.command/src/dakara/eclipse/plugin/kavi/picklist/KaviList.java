@@ -1,4 +1,4 @@
-package dakara.eclipse.plugin.command.picklist;
+package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,10 +37,10 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-import dakara.eclipse.plugin.command.handlers.StringScore.Score;
+import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
-public class RapidInputTableWidget<T> {
-	private final RapidInputPickList<T> rapidInputPickList;
+public class KaviList<T> {
+	private final KaviPickListDialog<T> rapidInputPickList;
 	private List<RapidInputTableItem<T>> tableEntries;
 	private Function<String, List<T>> listContentProvider;
 	private Consumer<T> handleSelectFn;
@@ -51,7 +51,7 @@ public class RapidInputTableWidget<T> {
 	private Table table;
 	private LocalResourceManager resourceManager = new LocalResourceManager(JFaceResources.getResources());
 
-	public RapidInputTableWidget(RapidInputPickList<T> rapidInputPickList) {
+	public KaviList(KaviPickListDialog<T> rapidInputPickList) {
 		this.rapidInputPickList = rapidInputPickList;
 	}
 

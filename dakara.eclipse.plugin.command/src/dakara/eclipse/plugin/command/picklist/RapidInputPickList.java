@@ -8,11 +8,8 @@ import java.util.function.Function;
 import org.eclipse.jface.dialogs.PopupDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.util.Util;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
@@ -83,7 +80,7 @@ public class RapidInputPickList<T> extends PopupDialog {
 		rapidInputTableWidget.setSelectionAction(handleSelectFn);
 	}
 
-	public ColumnOptions addColumn(Function<T, String> columnContentFn) {
+	public ColumnOptions<T> addColumn(Function<T, String> columnContentFn) {
 		return rapidInputTableWidget.addColumn(columnContentFn);
 	}
 
@@ -91,7 +88,7 @@ public class RapidInputPickList<T> extends PopupDialog {
 		rapidInputTableWidget.setListContentProvider(listContentProvider);
 	}
 
-	public void setListRankingStrategy(BiFunction<T, String, Score> rankStringFn) {
+	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
 		rapidInputTableWidget.setListRankingStrategy(rankStringFn);
 	}
 }

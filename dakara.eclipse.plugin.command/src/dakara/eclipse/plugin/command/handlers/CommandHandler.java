@@ -19,9 +19,9 @@ public class CommandHandler {
 		EclipseCommandProvider eclipseCommandProvider = new EclipseCommandProvider();
 		RapidInputPickList<QuickAccessElement> rapidInputPickList = new RapidInputPickList<>();
 		rapidInputPickList.addColumn(item -> item.getLabel()).width(420);
-		rapidInputPickList.addColumn(item -> item.getProvider().getName()).width(85).right().italic().fontColor(150, 150, 150).backgroundColor(250, 250, 250);
+		rapidInputPickList.addColumn(item -> item.getProvider().getName()).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		rapidInputPickList.setListContentProvider(filter -> eclipseCommandProvider.getAllCommands());
-		rapidInputPickList.setListRankingStrategy((item, filter) -> StringScore.contains(filter, item.getLabel()));
+		rapidInputPickList.setListRankingStrategy((columnText, filter) -> StringScore.contains(filter, columnText));
 		rapidInputPickList.setResolvedAction(item -> shell.getDisplay().asyncExec(item::execute));
 		rapidInputPickList.open();
 	}

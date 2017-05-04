@@ -44,7 +44,8 @@ public class RapidInputTableWidget<T> {
 	private List<RapidInputTableItem<T>> tableEntries;
 	private Function<String, List<T>> listContentProvider;
 	private Consumer<T> handleSelectFn;
-	private BiFunction<T, String, Score> rankStringFn;
+	private BiFunction<String, String, Score> rankStringFn;
+	private List<ColumnOptions<T>> columnOptions = new ArrayList<>();
 
 	private TableViewer tableViewer;
 	private Table table;
@@ -58,8 +59,8 @@ public class RapidInputTableWidget<T> {
 		this.listContentProvider = listContentProvider;
 	}
 	
-	public ColumnOptions addColumn(Function<T, String> columnContentFn) {
-		final ColumnOptions options = new ColumnOptions();
+	public ColumnOptions<T> addColumn(Function<T, String> columnContentFn) {
+		final ColumnOptions<T> options = new ColumnOptions<T>(columnContentFn);
 		StyledCellLabelProvider labelProvider = new StyledCellLabelProvider(StyledCellLabelProvider.COLORS_ON_SELECTION) {
         	@SuppressWarnings("unchecked")
 			@Override
@@ -72,11 +73,12 @@ public class RapidInputTableWidget<T> {
         		cell.setFont(font);
         		final RapidInputTableItem<T> rapidInputTableItem = (RapidInputTableItem<T>) cell.getElement();
                 cell.setText(columnContentFn.apply(rapidInputTableItem.dataItem));
-                cell.setStyleRanges(createStyles(rapidInputTableItem.score.matches));
+                cell.setStyleRanges(createStyles(rapidInputTableItem.getScore(cell.getColumnIndex()).matches));
                 super.update(cell);
         	}
-		};		
+		};
 		options.setColumn(createTableViewerColumn(tableViewer, labelProvider).getColumn());
+		columnOptions.add(options);
 		return options;
 	}
 	
@@ -92,16 +94,19 @@ public class RapidInputTableWidget<T> {
 		if (table != null) {
 			tableEntries = listContentProvider.apply(filter).stream().
 					       map(item -> new RapidInputTableItem<>(item)).
-					       peek(item -> item.setScore(rankStringFn.apply(item.dataItem, filter))).
-					       sorted((itemA, itemB) -> Integer.compare(itemB.score.rank, itemA.score.rank)).
-					       filter(item -> item.score.rank > 0).
+					       peek(item -> {
+					    	   columnOptions.stream().map(options -> options.getColumnContentFn().apply(item.dataItem)).
+					    	   		forEach(columnText -> item.addScore(rankStringFn.apply(columnText, filter)));  
+					       }).
+					       sorted((itemA, itemB) -> Integer.compare(itemB.totalScore(), itemA.totalScore())).
+					       filter(item -> item.totalScore() > 0).
 						   collect(Collectors.toList());
 			table.removeAll();
 			table.setItemCount(tableEntries.size());
 		}
 	}
 	
-	public void setListRankingStrategy(BiFunction<T, String, Score> rankStringFn) {
+	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
 		this.rankStringFn = rankStringFn;
 	}
 
@@ -237,18 +242,22 @@ public class RapidInputTableWidget<T> {
 	
 	public static final class RapidInputTableItem<T> {
 		private T dataItem;
-		private Score score;
+		private List<Score> scores = new ArrayList<>();
 		public RapidInputTableItem(T dataItem) {
 			this.dataItem = dataItem;
 		}
 		public T getDataItem() {
 			return dataItem;
 		}
-		public void setScore(Score score) {
-			this.score = score;
+		public void addScore(Score score) {
+			scores.add(score);
 		}
-		public Score getScore() {
-			return score;
+		public Score getScore(int columnIndex) {
+			return scores.get(columnIndex);
+		}
+		
+		public int totalScore() {
+			return scores.stream().mapToInt(score -> score.rank).sum();
 		}
 	}
 }

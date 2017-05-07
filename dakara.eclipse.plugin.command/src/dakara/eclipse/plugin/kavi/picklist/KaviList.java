@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.jface.resource.FontDescriptor;
@@ -41,7 +40,7 @@ import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 public class KaviList<T> {
 	private final KaviPickListDialog<T> rapidInputPickList;
-	private List<RapidInputTableItem<T>> tableEntries;
+	private List<KaviListItem<T>> tableEntries;
 	private Function<String, List<T>> listContentProvider;
 	private Consumer<T> handleSelectFn;
 	private BiFunction<String, String, Score> rankStringFn;
@@ -71,7 +70,7 @@ public class KaviList<T> {
         		FontDescriptor fontDescriptor = FontDescriptor.createFrom(cell.getFont()).setStyle(options.getFontStyle());
         		Font font = fontDescriptor.createFont(cell.getControl().getDisplay());
         		cell.setFont(font);
-        		final RapidInputTableItem<T> rapidInputTableItem = (RapidInputTableItem<T>) cell.getElement();
+        		final KaviListItem<T> rapidInputTableItem = (KaviListItem<T>) cell.getElement();
                 cell.setText(columnContentFn.apply(rapidInputTableItem.dataItem));
                 cell.setStyleRanges(createStyles(rapidInputTableItem.getScore(cell.getColumnIndex()).matches));
                 super.update(cell);
@@ -91,19 +90,11 @@ public class KaviList<T> {
 	}
 
 	public void refresh(String filter) {
-		if (table != null) {
-			tableEntries = listContentProvider.apply(filter).stream().
-					       map(item -> new RapidInputTableItem<>(item)).
-					       peek(item -> {
-					    	   columnOptions.stream().map(options -> options.getColumnContentFn().apply(item.dataItem)).
-					    	   		forEach(columnText -> item.addScore(rankStringFn.apply(columnText, filter)));  
-					       }).
-					       sorted((itemA, itemB) -> Integer.compare(itemB.totalScore(), itemA.totalScore())).
-					       filter(item -> item.totalScore() > 0).
-						   collect(Collectors.toList());
-			table.removeAll();
-			table.setItemCount(tableEntries.size());
-		}
+		if (table == null) return;
+		
+		tableEntries = new ListRankAndSelector<T>(columnOptions, listContentProvider, rankStringFn).rankAndSelect(filter);
+		table.removeAll();
+		table.setItemCount(tableEntries.size());
 	}
 	
 	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
@@ -178,9 +169,9 @@ public class KaviList<T> {
 
 	@SuppressWarnings("unchecked")
 	private void handleSelection() {
-		RapidInputTableItem<T> selectedElement = null;
+		KaviListItem<T> selectedElement = null;
 		if (table.getSelectionCount() == 1) {
-			selectedElement = (RapidInputTableItem<T>) table.getSelection()[0].getData();
+			selectedElement = (KaviListItem<T>) table.getSelection()[0].getData();
 		}
 		if (selectedElement != null) {
 			close();
@@ -237,27 +228,6 @@ public class KaviList<T> {
 		if (resourceManager != null) {
 			resourceManager.dispose();
 			resourceManager = null;
-		}
-	}
-	
-	public static final class RapidInputTableItem<T> {
-		private T dataItem;
-		private List<Score> scores = new ArrayList<>();
-		public RapidInputTableItem(T dataItem) {
-			this.dataItem = dataItem;
-		}
-		public T getDataItem() {
-			return dataItem;
-		}
-		public void addScore(Score score) {
-			scores.add(score);
-		}
-		public Score getScore(int columnIndex) {
-			return scores.get(columnIndex);
-		}
-		
-		public int totalScore() {
-			return scores.stream().mapToInt(score -> score.rank).sum();
 		}
 	}
 }

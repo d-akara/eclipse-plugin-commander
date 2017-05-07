@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.internal.progress.ProgressManagerUtil;
 
-import dakara.eclipse.plugin.command.handlers.CommandDialogPersistedSettings;
+import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 @SuppressWarnings("restriction")

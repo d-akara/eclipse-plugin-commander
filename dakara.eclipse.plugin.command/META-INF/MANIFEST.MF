@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Command
-Bundle-SymbolicName: dakara.eclipse.plugin.command;singleton:=true
+Bundle-SymbolicName: dakara.eclipse.commander.plugin;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: Dakara
 Require-Bundle: javax.inject,

@@ -6,14 +6,17 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class StringScore {
+	private static final Score EMPTY_SCORE = new Score(-1, Collections.emptyList());
+	
 	public static Score contains(String match, String target) {
+		if ((match == null) || (match.length() == 0)) return EMPTY_SCORE;
 		match = match.toLowerCase();
 		target = target.toLowerCase();
 		int index = target.indexOf(match);
 		if ( index > -1 ) {
 			return new Score(100 - index, fillList(index, match.length()));
 		}
-		return new Score(-1, Collections.emptyList() );
+		return EMPTY_SCORE;
 	}
 	
 	private static List<Integer> fillList(int startNumber, int length) {

@@ -1,4 +1,4 @@
-package dakara.eclipse.plugin.command.handlers;
+package dakara.eclipse.plugin.command.settings;
 
 import java.util.ArrayList;
 import java.util.HashMap;

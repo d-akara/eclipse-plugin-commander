@@ -41,9 +41,9 @@ import dakara.eclipse.plugin.stringscore.StringScore.Score;
 public class KaviList<T> {
 	private final KaviPickListDialog<T> rapidInputPickList;
 	private List<KaviListItem<T>> tableEntries;
-	private Function<String, List<T>> listContentProvider;
+	private Function<InputCommand, List<T>> listContentProvider;
 	private Consumer<T> handleSelectFn;
-	private BiFunction<String, String, Score> rankStringFn;
+	private BiFunction<String, String, Score> rankingStrategy;
 	private List<ColumnOptions<T>> columnOptions = new ArrayList<>();
 
 	private TableViewer tableViewer;
@@ -54,7 +54,7 @@ public class KaviList<T> {
 		this.rapidInputPickList = rapidInputPickList;
 	}
 
-	public void setListContentProvider(Function<String, List<T>> listContentProvider) {
+	public void setListContentProvider(Function<InputCommand, List<T>> listContentProvider) {
 		this.listContentProvider = listContentProvider;
 	}
 	
@@ -64,6 +64,7 @@ public class KaviList<T> {
         	@SuppressWarnings("unchecked")
 			@Override
         	public void update(ViewerCell cell) {
+        		// TODO reuse and manage SWT resources
         		Display display = cell.getControl().getDisplay();
         		cell.setForeground(new Color(display, options.getFontColor()));
         		cell.setBackground(new Color(display, options.getBackgroundColor()));
@@ -92,13 +93,14 @@ public class KaviList<T> {
 	public void refresh(String filter) {
 		if (table == null) return;
 		
-		tableEntries = new ListRankAndSelector<T>(columnOptions, listContentProvider, rankStringFn).rankAndSelect(filter);
+		final List<InputCommand> inputCommands = InputCommand.parse(filter);
+		tableEntries = new ListRankAndFilter<T>(columnOptions, listContentProvider, rankingStrategy).rankAndFilter(inputCommands.get(0));
 		table.removeAll();
 		table.setItemCount(tableEntries.size());
 	}
 	
 	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
-		this.rankStringFn = rankStringFn;
+		this.rankingStrategy = rankStringFn;
 	}
 
 	public Table createTable(Composite composite, int defaultOrientation) {

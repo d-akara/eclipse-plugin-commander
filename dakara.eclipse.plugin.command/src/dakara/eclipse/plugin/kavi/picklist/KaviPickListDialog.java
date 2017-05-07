@@ -84,7 +84,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		return rapidInputTableWidget.addColumn(columnContentFn);
 	}
 
-	public void setListContentProvider(Function<String, List<T>> listContentProvider) {
+	public void setListContentProvider(Function<InputCommand, List<T>> listContentProvider) {
 		rapidInputTableWidget.setListContentProvider(listContentProvider);
 	}
 

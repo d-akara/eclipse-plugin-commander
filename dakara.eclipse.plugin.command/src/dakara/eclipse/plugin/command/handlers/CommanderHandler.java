@@ -1,10 +1,11 @@
 package dakara.eclipse.plugin.command.handlers;
 
-import javax.inject.Named;
-
-import org.eclipse.e4.core.di.annotations.Execute;
-import org.eclipse.e4.ui.services.IServiceConstants;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.ui.IStartup;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 
 import dakara.eclipse.plugin.command.eclipse.internal.EclipseCommandProvider;
@@ -13,10 +14,18 @@ import dakara.eclipse.plugin.stringscore.StringScore;
 
 
 @SuppressWarnings("restriction")
-public class CommandHandler {
+public class CommanderHandler extends AbstractHandler implements IStartup {
 
-	@Execute
-	public void execute(@Named(IServiceConstants.ACTIVE_SHELL) Shell shell) {
+	@Override
+	public void earlyStartup() {
+		System.out.println("Dakara startup");
+		
+	}
+	
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+		System.out.println("received event " + event);
+		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
+		
 		EclipseCommandProvider eclipseCommandProvider = new EclipseCommandProvider();
 		KaviPickListDialog<QuickAccessElement> kaviPickList = new KaviPickListDialog<>();
 		kaviPickList.addColumn(item -> item.getLabel()).width(420);
@@ -28,7 +37,9 @@ public class CommandHandler {
 		// set default sorting
 		// set list augmentation
 		// auto select on exact match
-		kaviPickList.setResolvedAction(item -> shell.getDisplay().asyncExec(item::execute));
+		kaviPickList.setResolvedAction(item -> window.getShell().getDisplay().asyncExec(item::execute));
 		kaviPickList.open();
+		
+		return null;
 	}
 }

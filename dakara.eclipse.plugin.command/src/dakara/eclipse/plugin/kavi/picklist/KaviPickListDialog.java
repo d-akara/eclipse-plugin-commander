@@ -19,17 +19,21 @@ import org.eclipse.ui.internal.progress.ProgressManagerUtil;
 
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
-
+/*
+ * TODO - add page numbers to bottom
+ * add item count
+ * selected count
+ */
 @SuppressWarnings("restriction")
 public class KaviPickListDialog<T> extends PopupDialog {
 	private CommandDialogPersistedSettings persistedSettings;
-	private KaviList<T> rapidInputTableWidget;
+	private KaviList<T> kavaList;
 	private Text listFilterInputControl;
 
 	public KaviPickListDialog() {
 		super(ProgressManagerUtil.getDefaultParent(), SWT.RESIZE, true, true, false, true, true, null, "Central Command");
 		// persistedSettings = new CommandDialogPersistedSettings();
-		rapidInputTableWidget = new KaviList<T>(KaviPickListDialog.this);
+		kavaList = new KaviList<T>(KaviPickListDialog.this);
 		create();
 		// persistedSettings.loadSettings();
 	}
@@ -38,7 +42,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	protected Control createTitleControl(Composite parent) {
 		listFilterInputControl = new Text(parent, SWT.NONE);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(listFilterInputControl);
-		rapidInputTableWidget.bindInputField(listFilterInputControl);
+		kavaList.bindInputField(listFilterInputControl);
 		return listFilterInputControl;
 	}
 
@@ -47,7 +51,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		Composite composite = (Composite) super.createDialogArea(parent);
 		boolean isWin32 = Util.isWindows();
 		GridLayoutFactory.fillDefaults().extendedMargins(isWin32 ? 0 : 3, 3, 2, 2).applyTo(composite);
-		rapidInputTableWidget.createTable(composite, getDefaultOrientation());
+		kavaList.initialize(composite, getDefaultOrientation());
 		return composite;
 	}
 
@@ -64,7 +68,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 
 	@Override
 	protected Point getDefaultSize() {
-		return new Point(rapidInputTableWidget.getTotalColumnWidth(), 400);
+		return new Point(kavaList.getTotalColumnWidth(), 400);
 	}
 	
 	@Override
@@ -77,18 +81,18 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	}
 
 	public void setResolvedAction(Consumer<T> handleSelectFn) {
-		rapidInputTableWidget.setSelectionAction(handleSelectFn);
+		kavaList.setSelectionAction(handleSelectFn);
 	}
 
 	public ColumnOptions<T> addColumn(Function<T, String> columnContentFn) {
-		return rapidInputTableWidget.addColumn(columnContentFn);
+		return kavaList.addColumn(columnContentFn);
 	}
 
 	public void setListContentProvider(Function<InputCommand, List<T>> listContentProvider) {
-		rapidInputTableWidget.setListContentProvider(listContentProvider);
+		kavaList.setListContentProvider(listContentProvider);
 	}
 
 	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
-		rapidInputTableWidget.setListRankingStrategy(rankStringFn);
+		kavaList.setListRankingStrategy(rankStringFn);
 	}
 }

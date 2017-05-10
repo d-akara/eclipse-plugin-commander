@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
+import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 public class KaviList<T> {
@@ -45,6 +46,7 @@ public class KaviList<T> {
 	private Consumer<T> handleSelectFn;
 	private BiFunction<String, String, Score> rankingStrategy;
 	private List<ColumnOptions<T>> columnOptions = new ArrayList<>();
+	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 
 	private TableViewer tableViewer;
 	private Table table;
@@ -59,27 +61,47 @@ public class KaviList<T> {
 	}
 	
 	public ColumnOptions<T> addColumn(Function<T, String> columnContentFn) {
+		return addColumn((item, columnIndex) -> columnContentFn.apply(item));
+	}
+	
+	public ColumnOptions<T> addColumn(BiFunction<T, Integer, String> columnContentFn) {
 		final ColumnOptions<T> options = new ColumnOptions<T>(columnContentFn);
 		StyledCellLabelProvider labelProvider = new StyledCellLabelProvider(StyledCellLabelProvider.COLORS_ON_SELECTION) {
-        	@SuppressWarnings("unchecked")
 			@Override
         	public void update(ViewerCell cell) {
         		// TODO reuse and manage SWT resources
-        		Display display = cell.getControl().getDisplay();
-        		cell.setForeground(new Color(display, options.getFontColor()));
-        		cell.setBackground(new Color(display, options.getBackgroundColor()));
-        		FontDescriptor fontDescriptor = FontDescriptor.createFrom(cell.getFont()).setStyle(options.getFontStyle());
-        		Font font = fontDescriptor.createFont(cell.getControl().getDisplay());
-        		cell.setFont(font);
-        		final KaviListItem<T> rapidInputTableItem = (KaviListItem<T>) cell.getElement();
-                cell.setText(columnContentFn.apply(rapidInputTableItem.dataItem));
-                cell.setStyleRanges(createStyles(rapidInputTableItem.getScore(cell.getColumnIndex()).matches));
+        		final KaviListItem<T> kaviListItem = applyCellDefaultStyles(options, cell);
+        		resolveCellTextValue(columnContentFn, cell, kaviListItem);
+        		if (options.isSearchable())
+        			applyCellScoreMatchStyles(cell, kaviListItem);
                 super.update(cell);
         	}
 		};
-		options.setColumn(createTableViewerColumn(tableViewer, labelProvider).getColumn());
+		options.setColumn(createTableViewerColumn(tableViewer, labelProvider).getColumn(), columnOptions.size());
 		columnOptions.add(options);
 		return options;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private KaviListItem<T> applyCellDefaultStyles(final ColumnOptions<T> options, ViewerCell cell) {
+		Display display = cell.getControl().getDisplay();
+		cell.setForeground(new Color(display, options.getFontColor()));
+		cell.setBackground(new Color(display, options.getBackgroundColor()));
+		FontDescriptor fontDescriptor = FontDescriptor.createFrom(cell.getFont()).setStyle(options.getFontStyle());
+		Font font = fontDescriptor.createFont(cell.getControl().getDisplay());
+		cell.setFont(font);
+		final KaviListItem<T> kaviListItem = (KaviListItem<T>) cell.getElement();
+		return kaviListItem;
+	}
+
+	private void resolveCellTextValue(Function<T, String> columnContentFn, ViewerCell cell, final KaviListItem<T> kaviListItem) {
+		cell.setText(columnContentFn.apply(kaviListItem.dataItem));
+	}
+	private void resolveCellTextValue(BiFunction<T, Integer, String> columnContentFn, ViewerCell cell, final KaviListItem<T> kaviListItem) {
+		cell.setText(columnContentFn.apply(kaviListItem.dataItem, table.indexOf((TableItem) cell.getItem())));
+	}	
+	private void applyCellScoreMatchStyles(ViewerCell cell, final KaviListItem<T> kaviListItem) {
+		cell.setStyleRanges(createStyles(kaviListItem.getColumnScore(cell.getColumnIndex()).matches));
 	}
 	
 	public void setSelectionAction(Consumer<T> handleSelectFn) {
@@ -95,6 +117,7 @@ public class KaviList<T> {
 		
 		final List<InputCommand> inputCommands = InputCommand.parse(filter);
 		tableEntries = new ListRankAndFilter<T>(columnOptions, listContentProvider, rankingStrategy).rankAndFilter(inputCommands.get(0));
+		alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 		table.removeAll();
 		table.setItemCount(tableEntries.size());
 	}
@@ -103,7 +126,7 @@ public class KaviList<T> {
 		this.rankingStrategy = rankStringFn;
 	}
 
-	public Table createTable(Composite composite, int defaultOrientation) {
+	public void initialize(Composite composite, int defaultOrientation) {
 		composite.addDisposeListener((DisposeListener) this::dispose);
 		
 		tableViewer = new TableViewer(composite, SWT.SINGLE | SWT.FULL_SELECTION | SWT.VIRTUAL );
@@ -141,8 +164,9 @@ public class KaviList<T> {
 				handleSelection();
 			}
 		});
-
-		return table;
+		
+		// TODO should use mono space font
+		addColumn((item, columnIndex) -> alphaColumnConverter.toAlpha(columnIndex + 1)).searchable(false).width(20).backgroundColor(150, 200, 150);
 	}
 	
 	private boolean isMouseEventOverSelection(MouseEvent event) {
@@ -175,6 +199,9 @@ public class KaviList<T> {
 		if (table.getSelectionCount() == 1) {
 			selectedElement = (KaviListItem<T>) table.getSelection()[0].getData();
 		}
+		// TODO temp work around until we decide how to auto select
+		// get first item in the list
+		if ((selectedElement == null) && (tableEntries.size() > 0)) selectedElement = tableEntries.get(0);
 		if (selectedElement != null) {
 			close();
 			handleSelectFn.accept(selectedElement.dataItem);

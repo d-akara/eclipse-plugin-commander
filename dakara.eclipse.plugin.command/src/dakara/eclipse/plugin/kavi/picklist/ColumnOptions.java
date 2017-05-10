@@ -1,6 +1,6 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.RGB;
@@ -8,17 +8,25 @@ import org.eclipse.swt.widgets.TableColumn;
 
 public class ColumnOptions<T> {
 	private TableColumn column;
+	private int columnIndex;
+	private boolean searchable = true;
 	private int fontStyle = SWT.NONE;
 	private RGB fontRGB = new RGB(0,0,0);
 	private RGB backgroundRGB = new RGB(255,255,255);
-	Function<T, String> columnContentFn;
+	private BiFunction<T, Integer, String> columnContentFn;
 	
-	public ColumnOptions(Function<T, String> columnContentFn) {
+	public ColumnOptions(BiFunction<T, Integer, String> columnContentFn) {
 		this.columnContentFn = columnContentFn;
 	}
 	
-	public void setColumn(TableColumn column) {
+	public ColumnOptions<T> setColumn(TableColumn column, int columnIndex) {
 		this.column = column;
+		this.columnIndex = columnIndex;
+		return this;
+	}
+	
+	public int getColumnIndex() {
+		return columnIndex;
 	}
 	
 	public ColumnOptions<T> width(int width) {
@@ -41,6 +49,15 @@ public class ColumnOptions<T> {
 		return this;
 	}
 	
+	public ColumnOptions<T> searchable(boolean canSearch) {
+		this.searchable = canSearch;
+		return this;
+	}
+	
+	public boolean isSearchable() {
+		return searchable;
+	}
+	
 	public RGB getFontColor() {
 		return fontRGB;
 	}
@@ -58,7 +75,7 @@ public class ColumnOptions<T> {
 		return fontStyle;
 	}
 	
-	public Function<T, String> getColumnContentFn() {
+	public BiFunction<T, Integer, String> getColumnContentFn() {
 		return columnContentFn;
 	}
 	

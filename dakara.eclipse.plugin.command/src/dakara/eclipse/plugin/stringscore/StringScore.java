@@ -1,5 +1,6 @@
 package dakara.eclipse.plugin.stringscore;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,6 +8,17 @@ import java.util.stream.IntStream;
 
 public class StringScore {
 	private static final Score EMPTY_SCORE = new Score(-1, Collections.emptyList());
+	
+	public static Score containsAnyOrderWords(String match, String target) {
+		int totalRank = 0;
+		List<Integer> matches = new ArrayList<>();
+		for (String word : splitWords(match)) {
+			Score score = contains(word, target);
+			totalRank += score.rank;
+			matches.addAll(score.matches);
+		}
+		return new Score(totalRank, matches);
+	}
 	
 	public static Score contains(String match, String target) {
 		if ((match == null) || (match.length() == 0)) return EMPTY_SCORE;
@@ -17,6 +29,11 @@ public class StringScore {
 			return new Score(100 - index, fillList(index, match.length()));
 		}
 		return EMPTY_SCORE;
+	}
+	
+	private static String[] splitWords(String text) {
+		String[] words = text.split(" ");
+		return words;
 	}
 	
 	private static List<Integer> fillList(int startNumber, int length) {

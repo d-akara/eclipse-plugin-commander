@@ -23,7 +23,6 @@ public class CommanderHandler extends AbstractHandler implements IStartup {
 	}
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		System.out.println("received event " + event);
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 		
 		EclipseCommandProvider eclipseCommandProvider = new EclipseCommandProvider();
@@ -32,7 +31,7 @@ public class CommanderHandler extends AbstractHandler implements IStartup {
 		kaviPickList.addColumn(item -> item.getProvider().getName()).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		kaviPickList.setListContentProvider(filter -> eclipseCommandProvider.getAllCommands());
 		//kavaPickList.setListInitialContentProvider();
-		kaviPickList.setListRankingStrategy((columnText, filter) -> StringScore.contains(filter, columnText));
+		kaviPickList.setListRankingStrategy((columnText, filter) -> StringScore.containsAnyOrderWords(filter, columnText));
 		// set id function.  So that histories can be created
 		// set default sorting
 		// set list augmentation

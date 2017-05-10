@@ -14,9 +14,9 @@ public class ListRankAndSelectorTest {
 	@Before
 	public void makeMultiColumnData() {
 		List<ColumnOptions<TestItem>> options = new ArrayList<>();
-		options.add(new ColumnOptions<TestItem>(item -> item.field1));
-		options.add(new ColumnOptions<TestItem>(item -> item.field2));
-		options.add(new ColumnOptions<TestItem>(item -> item.field3));
+		options.add(new ColumnOptions<TestItem>((item, column) -> item.field1));
+		options.add(new ColumnOptions<TestItem>((item, column) -> item.field2));
+		options.add(new ColumnOptions<TestItem>((item, column) -> item.field3));
 		
 		List<TestItem> itemList = new ArrayList<>();
 		itemList.add(new TestItem("1", "one",  "4"));

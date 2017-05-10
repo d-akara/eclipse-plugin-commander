@@ -1,7 +1,6 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -23,9 +22,9 @@ public class ListRankAndFilter<T> {
 		return listContentProvider.apply(inputCommand).stream().
 				       map(item -> new KaviListItem<>(item)).
 				       peek(item -> {
-				    	   AtomicInteger columnIndex = new AtomicInteger(0);
-				    	   columnOptions.stream().map(options -> options.getColumnContentFn().apply(item.dataItem)).
-				    	   		forEach(columnText -> item.addScore(rankingStrategy.apply(columnText, inputCommand.getColumnFilter(columnIndex.getAndIncrement()))));  
+				    	   columnOptions.stream().map(options -> new Tuple<ColumnOptions<T>, String>(options, options.getColumnContentFn().apply(item.dataItem, options.getColumnIndex()))).
+				    	   		filter(options -> options.a.isSearchable()).
+				    	   		forEach(tuple -> item.addScore(rankingStrategy.apply(tuple.b, inputCommand.getColumnFilter(tuple.a.getColumnIndex())), tuple.a.getColumnIndex()));  
 				       }).
 				       sorted((itemA, itemB) -> Integer.compare(itemB.totalScore(), itemA.totalScore())).
 				       filter(item -> item.totalScore() > 0).

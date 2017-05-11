@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.eclipse.jface.dialogs.PopupDialog;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -90,6 +91,10 @@ public class KaviPickListDialog<T> extends PopupDialog {
 
 	public void setListContentProvider(Function<InputCommand, List<T>> listContentProvider) {
 		kavaList.setListContentProvider(listContentProvider);
+	}
+	
+	public void setListContentProvider(Supplier<List<T>> listContentProvider) {
+		kavaList.setListContentProvider(filter -> listContentProvider.get());
 	}
 
 	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {

@@ -24,7 +24,7 @@ public class ListRankAndFilter<T> {
 				       peek(item -> {
 				    	   columnOptions.stream().map(options -> new Tuple<ColumnOptions<T>, String>(options, options.getColumnContentFn().apply(item.dataItem, options.getColumnIndex()))).
 				    	   		filter(options -> options.a.isSearchable()).
-				    	   		forEach(tuple -> item.addScore(rankingStrategy.apply(tuple.b, inputCommand.getColumnFilter(tuple.a.getColumnIndex())), tuple.a.getColumnIndex()));  
+				    	   		forEach(tuple -> item.addScore(rankingStrategy.apply(tuple.b, inputCommand.getColumnFilter(tuple.a.getColumnIndex() - 1)), tuple.a.getColumnIndex()));  
 				       }).
 				       sorted((itemA, itemB) -> Integer.compare(itemB.totalScore(), itemA.totalScore())).
 				       filter(item -> item.totalScore() > 0).

@@ -14,6 +14,7 @@ public class StringScore {
 		List<Integer> matches = new ArrayList<>();
 		for (String word : splitWords(match)) {
 			Score score = contains(word, target);
+			if ( score.rank <= 0) return EMPTY_SCORE;  // both words must be found
 			totalRank += score.rank;
 			matches.addAll(score.matches);
 		}

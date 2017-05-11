@@ -8,14 +8,16 @@ import java.util.stream.Stream;
 public class InputCommand {
 	private final List<String> filter;
 	public final String fastSelectIndex;
+	public final boolean fastSelect;
 	public final ListType listType;
 	public enum ListType {
 		CONTENT,
 		INTERNAL_COMMAND
 	};
-	public InputCommand(List<String> filter, String fastSelectIndex, ListType listType) {
+	public InputCommand(List<String> filter, String fastSelectIndex, boolean fastSelect, ListType listType) {
 		this.filter = filter;
 		this.fastSelectIndex = fastSelectIndex;
+		this.fastSelect = fastSelect;
 		this.listType = listType;
 	}
 	
@@ -36,6 +38,7 @@ public class InputCommand {
 	}
 
 	private static InputCommand makeInputCommand(String commandPart) {
+		boolean fastSelectActive = commandPart.contains("/");
 		String[] splitPart = commandPart.split("/");
 		String[] filters = splitPart[0].split("\\|");
 				
@@ -44,6 +47,6 @@ public class InputCommand {
 			fastSelect = splitPart[1];
 		}
 		
-		return new InputCommand(Arrays.asList(filters), fastSelect, ListType.CONTENT);
+		return new InputCommand(Arrays.asList(filters), fastSelect, fastSelectActive, ListType.CONTENT);
 	}
 }

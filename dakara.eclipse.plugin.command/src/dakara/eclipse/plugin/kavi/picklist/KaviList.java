@@ -94,9 +94,6 @@ public class KaviList<T> {
 		return kaviListItem;
 	}
 
-	private void resolveCellTextValue(Function<T, String> columnContentFn, ViewerCell cell, final KaviListItem<T> kaviListItem) {
-		cell.setText(columnContentFn.apply(kaviListItem.dataItem));
-	}
 	private void resolveCellTextValue(BiFunction<T, Integer, String> columnContentFn, ViewerCell cell, final KaviListItem<T> kaviListItem) {
 		cell.setText(columnContentFn.apply(kaviListItem.dataItem, table.indexOf((TableItem) cell.getItem())));
 	}	
@@ -115,11 +112,26 @@ public class KaviList<T> {
 	public void refresh(String filter) {
 		if (table == null) return;
 		
-		final List<InputCommand> inputCommands = InputCommand.parse(filter);
-		tableEntries = new ListRankAndFilter<T>(columnOptions, listContentProvider, rankingStrategy).rankAndFilter(inputCommands.get(0));
+		final InputCommand inputCommand = InputCommand.parse(filter).get(0);
+		tableEntries = new ListRankAndFilter<T>(columnOptions, listContentProvider, rankingStrategy).rankAndFilter(inputCommand);
 		alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 		table.removeAll();
 		table.setItemCount(tableEntries.size());
+		fastSelectItem(inputCommand);
+	}
+
+	private void fastSelectItem(final InputCommand inputCommand) {
+		// show fast select index if we are typing a fast select expression
+		if (inputCommand.fastSelect) {
+			columnOptions.get(0).width(20);
+		} else {
+			columnOptions.get(0).width(0);
+		}
+		
+		if ((inputCommand.fastSelectIndex != null) && (inputCommand.fastSelectIndex.length() == alphaColumnConverter.getNumberOfCharacters())){
+			table.setSelection(alphaColumnConverter.toNumeric(inputCommand.fastSelectIndex) - 1);
+			table.getDisplay().asyncExec(this::handleSelection);
+		}
 	}
 	
 	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
@@ -166,7 +178,8 @@ public class KaviList<T> {
 		});
 		
 		// TODO should use mono space font
-		addColumn((item, columnIndex) -> alphaColumnConverter.toAlpha(columnIndex + 1)).searchable(false).width(20).backgroundColor(150, 200, 150);
+		//addColumn((item, columnIndex) -> alphaColumnConverter.toAlpha(columnIndex + 1)).searchable(false).width(20).backgroundColor(150, 200, 150);
+		addColumn((item, columnIndex) -> alphaColumnConverter.toAlpha(columnIndex + 1)).searchable(false).width(20).backgroundColor(242, 215, 135);
 	}
 	
 	private boolean isMouseEventOverSelection(MouseEvent event) {

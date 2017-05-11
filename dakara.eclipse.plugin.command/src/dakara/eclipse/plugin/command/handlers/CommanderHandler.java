@@ -29,7 +29,7 @@ public class CommanderHandler extends AbstractHandler implements IStartup {
 		KaviPickListDialog<QuickAccessElement> kaviPickList = new KaviPickListDialog<>();
 		kaviPickList.addColumn(item -> item.getLabel()).width(420);
 		kaviPickList.addColumn(item -> item.getProvider().getName()).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
-		kaviPickList.setListContentProvider(filter -> eclipseCommandProvider.getAllCommands());
+		kaviPickList.setListContentProvider(eclipseCommandProvider::getAllCommands);
 		//kavaPickList.setListInitialContentProvider();
 		kaviPickList.setListRankingStrategy((columnText, filter) -> StringScore.containsAnyOrderWords(filter, columnText));
 		// set id function.  So that histories can be created

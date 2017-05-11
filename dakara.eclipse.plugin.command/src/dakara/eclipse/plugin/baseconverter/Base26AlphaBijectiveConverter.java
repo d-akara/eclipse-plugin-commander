@@ -51,6 +51,10 @@ public class Base26AlphaBijectiveConverter {
 		return number -= getStartingValue(maxValue) - 1;
 	}
 	
+	public int getNumberOfCharacters() {
+		return calcuteNumberOfCharactersRequired(maxValue);
+	}
+	
 	/*
 	 * The intention here is to determine the minimum count of Alpha characters required to represent the maximum value.
 	 * This is for the case where we have a list of items and want the list to be enumerated with the same number of alpha characters like:
@@ -63,6 +67,14 @@ public class Base26AlphaBijectiveConverter {
 	 *
 	 */
 	private int getStartingValue(int maxValue) {
+		int numCharactersRequired = calcuteNumberOfCharactersRequired(maxValue);
+		
+		if ( numCharactersRequired == 1) return 1;
+		
+		return (int) getMaxValueCanBeRepresented(numCharactersRequired) + 1;
+	}
+
+	private int calcuteNumberOfCharactersRequired(int maxValue) {
 		int range = 0;
 		int numCharactersRequired = 0;
 		while (range < maxValue) {
@@ -71,10 +83,7 @@ public class Base26AlphaBijectiveConverter {
 				range -= (int) Math.pow(26, numCharactersRequired);  // subtract number of values represented by previous number of characters
 			numCharactersRequired++;
 		}
-		
-		if ( numCharactersRequired == 1) return 1;
-		
-		return (int) getMaxValueCanBeRepresented(numCharactersRequired) + 1;
+		return numCharactersRequired;
 	}
 	
 	private int getMaxValueCanBeRepresented(int numCharacters) {

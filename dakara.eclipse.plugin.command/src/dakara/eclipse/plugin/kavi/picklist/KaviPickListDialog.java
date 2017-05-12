@@ -94,7 +94,9 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	}
 	
 	public void setListContentProvider(Supplier<List<T>> listContentProvider) {
-		kavaList.setListContentProvider(filter -> listContentProvider.get());
+		// We can cache the list from a supplier since it doesn't change
+	    List<T> cachedItemsFromProvider = listContentProvider.get();
+		kavaList.setListContentProvider(filter -> cachedItemsFromProvider);
 	}
 
 	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {

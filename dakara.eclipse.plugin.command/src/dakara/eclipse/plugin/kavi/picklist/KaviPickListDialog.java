@@ -102,4 +102,9 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
 		kavaList.setListRankingStrategy(rankStringFn);
 	}
+	
+	
+	public void setSortFieldResolver(Function<T, String> sortFieldResolver) {
+		kavaList.setSortFieldResolver(sortFieldResolver);
+	}
 }

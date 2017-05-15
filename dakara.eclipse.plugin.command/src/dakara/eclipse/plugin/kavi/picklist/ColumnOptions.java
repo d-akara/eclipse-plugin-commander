@@ -3,6 +3,7 @@ package dakara.eclipse.plugin.kavi.picklist;
 import java.util.function.BiFunction;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.TableColumn;
 
@@ -13,15 +14,16 @@ public class ColumnOptions<T> {
 	private int fontStyle = SWT.NONE;
 	private RGB fontRGB = new RGB(0,0,0);
 	private RGB backgroundRGB = new RGB(255,255,255);
+	private Font font;
 	private BiFunction<T, Integer, String> columnContentFn;
 	
-	public ColumnOptions(BiFunction<T, Integer, String> columnContentFn) {
+	public ColumnOptions(BiFunction<T, Integer, String> columnContentFn, int columnIndex) {
 		this.columnContentFn = columnContentFn;
+		this.columnIndex = columnIndex;
 	}
 	
-	public ColumnOptions<T> setColumn(TableColumn column, int columnIndex) {
+	public ColumnOptions<T> setColumn(TableColumn column) {
 		this.column = column;
-		this.columnIndex = columnIndex;
 		return this;
 	}
 	
@@ -79,4 +81,12 @@ public class ColumnOptions<T> {
 		return columnContentFn;
 	}
 	
+	public ColumnOptions<T> setFont(Font font) {
+		this.font = font;
+		return this;
+	}
+	
+	public Font getFont() {
+		return this.font;
+	}
 }

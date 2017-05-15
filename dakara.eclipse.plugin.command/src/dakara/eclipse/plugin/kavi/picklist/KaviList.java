@@ -28,7 +28,10 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontMetrics;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -45,6 +48,7 @@ public class KaviList<T> {
 	private Function<InputCommand, List<T>> listContentProvider;
 	private Consumer<T> handleSelectFn;
 	private BiFunction<String, String, Score> rankingStrategy;
+	private Function<T, String> sortFieldResolver; 
 	private List<ColumnOptions<T>> columnOptions = new ArrayList<>();
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 
@@ -65,7 +69,7 @@ public class KaviList<T> {
 	}
 	
 	public ColumnOptions<T> addColumn(BiFunction<T, Integer, String> columnContentFn) {
-		final ColumnOptions<T> options = new ColumnOptions<T>(columnContentFn);
+		final ColumnOptions<T> options = new ColumnOptions<T>(columnContentFn, columnOptions.size());
 		StyledCellLabelProvider labelProvider = new StyledCellLabelProvider(StyledCellLabelProvider.COLORS_ON_SELECTION) {
 			@Override
         	public void update(ViewerCell cell) {
@@ -77,21 +81,42 @@ public class KaviList<T> {
                 super.update(cell);
         	}
 		};
-		options.setColumn(createTableViewerColumn(tableViewer, labelProvider).getColumn(), columnOptions.size());
+		options.setColumn(createTableViewerColumn(tableViewer, labelProvider).getColumn());
 		columnOptions.add(options);
 		return options;
 	}
 	
+	public void setSortFieldResolver(Function<T, String> sortFieldResolver) {
+		this.sortFieldResolver = sortFieldResolver;
+	}
+	
 	@SuppressWarnings("unchecked")
 	private KaviListItem<T> applyCellDefaultStyles(final ColumnOptions<T> options, ViewerCell cell) {
-		Display display = cell.getControl().getDisplay();
-		cell.setForeground(new Color(display, options.getFontColor()));
-		cell.setBackground(new Color(display, options.getBackgroundColor()));
-		FontDescriptor fontDescriptor = FontDescriptor.createFrom(cell.getFont()).setStyle(options.getFontStyle());
-		Font font = fontDescriptor.createFont(cell.getControl().getDisplay());
+		cell.setForeground(fromRegistry(options.getFontColor()));
+		cell.setBackground(fromRegistry(options.getBackgroundColor()));
+		Font font = createColumnFont(options, cell);
 		cell.setFont(font);
 		final KaviListItem<T> kaviListItem = (KaviListItem<T>) cell.getElement();
 		return kaviListItem;
+	}
+
+	private Font createColumnFont(final ColumnOptions<T> options, ViewerCell cell) {
+		Font font = options.getFont();
+		if (font == null) {
+			FontDescriptor fontDescriptor = FontDescriptor.createFrom(cell.getFont()).setStyle(options.getFontStyle());
+			font = fontDescriptor.createFont(cell.getControl().getDisplay());
+			options.setFont(font);
+		}
+		return font;
+	}
+	
+	private Color fromRegistry(RGB rgb) {
+		String symbolicName = rgb.red + "." + rgb.blue + "." + rgb.green;
+		Color color = JFaceResources.getColorRegistry().get(symbolicName);
+		if (color == null) {
+			color = new Color(Display.getCurrent(), rgb);
+		}
+		return color;
 	}
 
 	private void resolveCellTextValue(BiFunction<T, Integer, String> columnContentFn, ViewerCell cell, final KaviListItem<T> kaviListItem) {
@@ -113,7 +138,7 @@ public class KaviList<T> {
 		if (table == null) return;
 		
 		final InputCommand inputCommand = InputCommand.parse(filter).get(0);
-		tableEntries = new ListRankAndFilter<T>(columnOptions, listContentProvider, rankingStrategy).rankAndFilter(inputCommand);
+		tableEntries = new ListRankAndFilter<T>(columnOptions, listContentProvider, rankingStrategy, sortFieldResolver).rankAndFilter(inputCommand);
 		alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 		table.removeAll();
 		table.setItemCount(tableEntries.size());
@@ -123,7 +148,8 @@ public class KaviList<T> {
 	private void fastSelectItem(final InputCommand inputCommand) {
 		// show fast select index if we are typing a fast select expression
 		if (inputCommand.fastSelect) {
-			columnOptions.get(0).width(20);
+			int columnWidth = averageCharacterWidth(columnOptions.get(0).getFont()) * alphaColumnConverter.getNumberOfCharacters() + 5;
+			columnOptions.get(0).width(columnWidth);
 		} else {
 			columnOptions.get(0).width(0);
 		}
@@ -132,6 +158,16 @@ public class KaviList<T> {
 			table.setSelection(alphaColumnConverter.toNumeric(inputCommand.fastSelectIndex) - 1);
 			table.getDisplay().asyncExec(this::handleSelection);
 		}
+	}
+	
+	private int averageCharacterWidth(Font font) {
+		int width;
+	    GC gc = new GC(Display.getDefault());
+	    gc.setFont(font);
+	    FontMetrics fontMetrics = gc.getFontMetrics();
+		width = fontMetrics.getAverageCharWidth();
+		gc.dispose();
+		return width;
 	}
 	
 	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
@@ -177,9 +213,7 @@ public class KaviList<T> {
 			}
 		});
 		
-		// TODO should use mono space font
-		//addColumn((item, columnIndex) -> alphaColumnConverter.toAlpha(columnIndex + 1)).searchable(false).width(20).backgroundColor(150, 200, 150);
-		addColumn((item, columnIndex) -> alphaColumnConverter.toAlpha(columnIndex + 1)).searchable(false).width(20).backgroundColor(242, 215, 135);
+		addColumn((item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
 	}
 	
 	private boolean isMouseEventOverSelection(MouseEvent event) {
@@ -201,7 +235,7 @@ public class KaviList<T> {
     private StyleRange[] createStyles(List<Integer> matches) {
     	List<StyleRange> styles = new ArrayList<StyleRange>();
     	for (Integer match : matches) {
-    		styles.add(new StyleRange(match, 1, null, new Color(Display.getCurrent(), 150,190,255)));
+    		styles.add(new StyleRange(match, 1, null, fromRegistry(new RGB(150,190,255))));
     	}
     	return styles.toArray(new StyleRange[]{});
     }

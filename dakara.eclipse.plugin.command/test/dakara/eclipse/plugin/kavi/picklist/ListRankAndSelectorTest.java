@@ -14,9 +14,10 @@ public class ListRankAndSelectorTest {
 	@Before
 	public void makeMultiColumnData() {
 		List<ColumnOptions<TestItem>> options = new ArrayList<>();
-		options.add(new ColumnOptions<TestItem>((item, column) -> item.field1));
-		options.add(new ColumnOptions<TestItem>((item, column) -> item.field2));
-		options.add(new ColumnOptions<TestItem>((item, column) -> item.field3));
+		// TODO does not work because column index is not set
+		options.add(new ColumnOptions<TestItem>((item, column) -> item.field1, 0));
+		options.add(new ColumnOptions<TestItem>((item, column) -> item.field2, 1));
+		options.add(new ColumnOptions<TestItem>((item, column) -> item.field3, 2));
 		
 		List<TestItem> itemList = new ArrayList<>();
 		itemList.add(new TestItem("1", "one",  "4"));
@@ -24,7 +25,7 @@ public class ListRankAndSelectorTest {
 		itemList.add(new TestItem("3", "three","2"));
 		itemList.add(new TestItem("4", "four", "1"));
 		
-		rankSelectorMultiColumn = new ListRankAndFilter<>(options, (filter) -> itemList, StringScore::contains);
+		rankSelectorMultiColumn = new ListRankAndFilter<>(options, filter -> itemList, StringScore::contains, item -> item.field1);
 	}
 	
 	@Test

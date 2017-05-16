@@ -35,7 +35,8 @@ public class ListRankAndFilter<T> {
 	// TODO generic way to determine field filters vs inputCommand
 	// map inputCommand filters to column id's (index)
 	private KaviListItem<T> setItemRank(KaviListItem<T> listItem, final InputCommand inputCommand) {
-		columnOptions.stream()
+		listItem.setScoreModeAllRequired(!inputCommand.filterAnyColumn());
+		columnOptions.stream()	
 			.filter(options -> options.isSearchable())
 			// TODO need to change the column index - 1 which takes into account the alpha index column
 			.forEach(options -> listItem.addScore(rankingStrategy.apply(options.getColumnContentFn().apply(listItem.dataItem, -1), inputCommand.getColumnFilter(options.getColumnIndex() - 1)), options.getColumnIndex())); 

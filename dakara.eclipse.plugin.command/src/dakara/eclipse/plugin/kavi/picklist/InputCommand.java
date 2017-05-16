@@ -23,11 +23,15 @@ public class InputCommand {
 	
 	public String getColumnFilter(final int column) {
 		// When we only have 1 filter it should be applied to all columns
-		if (filter.size() == 1) return filter.get(0);
+		if (filterAnyColumn()) return filter.get(0);
 		
 		if (column >= filter.size()) return "";
 		
 		return filter.get(column);
+	}
+	
+	public boolean filterAnyColumn() {
+		return filter.size() == 1;
 	}
 	
 	public static List<InputCommand> parse(String inputText) {

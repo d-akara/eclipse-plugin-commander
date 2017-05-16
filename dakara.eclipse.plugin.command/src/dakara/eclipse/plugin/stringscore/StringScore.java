@@ -7,14 +7,15 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class StringScore {
-	private static final Score EMPTY_SCORE = new Score(-1, Collections.emptyList());
+	private static final Score EMPTY_SCORE = new Score(0, Collections.emptyList());
+	private static final Score NOT_FOUND_SCORE = new Score(-1, Collections.emptyList());
 	
 	public static Score containsAnyOrderWords(String match, String target) {
 		int totalRank = 0;
 		List<Integer> matches = new ArrayList<>();
 		for (String word : splitWords(match)) {
 			Score score = contains(word, target);
-			if ( score.rank <= 0) return EMPTY_SCORE;  // both words must be found
+			if ( score.rank <= 0) return score;  // all words must be found
 			totalRank += score.rank;
 			matches.addAll(score.matches);
 		}
@@ -29,7 +30,7 @@ public class StringScore {
 		if ( index > -1 ) {
 			return new Score(100 - index, fillList(index, match.length()));
 		}
-		return EMPTY_SCORE;
+		return NOT_FOUND_SCORE;
 	}
 	
 	private static String[] splitWords(String text) {

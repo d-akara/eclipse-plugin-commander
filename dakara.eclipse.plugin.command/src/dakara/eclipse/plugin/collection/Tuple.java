@@ -1,4 +1,4 @@
-package dakara.eclipse.plugin.kavi.picklist;
+package dakara.eclipse.plugin.collection;
 
 public class Tuple<A, B> {
 	public final A a;

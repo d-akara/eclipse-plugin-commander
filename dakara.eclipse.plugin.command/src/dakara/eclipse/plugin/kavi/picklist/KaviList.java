@@ -1,22 +1,16 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.eclipse.jface.resource.FontDescriptor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.LocalResourceManager;
 import org.eclipse.jface.viewers.ILazyContentProvider;
-import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
-import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyEvent;
@@ -26,12 +20,10 @@ import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -49,8 +41,8 @@ public class KaviList<T> {
 	private Consumer<T> handleSelectFn;
 	private BiFunction<String, String, Score> rankingStrategy;
 	private Function<T, String> sortFieldResolver; 
-	private List<ColumnOptions<T>> columnOptions = new ArrayList<>();
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
+	private KaviListColumns<T> kaviListColumn;
 
 	private TableViewer tableViewer;
 	private Table table;
@@ -64,81 +56,27 @@ public class KaviList<T> {
 		this.listContentProvider = listContentProvider;
 	}
 	
-	public ColumnOptions<T> addColumn(Function<T, String> columnContentFn) {
-		return addColumn((item, columnIndex) -> columnContentFn.apply(item));
-	}
-	
-	public ColumnOptions<T> addColumn(BiFunction<T, Integer, String> columnContentFn) {
-		final ColumnOptions<T> options = new ColumnOptions<T>(columnContentFn, columnOptions.size());
-		StyledCellLabelProvider labelProvider = new StyledCellLabelProvider(StyledCellLabelProvider.COLORS_ON_SELECTION) {
-			@Override
-        	public void update(ViewerCell cell) {
-        		// TODO reuse and manage SWT resources
-        		final KaviListItem<T> kaviListItem = applyCellDefaultStyles(options, cell);
-        		resolveCellTextValue(columnContentFn, cell, kaviListItem);
-        		if (options.isSearchable())
-        			applyCellScoreMatchStyles(cell, kaviListItem);
-                super.update(cell);
-        	}
-		};
-		options.setColumn(createTableViewerColumn(tableViewer, labelProvider).getColumn());
-		columnOptions.add(options);
-		return options;
-	}
-	
 	public void setSortFieldResolver(Function<T, String> sortFieldResolver) {
 		this.sortFieldResolver = sortFieldResolver;
 	}
 	
-	@SuppressWarnings("unchecked")
-	private KaviListItem<T> applyCellDefaultStyles(final ColumnOptions<T> options, ViewerCell cell) {
-		cell.setForeground(fromRegistry(options.getFontColor()));
-		cell.setBackground(fromRegistry(options.getBackgroundColor()));
-		Font font = createColumnFont(options, cell);
-		cell.setFont(font);
-		final KaviListItem<T> kaviListItem = (KaviListItem<T>) cell.getElement();
-		return kaviListItem;
-	}
-
-	private Font createColumnFont(final ColumnOptions<T> options, ViewerCell cell) {
-		Font font = options.getFont();
-		if (font == null) {
-			FontDescriptor fontDescriptor = FontDescriptor.createFrom(cell.getFont()).setStyle(options.getFontStyle());
-			font = fontDescriptor.createFont(cell.getControl().getDisplay());
-			options.setFont(font);
-		}
-		return font;
-	}
-	
-	private Color fromRegistry(RGB rgb) {
-		String symbolicName = rgb.red + "." + rgb.blue + "." + rgb.green;
-		Color color = JFaceResources.getColorRegistry().get(symbolicName);
-		if (color == null) {
-			color = new Color(Display.getCurrent(), rgb);
-		}
-		return color;
-	}
-
-	private void resolveCellTextValue(BiFunction<T, Integer, String> columnContentFn, ViewerCell cell, final KaviListItem<T> kaviListItem) {
-		cell.setText(columnContentFn.apply(kaviListItem.dataItem, table.indexOf((TableItem) cell.getItem())));
-	}	
-	private void applyCellScoreMatchStyles(ViewerCell cell, final KaviListItem<T> kaviListItem) {
-		cell.setStyleRanges(createStyles(kaviListItem.getColumnScore(cell.getColumnIndex()).matches));
+	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
+		this.rankingStrategy = rankStringFn;
 	}
 	
 	public void setSelectionAction(Consumer<T> handleSelectFn) {
 		this.handleSelectFn = handleSelectFn;
 	}
 	
-	protected void close() {
-		rapidInputPickList.close();
+	public ColumnOptions<T> addColumn(Function<T, String> columnContentFn) {
+		return kaviListColumn.addColumn((item, columnIndex) -> columnContentFn.apply(item));
 	}
 
 	public void refresh(String filter) {
 		if (table == null) return;
 		
 		final InputCommand inputCommand = InputCommand.parse(filter).get(0);
-		tableEntries = new ListRankAndFilter<T>(columnOptions, listContentProvider, rankingStrategy, sortFieldResolver).rankAndFilter(inputCommand);
+		tableEntries = new ListRankAndFilter<T>(kaviListColumn.getColumnOptions(), listContentProvider, rankingStrategy, sortFieldResolver).rankAndFilter(inputCommand);
 		alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 		table.removeAll();
 		table.setItemCount(tableEntries.size());
@@ -146,6 +84,7 @@ public class KaviList<T> {
 	}
 
 	private void fastSelectItem(final InputCommand inputCommand) {
+		List<ColumnOptions<T>> columnOptions = kaviListColumn.getColumnOptions();
 		// show fast select index if we are typing a fast select expression
 		if (inputCommand.fastSelect) {
 			int columnWidth = averageCharacterWidth(columnOptions.get(0).getFont()) * alphaColumnConverter.getNumberOfCharacters() + 5;
@@ -170,9 +109,9 @@ public class KaviList<T> {
 		return width;
 	}
 	
-	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
-		this.rankingStrategy = rankStringFn;
-	}
+    public int getTotalColumnWidth() {
+    	return Stream.of(table.getColumns()).map(column -> column.getWidth()).reduce((width1, width2) -> width1 + width2).orElse(400);
+    }
 
 	public void initialize(Composite composite, int defaultOrientation) {
 		composite.addDisposeListener((DisposeListener) this::dispose);
@@ -213,7 +152,8 @@ public class KaviList<T> {
 			}
 		});
 		
-		addColumn((item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
+		kaviListColumn = new KaviListColumns<T>(tableViewer);
+        kaviListColumn.addColumn((item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
 	}
 	
 	private boolean isMouseEventOverSelection(MouseEvent event) {
@@ -221,24 +161,6 @@ public class KaviList<T> {
 		TableItem itemSelection = table.getSelection()[0];
 		return itemSelection.equals(itemUnderMouse);
 	}
-	
-    private TableViewerColumn createTableViewerColumn(TableViewer tableViewer, StyledCellLabelProvider labelProvider) {
-        final TableViewerColumn viewerColumn = new TableViewerColumn(tableViewer, SWT.NONE);
-        viewerColumn.setLabelProvider(labelProvider);
-        return viewerColumn;
-    }	
-    
-    public int getTotalColumnWidth() {
-    	return Stream.of(table.getColumns()).map(column -> column.getWidth()).reduce((width1, width2) -> width1 + width2).orElse(400);
-    }
-    
-    private StyleRange[] createStyles(List<Integer> matches) {
-    	List<StyleRange> styles = new ArrayList<StyleRange>();
-    	for (Integer match : matches) {
-    		styles.add(new StyleRange(match, 1, null, fromRegistry(new RGB(150,190,255))));
-    	}
-    	return styles.toArray(new StyleRange[]{});
-    }
 
 	@SuppressWarnings("unchecked")
 	private void handleSelection() {
@@ -298,6 +220,10 @@ public class KaviList<T> {
 		} else {
 			table.setSelection(table.getItemCount() - 1);
 		}
+	}
+	
+	protected void close() {
+		rapidInputPickList.close();
 	}
 	
 	private void dispose(DisposeEvent e) {

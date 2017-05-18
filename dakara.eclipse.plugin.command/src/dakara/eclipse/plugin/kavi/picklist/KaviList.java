@@ -76,6 +76,7 @@ public class KaviList<T> {
 		if (table == null) return;
 		
 		final InputCommand inputCommand = InputCommand.parse(filter).get(0);
+		// TODO detect if input change before we refilter or select so that we don't refresh the table.
 		tableEntries = new ListRankAndFilter<T>(kaviListColumn.getColumnOptions(), listContentProvider, rankingStrategy, sortFieldResolver).rankAndFilter(inputCommand);
 		alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 		table.removeAll();
@@ -86,12 +87,16 @@ public class KaviList<T> {
 	private void fastSelectItem(final InputCommand inputCommand) {
 		List<ColumnOptions<T>> columnOptions = kaviListColumn.getColumnOptions();
 		// show fast select index if we are typing a fast select expression
+		int current = tableViewer.getTable().getTopIndex();
 		if (inputCommand.fastSelect) {
 			int columnWidth = averageCharacterWidth(columnOptions.get(0).getFont()) * alphaColumnConverter.getNumberOfCharacters() + 5;
 			columnOptions.get(0).width(columnWidth);
 		} else {
 			columnOptions.get(0).width(0);
 		}
+		// TODO when changing width, scroll is reset.  Need to find way of restoring scroll position
+		// probably will be fixed when we don't refresh the table above when not needed.
+		// table.getDisplay().asyncExec(() -> tableViewer.getTable().setTopIndex(current));
 		
 		if ((inputCommand.fastSelectIndex != null) && (inputCommand.fastSelectIndex.length() == alphaColumnConverter.getNumberOfCharacters())){
 			table.setSelection(alphaColumnConverter.toNumeric(inputCommand.fastSelectIndex) - 1);
@@ -178,9 +183,20 @@ public class KaviList<T> {
 	}
 
 	public void bindInputField(Text filterText) {
+		// TODO - create separate key binding manager
+		// check for keys being held down
+		// possibly tab toggle for command mode
 		filterText.addKeyListener(new KeyListener() {
 			@Override
 			public void keyPressed(KeyEvent e) {
+				
+				if (isKeys(SWT.CTRL, 'j', e)) {
+					e.doit = false;
+					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()+1);
+				}
+				if (isKeys(SWT.CTRL, 'k', e)) {
+					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()-1);
+				}
 				switch (e.keyCode) {
 				case SWT.ARROW_DOWN:
 					moveSelectionDown();
@@ -201,6 +217,10 @@ public class KaviList<T> {
 		});
 		
 		filterText.addModifyListener((ModifyListener) event -> refresh(((Text) event.widget).getText()));
+	}
+	
+	private boolean isKeys(int modifier, int keyCode, KeyEvent event) {
+		return ((event.stateMask & modifier) != 0) && (event.keyCode == keyCode);
 	}
 	
 	private void moveSelectionDown() {

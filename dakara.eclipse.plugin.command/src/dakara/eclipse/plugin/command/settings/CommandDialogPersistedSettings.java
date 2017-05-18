@@ -65,8 +65,8 @@ public class CommandDialogPersistedSettings {
 		return null;
 	}
 	
-	public void addSelectedCommandToHistory(String text, QuickAccessElement element) {
-		CommandHistoryEntry newHistoryEntry = new CommandHistoryEntry(element.getId(), element.getProvider().getId(), text);
+	public void addSelectedCommandToHistory(QuickAccessElement element) {
+		CommandHistoryEntry newHistoryEntry = new CommandHistoryEntry(element.getId(), element.getProvider().getId());
 		commanderSettings.entries.remove(newHistoryEntry);
 		commanderSettings.entries.add(0, newHistoryEntry);
 	}
@@ -81,11 +81,9 @@ public class CommandDialogPersistedSettings {
 	public static class CommandHistoryEntry {
 		public final String commandId;
 		public final String providerId;
-		public final String userInput; 
-		public CommandHistoryEntry(String commandId, String providerId, String userInput) {
+		public CommandHistoryEntry(String commandId, String providerId) {
 			this.commandId = commandId;
 			this.providerId = providerId;
-			this.userInput = userInput;
 		}
 		
 		@Override

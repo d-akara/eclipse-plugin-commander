@@ -34,6 +34,7 @@ public class CommanderHandler extends AbstractHandler implements IStartup {
 		kaviPickList.setListRankingStrategy((columnText, filter) -> StringScore.containsAnyOrderWords(filter, columnText));
 		kaviPickList.setSortFieldResolver(item -> item.getLabel());
 		// set id function.  So that histories can be created
+		// kaviPickList.setItemIdResolver(item -> item.getId() + ":" + item.getProvider().getId);
 		// set list augmentation
 		// auto select on exact match
 		kaviPickList.setResolvedAction(item -> window.getShell().getDisplay().asyncExec(item::execute));

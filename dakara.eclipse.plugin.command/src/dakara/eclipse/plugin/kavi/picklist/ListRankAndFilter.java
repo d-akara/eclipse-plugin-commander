@@ -27,7 +27,6 @@ public class ListRankAndFilter<T> {
 				       map(item -> new KaviListItem<>(item)).
 				       map(item -> setItemRank(item, inputCommand)).
 				       filter(item -> item.totalScore() > 0).
-				       //sorted((itemA, itemB) -> Integer.compare(itemB.totalScore(), itemA.totalScore())).
 				       sorted(Comparator.comparing((KaviListItem item) -> item.totalScore()).reversed().thenComparing(item -> sortFieldResolver.apply((T) item.dataItem))).
 					   collect(Collectors.toList());
 	}

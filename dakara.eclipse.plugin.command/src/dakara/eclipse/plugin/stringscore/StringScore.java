@@ -3,8 +3,6 @@ package dakara.eclipse.plugin.stringscore;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 /**
  * scoring strategies:
  * - rank by distance found from beginning of string
@@ -25,7 +23,10 @@ public class StringScore {
 		List<Integer> matches = new ArrayList<>();
 		for (String word : splitWords(match)) {
 			Score score = contains(word, maskRegions(target, matches));
-//			if ( score.rank <= 0) return score;  // all words must be found
+			if ( score.rank <= 0) {
+				totalRank = 0;
+				break;  // all words must be found
+			}
 			totalRank += score.rank;
 			matches.addAll(score.matches);
 		}
@@ -47,7 +48,7 @@ public class StringScore {
 		
 		while (!acronymCursor.markerPositionTerminal() && !inputCursor.cursorPositionTerminal()) {
 			if (acronymCursor.currentMarker() == inputCursor.currentChar()) {
-				inputCursor.advanceCursor();
+				inputCursor.moveCursorForward();
 				matchesCursor.addMarker(acronymCursor.indexOfMarker());
 			}
 			acronymCursor.advanceMarker();
@@ -66,7 +67,7 @@ public class StringScore {
 			if (Character.isAlphabetic(text.currentChar()) && !Character.isAlphabetic(text.peekPreviousChar())) {
 				text.addMarker(text.indexOfCursor());
 			}
-			text.advanceCursor();
+			text.moveCursorForward();
 		}
 		return text;
 	}
@@ -82,13 +83,20 @@ public class StringScore {
 		return builder.toString();
 	}
 	
+	// TODO don't have infinite scoring.  Need to have ranges (0-10) for each algorithm
+	// score whole word matching higher vs partial includes
 	public static Score contains(String match, String target) {
 		if ((match == null) || (match.length() == 0)) return EMPTY_SCORE;
+		
 		match = match.toLowerCase();
 		target = target.toLowerCase();
-		int index = target.indexOf(match);
-		if ( index > -1 ) {
-			return new Score(100 - index, fillList(index, match.length()));
+		StringCursor targetCursor = new StringCursor(target);
+		boolean fullMatch = targetCursor.moveCursorIndexOf(match).wordAtCursor().equals(match);  // did we match full word
+		//boolean fullMatch = targetCursor.moveCursorIndexOf(match).markWordAtCursor().textOfMarkers().equals(match);  // did we match full word
+		if ( fullMatch ) {
+			return new Score(2, targetCursor.markRangeForward(match.length()).markers());
+		} else if (!targetCursor.cursorPositionTerminal()) {
+			return new Score(1, targetCursor.markRangeForward(match.length()).markers());
 		}
 		return NOT_FOUND_SCORE;
 	}
@@ -98,15 +106,11 @@ public class StringScore {
 		return words;
 	}
 	
-	private static List<Integer> fillList(int startNumber, int length) {
-		if (length == 0) return Collections.emptyList();
-		return IntStream.range(startNumber, startNumber + length).boxed().collect(Collectors.toList());
-	}
-	
 	public static class StringCursor {
 		public final String text;
 		private int indexOfCursor = 0;
 		private int currentMarker = 0;
+		
 		private List<Integer> markers = new ArrayList<>();
 		public StringCursor(String text) {
 			this.text = text;
@@ -118,7 +122,7 @@ public class StringScore {
 		}
 		
 		public boolean markerPositionTerminal() {
-			if (currentMarker == markers.size()) return true;
+			if (currentMarker == markers.size() || currentMarker == -1) return true;
 			return false;
 		}
 		
@@ -136,13 +140,34 @@ public class StringScore {
 		}
 		
 		public StringCursor addMarker(int index) {
-			if (index >= text.length()) throw new IllegalArgumentException("Index is great than text length " +index);
+			if (index >= text.length()) throw new IllegalArgumentException("Index is greater than text length " +index);
 			markers.add(index);
 			return this;
 		}
 		
+		public StringCursor markRangeForward(int charsForward) {
+			if (charsForward + indexOfCursor >= text.length()) throw new IllegalArgumentException("Index is greater than text length " +charsForward + indexOfCursor);
+			for (int index = indexOfCursor; index < indexOfCursor + charsForward; index++) {
+				markers.add(index);
+			}
+			return this;
+		}
+		
+		public List<Integer> markers() {
+			return markers;
+		}
+		
+		public String wordAtCursor() {
+			if (cursorPositionTerminal()) return "";
+			int currentIndex = indexOfCursor;
+			int indexStart = moveCursorPreviousAlphaBoundary().indexOfCursor();
+			int indexEnd   = moveCursorNextAlphaBoundary().indexOfCursor();
+			indexOfCursor = currentIndex;
+			return text.substring(indexStart, indexEnd);
+		}
+		
 		public boolean cursorPositionTerminal() {
-			if (indexOfCursor == text.length()) return true;
+			if (indexOfCursor == text.length() || indexOfCursor == -1) return true;
 			return false;
 		}
 		
@@ -159,10 +184,41 @@ public class StringScore {
 			return 0;
 		}
 		
-		public StringCursor advanceCursor() {
+		public char peekNextChar() {
+			if (indexOfCursor < text.length() - 1) {
+				return text.charAt(indexOfCursor + 1);
+			}
+			return 0;
+		}
+		
+		public StringCursor moveCursorPreviousAlphaBoundary() {
+			while(Character.isAlphabetic(peekPreviousChar())) {
+				moveCursorBackward();
+			}
+			return this;
+		}
+		
+		public StringCursor moveCursorNextAlphaBoundary() {
+			while(Character.isAlphabetic(peekNextChar())) {
+				moveCursorForward();
+			}
+			return this;
+		}
+		
+		public StringCursor moveCursorIndexOf(String match) {
+			 indexOfCursor = text.indexOf(match);
+			 return this;
+		}
+		
+		public StringCursor moveCursorForward() {
 			 indexOfCursor++;
 			 return this;
 		}
+		
+		public StringCursor moveCursorBackward() {
+			 indexOfCursor--;
+			 return this;
+		}		
 		
 		public StringCursor advanceMarker() {
 			 currentMarker++;

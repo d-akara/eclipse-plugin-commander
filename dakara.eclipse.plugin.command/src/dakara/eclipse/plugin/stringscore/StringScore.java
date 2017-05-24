@@ -21,7 +21,8 @@ public class StringScore {
 	public static Score containsAnyOrderWords(String match, String target) {
 		int totalRank = 0;
 		List<Integer> matches = new ArrayList<>();
-		for (String word : splitWords(match)) {
+		String words[] = splitWords(match);
+		for (String word : words) {
 			Score score = contains(word, maskRegions(target, matches));
 			if ( score.rank <= 0) {
 				totalRank = 0;
@@ -31,11 +32,12 @@ public class StringScore {
 			matches.addAll(score.matches);
 		}
 		
-		Score acronymScore = scoreAsAcronym(match.toLowerCase(), target.toLowerCase());
-		if (acronymScore.rank > totalRank) {
-			return acronymScore;
+		if (words.length == 1) {
+			Score acronymScore = scoreAsAcronym(match.toLowerCase(), target.toLowerCase());
+			if (acronymScore.rank > totalRank) {
+				return acronymScore;
+			} 
 		}
-		
 		return new Score(totalRank, matches);
 	}
 	
@@ -56,7 +58,7 @@ public class StringScore {
 		
 		// did we complete all matches from the input
 		if (inputCursor.cursorPositionTerminal()) {
-			return new Score(100, matchesCursor.markers);
+			return new Score(4, matchesCursor.markers());
 		}
 		
 		return EMPTY_SCORE;
@@ -92,11 +94,10 @@ public class StringScore {
 		target = target.toLowerCase();
 		StringCursor targetCursor = new StringCursor(target);
 		boolean fullMatch = targetCursor.moveCursorIndexOf(match).wordAtCursor().equals(match);  // did we match full word
-		//boolean fullMatch = targetCursor.moveCursorIndexOf(match).markWordAtCursor().textOfMarkers().equals(match);  // did we match full word
 		if ( fullMatch ) {
-			return new Score(2, targetCursor.markRangeForward(match.length()).markers());
+			return new Score(5, targetCursor.markRangeForward(match.length()).markers());
 		} else if (!targetCursor.cursorPositionTerminal()) {
-			return new Score(1, targetCursor.markRangeForward(match.length()).markers());
+			return new Score(2, targetCursor.markRangeForward(match.length()).markers());
 		}
 		return NOT_FOUND_SCORE;
 	}
@@ -104,137 +105,6 @@ public class StringScore {
 	private static String[] splitWords(String text) {
 		String[] words = text.split(" ");
 		return words;
-	}
-	
-	public static class StringCursor {
-		public final String text;
-		private int indexOfCursor = 0;
-		private int currentMarker = 0;
-		
-		private List<Integer> markers = new ArrayList<>();
-		public StringCursor(String text) {
-			this.text = text;
-		}
-		
-		public StringCursor setMarkers(List<Integer> markers) {
-			this.markers = markers;
-			return this;
-		}
-		
-		public boolean markerPositionTerminal() {
-			if (currentMarker == markers.size() || currentMarker == -1) return true;
-			return false;
-		}
-		
-		public char currentMarker() {
-			if (currentMarker < markers.size())
-				return text.charAt(markers.get(currentMarker));
-			return 0;
-		}	
-		
-		public char previousMarker() {
-			if (currentMarker > 0) {
-				return text.charAt(markers.get(currentMarker - 1));
-			}
-			return 0;
-		}
-		
-		public StringCursor addMarker(int index) {
-			if (index >= text.length()) throw new IllegalArgumentException("Index is greater than text length " +index);
-			markers.add(index);
-			return this;
-		}
-		
-		public StringCursor markRangeForward(int charsForward) {
-			if (charsForward + indexOfCursor >= text.length()) throw new IllegalArgumentException("Index is greater than text length " +charsForward + indexOfCursor);
-			for (int index = indexOfCursor; index < indexOfCursor + charsForward; index++) {
-				markers.add(index);
-			}
-			return this;
-		}
-		
-		public List<Integer> markers() {
-			return markers;
-		}
-		
-		public String wordAtCursor() {
-			if (cursorPositionTerminal()) return "";
-			int currentIndex = indexOfCursor;
-			int indexStart = moveCursorPreviousAlphaBoundary().indexOfCursor();
-			int indexEnd   = moveCursorNextAlphaBoundary().indexOfCursor();
-			indexOfCursor = currentIndex;
-			return text.substring(indexStart, indexEnd);
-		}
-		
-		public boolean cursorPositionTerminal() {
-			if (indexOfCursor == text.length() || indexOfCursor == -1) return true;
-			return false;
-		}
-		
-		public char currentChar() {
-			if (indexOfCursor < text.length())
-				return text.charAt(indexOfCursor);
-			return 0;
-		}
-		
-		public char peekPreviousChar() {
-			if (indexOfCursor > 0) {
-				return text.charAt(indexOfCursor - 1);
-			}
-			return 0;
-		}
-		
-		public char peekNextChar() {
-			if (indexOfCursor < text.length() - 1) {
-				return text.charAt(indexOfCursor + 1);
-			}
-			return 0;
-		}
-		
-		public StringCursor moveCursorPreviousAlphaBoundary() {
-			while(Character.isAlphabetic(peekPreviousChar())) {
-				moveCursorBackward();
-			}
-			return this;
-		}
-		
-		public StringCursor moveCursorNextAlphaBoundary() {
-			while(Character.isAlphabetic(peekNextChar())) {
-				moveCursorForward();
-			}
-			return this;
-		}
-		
-		public StringCursor moveCursorIndexOf(String match) {
-			 indexOfCursor = text.indexOf(match);
-			 return this;
-		}
-		
-		public StringCursor moveCursorForward() {
-			 indexOfCursor++;
-			 return this;
-		}
-		
-		public StringCursor moveCursorBackward() {
-			 indexOfCursor--;
-			 return this;
-		}		
-		
-		public StringCursor advanceMarker() {
-			 currentMarker++;
-			 return this;
-		}
-		
-		public int indexOfCursor() {
-			return indexOfCursor;
-		}
-		
-		public int indexOfMarker() {
-			if (!markers.isEmpty())
-				return markers.get(currentMarker);
-			return 0;
-		}
-		
 	}
 	
 	public static class Score {

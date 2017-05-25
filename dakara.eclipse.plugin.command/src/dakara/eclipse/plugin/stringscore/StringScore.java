@@ -12,6 +12,18 @@ import java.util.List;
  * - rank by contiguous characters found
  * - single characters only match word start?
  *
+ * - by importance:
+ * 	- exact match
+ *  - multiple word full match
+ *  - single word full match
+ *  - acronym match
+ *  
+ * - bonuses:
+ *  - word or acronym starts at first char
+ *  - word or acronym contiguous
+ * 
+ * - minuses:
+ *  - gaps between words or acronym
  */
 public class StringScore {
 	private static final Score EMPTY_SCORE = new Score(0, Collections.emptyList());
@@ -53,12 +65,15 @@ public class StringScore {
 				inputCursor.moveCursorForward();
 				matchesCursor.addMarker(acronymCursor.indexOfMarker());
 			}
-			acronymCursor.advanceMarker();
+			acronymCursor.nextMarker();
 		}
 		
 		// did we complete all matches from the input
 		if (inputCursor.cursorPositionTerminal()) {
-			return new Score(4, matchesCursor.markers());
+			int rank = 3;
+			if (matchesCursor.firstMarker().indexOfMarker() == 0) 
+				rank += 1;
+			return new Score(rank, matchesCursor.markers());
 		}
 		
 		return EMPTY_SCORE;
@@ -94,11 +109,21 @@ public class StringScore {
 		target = target.toLowerCase();
 		StringCursor targetCursor = new StringCursor(target);
 		boolean fullMatch = targetCursor.moveCursorIndexOf(match).wordAtCursor().equals(match);  // did we match full word
+		int rank = 0;
 		if ( fullMatch ) {
-			return new Score(5, targetCursor.markRangeForward(match.length()).markers());
-		} else if (!targetCursor.cursorPositionTerminal()) {
-			return new Score(2, targetCursor.markRangeForward(match.length()).markers());
+			rank = 3;
+		} else if (!targetCursor.cursorPositionTerminal()) { // cursor will be at terminal position if text not found
+			rank = 2;
 		}
+		
+		// bonuses
+		if (targetCursor.indexOfCursor() == 0) {
+			// Our match is at the very beginning
+			rank += 1;
+		}
+		
+		if (rank > 0)
+			return new Score(rank, targetCursor.markRangeForward(match.length()).markers());
 		return NOT_FOUND_SCORE;
 	}
 	

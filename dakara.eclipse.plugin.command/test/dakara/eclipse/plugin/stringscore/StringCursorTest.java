@@ -85,7 +85,7 @@ public class StringCursorTest {
 		StringCursor cursor = new StringCursor("abc def ghi");
 		cursor.addMarker(0).addMarker(2);
 		assertEquals('a', cursor.currentMarker());
-		assertEquals('c', cursor.advanceMarker().currentMarker());
+		assertEquals('c', cursor.nextMarker().currentMarker());
 	}
 	
 	@Test

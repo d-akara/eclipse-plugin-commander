@@ -131,8 +131,13 @@ public class StringCursor {
 		 return this;
 	}	
 	
-	public StringCursor advanceMarker() {
+	public StringCursor nextMarker() {
 		 currentMarker++;
+		 return this;
+	}
+	
+	public StringCursor firstMarker() {
+		 currentMarker = 0;
 		 return this;
 	}
 	

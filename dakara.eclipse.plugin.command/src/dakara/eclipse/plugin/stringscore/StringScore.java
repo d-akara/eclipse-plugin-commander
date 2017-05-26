@@ -24,18 +24,29 @@ import java.util.List;
  * 
  * - minuses:
  *  - gaps between words or acronym
+ *  - matches in middle of word
  */
 public class StringScore {
 	private static final Score EMPTY_SCORE = new Score(0, Collections.emptyList());
 	private static final Score NOT_FOUND_SCORE = new Score(-1, Collections.emptyList());
 	
-	// TODO run all permutations and keep highest score
-	public static Score containsAnyOrderWords(String match, String target) {
+	public static Score scoreCombination(String match, String target) {
+		final String[] words = splitWords(match);
+		Score wordsScore = scoreMultipleContainsAnyOrder(words, target);
+		if (words.length == 1) {
+			Score acronymScore = scoreAsAcronym(match.toLowerCase(), target.toLowerCase());
+			if (acronymScore.rank > wordsScore.rank) {
+				return acronymScore;
+			} 
+		}
+		return wordsScore;
+	}
+	
+	public static Score scoreMultipleContainsAnyOrder(final String[] words, final String target) {
 		int totalRank = 0;
 		List<Integer> matches = new ArrayList<>();
-		String words[] = splitWords(match);
 		for (String word : words) {
-			Score score = contains(word, maskRegions(target, matches));
+			Score score = scoreAsContains(word, maskRegions(target, matches));
 			if ( score.rank <= 0) {
 				totalRank = 0;
 				break;  // all words must be found
@@ -43,19 +54,38 @@ public class StringScore {
 			totalRank += score.rank;
 			matches.addAll(score.matches);
 		}
-		
-		if (words.length == 1) {
-			Score acronymScore = scoreAsAcronym(match.toLowerCase(), target.toLowerCase());
-			if (acronymScore.rank > totalRank) {
-				return acronymScore;
-			} 
-		}
 		return new Score(totalRank, matches);
 	}
 	
+	public static Score scoreAsContains(String match, String target) {
+		if ((match == null) || (match.length() == 0)) return EMPTY_SCORE;
+		
+		match = match.toLowerCase();
+		target = target.toLowerCase();
+		StringCursor targetCursor = new StringCursor(target);
+		boolean fullMatch = targetCursor.moveCursorIndexOf(match).wordAtCursor().equals(match);  // did we match full word
+		int rank = 0;
+		if ( fullMatch ) {
+			rank = 3;
+		} else if (!targetCursor.cursorPositionTerminal()) { // cursor will be at terminal position if text not found
+			if (targetCursor.cursorAtWordStart())
+				rank = 2;
+			else if (match.length() > 2)  // 1 or 2 character matches are very weak when not at beginning of word, lets not show them at all.
+				rank = 1;
+		}
+		
+		// bonuses
+		if (targetCursor.indexOfCursor() == 0) {
+			// Our match is at the very beginning
+			rank += 1;
+		}
+		
+		if (rank > 0)
+			return new Score(rank, targetCursor.markRangeForward(match.length()).markers());
+		return NOT_FOUND_SCORE;
+	}		
 	
-	
-	private static Score scoreAsAcronym(String searchInput, String text) {
+	public static Score scoreAsAcronym(String searchInput, String text) {
 		StringCursor matchesCursor = new StringCursor(text);
 		StringCursor acronymCursor = addMarkersForAcronym(new StringCursor(text));
 		StringCursor inputCursor = new StringCursor(searchInput);
@@ -71,8 +101,12 @@ public class StringScore {
 		// did we complete all matches from the input
 		if (inputCursor.cursorPositionTerminal()) {
 			int rank = 3;
+			// apply bonus for first character match
 			if (matchesCursor.firstMarker().indexOfMarker() == 0) 
 				rank += 1;
+			// TODO subtract for weak matches.  If there are more than 1 gap reduce ranking
+			// if there are a large number of gaps, remove entirely
+			
 			return new Score(rank, matchesCursor.markers());
 		}
 		
@@ -98,33 +132,6 @@ public class StringScore {
 		StringBuilder builder = new StringBuilder(text);
 		maskIndexes.stream().forEach(index -> builder.setCharAt(index, ' '));
 		return builder.toString();
-	}
-	
-	// TODO don't have infinite scoring.  Need to have ranges (0-10) for each algorithm
-	// score whole word matching higher vs partial includes
-	public static Score contains(String match, String target) {
-		if ((match == null) || (match.length() == 0)) return EMPTY_SCORE;
-		
-		match = match.toLowerCase();
-		target = target.toLowerCase();
-		StringCursor targetCursor = new StringCursor(target);
-		boolean fullMatch = targetCursor.moveCursorIndexOf(match).wordAtCursor().equals(match);  // did we match full word
-		int rank = 0;
-		if ( fullMatch ) {
-			rank = 3;
-		} else if (!targetCursor.cursorPositionTerminal()) { // cursor will be at terminal position if text not found
-			rank = 2;
-		}
-		
-		// bonuses
-		if (targetCursor.indexOfCursor() == 0) {
-			// Our match is at the very beginning
-			rank += 1;
-		}
-		
-		if (rank > 0)
-			return new Score(rank, targetCursor.markRangeForward(match.length()).markers());
-		return NOT_FOUND_SCORE;
 	}
 	
 	private static String[] splitWords(String text) {

@@ -31,7 +31,7 @@ public class CommanderHandler extends AbstractHandler implements IStartup {
 		kaviPickList.addColumn(item -> item.getProvider().getName()).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		kaviPickList.setListContentProvider(eclipseCommandProvider::getAllCommands);
 		//kavaPickList.setListInitialContentProvider();
-		kaviPickList.setListRankingStrategy((columnText, filter) -> StringScore.containsAnyOrderWords(filter, columnText));
+		kaviPickList.setListRankingStrategy((columnText, filter) -> StringScore.scoreCombination(filter, columnText));
 		kaviPickList.setSortFieldResolver(item -> item.getLabel());
 		// set id function.  So that histories can be created
 		// kaviPickList.setItemIdResolver(item -> item.getId() + ":" + item.getProvider().getId);

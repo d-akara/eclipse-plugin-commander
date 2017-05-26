@@ -8,7 +8,7 @@ import dakara.eclipse.plugin.stringscore.StringScore.Score;
 public class StringScoreTest {
 	@Test
 	public void verifyEmptyMatch() {
-		Score score = StringScore.contains("", "abc");
+		Score score = StringScore.scoreAsContains("", "abc");
 		Assert.assertEquals(-1, score.rank);
 	}
 }

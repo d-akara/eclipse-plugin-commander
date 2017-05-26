@@ -77,6 +77,11 @@ public class StringCursor {
 		return false;
 	}
 	
+	public boolean cursorAtWordStart() {
+		if (!Character.isAlphabetic(text.charAt(indexOfCursor))) return false;
+		return !Character.isAlphabetic(peekPreviousChar());
+	}
+	
 	public char currentChar() {
 		if (indexOfCursor < text.length())
 			return text.charAt(indexOfCursor);

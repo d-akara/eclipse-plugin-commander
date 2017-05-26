@@ -25,7 +25,7 @@ public class ListRankAndSelectorTest {
 		itemList.add(new TestItem("3", "three","2"));
 		itemList.add(new TestItem("4", "four", "1"));
 		
-		rankSelectorMultiColumn = new ListRankAndFilter<>(options, filter -> itemList, StringScore::contains, item -> item.field1);
+		rankSelectorMultiColumn = new ListRankAndFilter<>(options, filter -> itemList, StringScore::scoreAsContains, item -> item.field1);
 	}
 	
 	@Test

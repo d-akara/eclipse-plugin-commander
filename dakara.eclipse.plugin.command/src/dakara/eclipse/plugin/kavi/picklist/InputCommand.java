@@ -38,6 +38,10 @@ public class InputCommand {
 			.map(InputCommand::makeInputCommand)
 			.collect(Collectors.toList());
 	}
+	
+	public boolean isFilterEqual(InputCommand otherInput) {
+		return filter.equals(otherInput.filter) && filterAnyColumn == otherInput.filterAnyColumn;
+	}
 
 	private static InputCommand makeInputCommand(String commandPart) {
 		boolean fastSelectActive = commandPart.contains("/");

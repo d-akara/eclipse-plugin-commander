@@ -25,7 +25,17 @@ import java.util.List;
  * - minuses:
  *  - gaps between words or acronym
  *  - matches in middle of word
+ *  
+ *  TODO - Need a new way to score across fields or columns vs doing each field individually as we do now
+ *         Multiple words should match across fields as if the fields were concatenated as a single field
+ *         All words must be found, but can exist across fields
+ *         This will require some redesign, but will be very powerful
+ *  
+ *  TODO - remaining match strategies to implement
+ *         1) camel case matching.  will be more useful when used for filename matching, not so much in commands
+ *         2) sequence matching. there can be any distance between all letters, but must be in same order.
  */
+
 public class StringScore {
 	private static final Score EMPTY_SCORE = new Score(0, Collections.emptyList());
 	private static final Score NOT_FOUND_SCORE = new Score(-1, Collections.emptyList());
@@ -63,11 +73,23 @@ public class StringScore {
 		match = match.toLowerCase();
 		target = target.toLowerCase();
 		StringCursor targetCursor = new StringCursor(target);
-		boolean fullMatch = targetCursor.moveCursorIndexOf(match).wordAtCursor().equals(match);  // did we match full word
+		
 		int rank = 0;
+		if (!targetCursor.moveCursorIndexOf(match).cursorPositionTerminal()) {
+			rank = rankContainsMatches(match, targetCursor);
+		}
+		
+		if (rank > 0)
+			return new Score(rank, targetCursor.markFillRangeForward(match.length()).markers());
+		return NOT_FOUND_SCORE;
+	}
+
+	private static int rankContainsMatches(String match, StringCursor targetCursor) {
+		int rank = 0;
+		final boolean fullMatch = targetCursor.wordAtCursor().equals(match);  // did we match full word
 		if ( fullMatch ) {
 			rank = 3;
-		} else if (!targetCursor.cursorPositionTerminal()) { // cursor will be at terminal position if text not found
+		} else {
 			if (targetCursor.cursorAtWordStart())
 				rank = 2;
 			else if (match.length() > 2)  // 1 or 2 character matches are very weak when not at beginning of word, lets not show them at all.
@@ -79,10 +101,7 @@ public class StringScore {
 			// Our match is at the very beginning
 			rank += 1;
 		}
-		
-		if (rank > 0)
-			return new Score(rank, targetCursor.markFillRangeForward(match.length()).markers());
-		return NOT_FOUND_SCORE;
+		return rank;
 	}		
 	
 	public static Score scoreAsAcronym(String searchInput, String text) {
@@ -93,38 +112,41 @@ public class StringScore {
 		while (!acronymCursor.markerPositionTerminal() && !inputCursor.cursorPositionTerminal()) {
 			if (acronymCursor.currentMarker() == inputCursor.currentChar()) {
 				inputCursor.moveCursorForward();
-				matchesCursor.addMarker(acronymCursor.indexOfMarker());
+				matchesCursor.addMark(acronymCursor.indexOfCurrentMark());
 			}
-			acronymCursor.nextMarker();
+			acronymCursor.setNextMarkCurrent();
 		}
 		
 		// did we complete all matches from the input
 		if (inputCursor.cursorPositionTerminal()) {
-			int rank = 3;
-			// apply bonus for first character match
-			if (matchesCursor.setCurrentMarkerFirst().indexOfMarker() == 0) 
-				rank += 1;
-			// TODO subtract for weak matches.  If there are more than 1 gap reduce ranking
-			// if there are a large number of gaps, remove entirely
-			int wordsBetweenMatches = matchesCursor.wordGapsBetweenMarkedRegions(0, matchesCursor.markers().size() - 1);
-			if (wordsBetweenMatches > 0) {
-				rank -=1;
-			}
-			if (wordsBetweenMatches > 2) {
-				rank = 0;
-			}
-			
-			
+			int rank = rankAcronymMatches(matchesCursor);
 			return new Score(rank, matchesCursor.markers());
 		}
 		
 		return EMPTY_SCORE;
 	}
+
+	private static int rankAcronymMatches(StringCursor matchesCursor) {
+		int rank = 3;
+		// apply bonus for first character match
+		if (matchesCursor.setFirstMarkCurrent().indexOfCurrentMark() == 0) 
+			rank += 1;
+		// subtract for weak matches.  If there are more than 1 gap reduce ranking
+		// if there are a large number of gaps, remove entirely
+		int countUnMarkedWords = matchesCursor.countUnMarkedWordsBetweenMarkers(0, matchesCursor.markers().size() - 1);
+		if (countUnMarkedWords > 0) {
+			rank -=1;
+		}
+		if (countUnMarkedWords > 2) {
+			rank = 0;
+		}
+		return rank;
+	}
 	
 	private static StringCursor addMarkersForAcronym(StringCursor text) {
 		while (!text.cursorPositionTerminal()) {
 			if (Character.isAlphabetic(text.currentChar()) && !Character.isAlphabetic(text.peekPreviousChar())) {
-				text.addMarker(text.indexOfCursor());
+				text.addMark(text.indexOfCursor());
 			}
 			text.moveCursorForward();
 		}

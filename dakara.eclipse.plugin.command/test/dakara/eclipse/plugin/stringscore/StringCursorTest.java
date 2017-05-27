@@ -81,9 +81,9 @@ public class StringCursorTest {
 	@Test
 	public void verifyMarkerPositions() {
 		StringCursor cursor = new StringCursor("abc def ghi");
-		cursor.addMarker(0).addMarker(2);
+		cursor.addMark(0).addMark(2);
 		assertEquals('a', cursor.currentMarker());
-		assertEquals('c', cursor.nextMarker().currentMarker());
+		assertEquals('c', cursor.setNextMarkCurrent().currentMarker());
 	}
 	
 	@Test
@@ -98,14 +98,14 @@ public class StringCursorTest {
 	@Test
 	public void verifyWordGaps() {
 		StringCursor cursor = new StringCursor("abc def ghi abc def ghi");
-		cursor.addMarker(1).addMarker(10);
-		assertEquals(1, cursor.wordGapsBetweenMarkedRegions(0, 1));
+		cursor.addMark(1).addMark(10);
+		assertEquals(1, cursor.countUnMarkedWordsBetweenMarkers(0, 1));
 		
-		cursor.clearMarkers().addMarker(1).addMarker(22);
-		assertEquals(4, cursor.wordGapsBetweenMarkedRegions(0, 1));
+		cursor.clearMarkers().addMark(1).addMark(22);
+		assertEquals(4, cursor.countUnMarkedWordsBetweenMarkers(0, 1));
 
-		cursor.clearMarkers().addMarker(0).addMarker(12);
-		assertEquals(2, cursor.wordGapsBetweenMarkedRegions(0, 1));
+		cursor.clearMarkers().addMark(0).addMark(12);
+		assertEquals(2, cursor.countUnMarkedWordsBetweenMarkers(0, 1));
 		
 		
 	}

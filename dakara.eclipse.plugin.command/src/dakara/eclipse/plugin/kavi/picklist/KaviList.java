@@ -43,6 +43,7 @@ public class KaviList<T> {
 	private Function<T, String> sortFieldResolver; 
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 	private KaviListColumns<T> kaviListColumn;
+	private InputCommand previousInputCommand = null;
 
 	private TableViewer tableViewer;
 	private Table table;
@@ -76,27 +77,34 @@ public class KaviList<T> {
 		if (table == null) return;
 		
 		final InputCommand inputCommand = InputCommand.parse(filter).get(0);
-		// TODO detect if input change before we refilter or select so that we don't refresh the table.
-		tableEntries = new ListRankAndFilter<T>(kaviListColumn.getColumnOptions(), listContentProvider, rankingStrategy, sortFieldResolver).rankAndFilter(inputCommand);
-		alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
-		table.removeAll();
-		table.setItemCount(tableEntries.size());
+		if (filterChanged(inputCommand)) {
+			tableEntries = new ListRankAndFilter<T>(kaviListColumn.getColumnOptions(), listContentProvider, rankingStrategy, sortFieldResolver).rankAndFilter(inputCommand);
+			alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
+			table.removeAll();
+			table.setItemCount(tableEntries.size());
+		}
 		fastSelectItem(inputCommand);
+	}
+	
+	private boolean filterChanged(InputCommand inputCommand)	{
+		if (previousInputCommand == null) {
+			previousInputCommand = inputCommand;
+			return true;
+		}
+		boolean filterChanged = !inputCommand.isFilterEqual(previousInputCommand);
+		previousInputCommand = inputCommand;
+		return filterChanged;
 	}
 
 	private void fastSelectItem(final InputCommand inputCommand) {
 		List<ColumnOptions<T>> columnOptions = kaviListColumn.getColumnOptions();
 		// show fast select index if we are typing a fast select expression
-		int current = tableViewer.getTable().getTopIndex();
 		if (inputCommand.fastSelect) {
 			int columnWidth = averageCharacterWidth(columnOptions.get(0).getFont()) * alphaColumnConverter.getNumberOfCharacters() + 5;
 			columnOptions.get(0).width(columnWidth);
 		} else {
 			columnOptions.get(0).width(0);
 		}
-		// TODO when changing width, scroll is reset.  Need to find way of restoring scroll position
-		// probably will be fixed when we don't refresh the table above when not needed.
-		// table.getDisplay().asyncExec(() -> tableViewer.getTable().setTopIndex(current));
 		
 		if ((inputCommand.fastSelectIndex != null) && (inputCommand.fastSelectIndex.length() == alphaColumnConverter.getNumberOfCharacters())){
 			table.setSelection(alphaColumnConverter.toNumeric(inputCommand.fastSelectIndex) - 1);

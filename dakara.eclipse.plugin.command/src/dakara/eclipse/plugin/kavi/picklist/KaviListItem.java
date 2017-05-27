@@ -27,7 +27,7 @@ public final class KaviListItem<T> {
 	
 	public int totalScore() {
 		if (allColumnsRequired)
-			if (scores.values().stream().mapToInt(score -> score.rank).anyMatch(rank -> rank < 0)) return 0;
+			if (scores.values().stream().mapToInt(score -> score.rank).anyMatch(rank -> rank <= 0)) return 0;
 		return scores.values().stream().mapToInt(score -> score.rank).sum();
 	}
 }

@@ -38,14 +38,14 @@ public class StringCursor {
 		return 0;
 	}
 	
-	public char previousMarker() {
+	public char setPreviousMarkCurrent() {
 		if (currentMarker > 0) {
 			return text.charAt(markers.get(currentMarker - 1));
 		}
 		return 0;
 	}
 	
-	public StringCursor addMarker(int index) {
+	public StringCursor addMark(int index) {
 		if (index >= text.length()) throw new IllegalArgumentException("Index is greater than text length " +index);
 		markers.add(index);
 		return this;
@@ -68,9 +68,7 @@ public class StringCursor {
 		return markers;
 	}
 	
-	
-	
-	public int wordGapsBetweenMarkedRegions(int firstMarker, int lastMarker) {
+	public int countUnMarkedWordsBetweenMarkers(int firstMarker, int lastMarker) {
 		if (markers.isEmpty()) return 0;
 		int wordCount = 0;
 		final int originalCursorPosition = indexOfCursor;
@@ -78,15 +76,15 @@ public class StringCursor {
 		int startIndex = markers.get(firstMarker);
 		indexOfCursor = startIndex;
 		
-		setCurrentMarkerFirst().advanceMarkerToEndOfCurrentMarkedRegion();
+		setFirstMarkCurrent().setCurrentMarkToEndOfCurrentMarkedRegion();
 		while(currentMarker < lastMarker) {
-			int nonAlphaRegionCount = countNonAlphabeticRegions(indexOfMarker(), indexOfNextMarker());
+			int nonAlphaRegionCount = countNonAlphabeticRegions(indexOfCurrentMark(), indexOfNextMark());
 			if (nonAlphaRegionCount > 1) {
 				// We are counting words which are surrounded by whitespace on each side.
 				// So there must be 2 non alphabetic regions for this to be true.
 				wordCount += nonAlphaRegionCount - 1;
 			}
-			nextMarker().advanceMarkerToEndOfCurrentMarkedRegion();
+			setNextMarkCurrent().setCurrentMarkToEndOfCurrentMarkedRegion();
 		}
 		
 		indexOfCursor = originalCursorPosition;
@@ -114,12 +112,12 @@ public class StringCursor {
 		return count;
 	}
 	
-	public StringCursor advanceMarkerToEndOfCurrentMarkedRegion() {
+	public StringCursor setCurrentMarkToEndOfCurrentMarkedRegion() {
 		if (markerPositionTerminal()) return this;
 		
 		// move until no more contiguous marks
-		while (indexOfNextMarker() == indexOfMarker() + 1) {
-			nextMarker();
+		while (indexOfNextMark() == indexOfCurrentMark() + 1) {
+			setNextMarkCurrent();
 		}
 		return this;
 	}
@@ -212,21 +210,21 @@ public class StringCursor {
 		 return this;
 	}	
 	
-	public StringCursor nextMarker() {
+	public StringCursor setNextMarkCurrent() {
 		 currentMarker++;
 		 return this;
 	}
 	
-	public StringCursor setCurrentMarkerFirst() {
+	public StringCursor setFirstMarkCurrent() {
 		 currentMarker = 0;
 		 return this;
 	}
 	
-	public int indexOfFirstMarker() {
+	public int indexOfFirstMark() {
 		return markers.get(0);
 	}
 	
-	public int indexOfLastMarker() {
+	public int indexOfLastMark() {
 		return markers.get(markers.size() - 1);
 	}
 	
@@ -234,13 +232,13 @@ public class StringCursor {
 		return indexOfCursor;
 	}
 	
-	public int indexOfNextMarker() {
+	public int indexOfNextMark() {
 		if (!markers.isEmpty() && currentMarker + 1 < markers.size())
 			return markers.get(currentMarker + 1);
 		return 0;
 	}
 	
-	public int indexOfMarker() {
+	public int indexOfCurrentMark() {
 		if (!markers.isEmpty() && !markerPositionTerminal())
 			return markers.get(currentMarker);
 		return -1;

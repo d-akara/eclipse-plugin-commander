@@ -81,7 +81,7 @@ public class StringScore {
 		}
 		
 		if (rank > 0)
-			return new Score(rank, targetCursor.markRangeForward(match.length()).markers());
+			return new Score(rank, targetCursor.markFillRangeForward(match.length()).markers());
 		return NOT_FOUND_SCORE;
 	}		
 	
@@ -102,10 +102,18 @@ public class StringScore {
 		if (inputCursor.cursorPositionTerminal()) {
 			int rank = 3;
 			// apply bonus for first character match
-			if (matchesCursor.firstMarker().indexOfMarker() == 0) 
+			if (matchesCursor.setCurrentMarkerFirst().indexOfMarker() == 0) 
 				rank += 1;
 			// TODO subtract for weak matches.  If there are more than 1 gap reduce ranking
 			// if there are a large number of gaps, remove entirely
+			int wordsBetweenMatches = matchesCursor.wordGapsBetweenMarkedRegions(0, matchesCursor.markers().size() - 1);
+			if (wordsBetweenMatches > 0) {
+				rank -=1;
+			}
+			if (wordsBetweenMatches > 2) {
+				rank = 0;
+			}
+			
 			
 			return new Score(rank, matchesCursor.markers());
 		}

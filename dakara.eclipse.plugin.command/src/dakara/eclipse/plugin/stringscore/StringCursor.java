@@ -2,6 +2,7 @@ package dakara.eclipse.plugin.stringscore;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 
 public class StringCursor {
@@ -30,6 +31,13 @@ public class StringCursor {
 		return 0;
 	}	
 	
+	public char peekNextMarker() {
+		int nextMarker = currentMarker + 1;
+		if (nextMarker < markers.size())
+			return text.charAt(markers.get(nextMarker));
+		return 0;
+	}
+	
 	public char previousMarker() {
 		if (currentMarker > 0) {
 			return text.charAt(markers.get(currentMarker - 1));
@@ -43,7 +51,12 @@ public class StringCursor {
 		return this;
 	}
 	
-	public StringCursor markRangeForward(int charsForward) {
+	public StringCursor clearMarkers() {
+		markers.clear();
+		return this;
+	}
+	
+	public StringCursor markFillRangeForward(int charsForward) {
 		if (charsForward + indexOfCursor > text.length()) throw new IllegalArgumentException("Index is greater than text length. index " + indexOfCursor + " range " + charsForward + " '" + text + "'");
 		for (int index = indexOfCursor; index < indexOfCursor + charsForward; index++) {
 			markers.add(index);
@@ -53,6 +66,62 @@ public class StringCursor {
 	
 	public List<Integer> markers() {
 		return markers;
+	}
+	
+	
+	
+	public int wordGapsBetweenMarkedRegions(int firstMarker, int lastMarker) {
+		if (markers.isEmpty()) return 0;
+		int wordCount = 0;
+		final int originalCursorPosition = indexOfCursor;
+		final int originalMarkerPosition = currentMarker;
+		int startIndex = markers.get(firstMarker);
+		indexOfCursor = startIndex;
+		
+		setCurrentMarkerFirst().advanceMarkerToEndOfCurrentMarkedRegion();
+		while(currentMarker < lastMarker) {
+			int nonAlphaRegionCount = countNonAlphabeticRegions(indexOfMarker(), indexOfNextMarker());
+			if (nonAlphaRegionCount > 1) {
+				// We are counting words which are surrounded by whitespace on each side.
+				// So there must be 2 non alphabetic regions for this to be true.
+				wordCount += nonAlphaRegionCount - 1;
+			}
+			nextMarker().advanceMarkerToEndOfCurrentMarkedRegion();
+		}
+		
+		indexOfCursor = originalCursorPosition;
+		currentMarker = originalMarkerPosition;
+		
+		return wordCount;
+	}
+	
+	public int countNonAlphabeticRegions(int startIndex, int endIndex) {
+		final int originalCursorPosition = indexOfCursor;
+		indexOfCursor = startIndex;
+		int count = 0;
+		while(indexOfCursor < endIndex) {
+			if (!Character.isAlphabetic(text.charAt(indexOfCursor))) {
+				count++;
+				// skip all whitespace
+				moveCursorForwardUntil(cursor -> Character.isAlphabetic(cursor.currentChar()));
+			} else {
+				// skip all chars
+				moveCursorForwardUntil(cursor -> !Character.isAlphabetic(cursor.currentChar()));
+			}
+		}
+		indexOfCursor = originalCursorPosition;
+		
+		return count;
+	}
+	
+	public StringCursor advanceMarkerToEndOfCurrentMarkedRegion() {
+		if (markerPositionTerminal()) return this;
+		
+		// move until no more contiguous marks
+		while (indexOfNextMarker() == indexOfMarker() + 1) {
+			nextMarker();
+		}
+		return this;
 	}
 	
 	public String wordAtCursor() {
@@ -102,6 +171,13 @@ public class StringCursor {
 		return 0;
 	}
 	
+	public StringCursor moveCursorForwardUntil(Function<StringCursor, Boolean> shouldContinue) {
+		while(!shouldContinue.apply(this) && !cursorPositionTerminal()) {
+			indexOfCursor++;
+		}
+		return this;
+	}
+	
 	public StringCursor moveCursorPreviousAlphaBoundary() {
 		while(Character.isAlphabetic(peekPreviousChar())) {
 			moveCursorBackward();
@@ -141,19 +217,33 @@ public class StringCursor {
 		 return this;
 	}
 	
-	public StringCursor firstMarker() {
+	public StringCursor setCurrentMarkerFirst() {
 		 currentMarker = 0;
 		 return this;
+	}
+	
+	public int indexOfFirstMarker() {
+		return markers.get(0);
+	}
+	
+	public int indexOfLastMarker() {
+		return markers.get(markers.size() - 1);
 	}
 	
 	public int indexOfCursor() {
 		return indexOfCursor;
 	}
 	
-	public int indexOfMarker() {
-		if (!markers.isEmpty())
-			return markers.get(currentMarker);
+	public int indexOfNextMarker() {
+		if (!markers.isEmpty() && currentMarker + 1 < markers.size())
+			return markers.get(currentMarker + 1);
 		return 0;
+	}
+	
+	public int indexOfMarker() {
+		if (!markers.isEmpty() && !markerPositionTerminal())
+			return markers.get(currentMarker);
+		return -1;
 	}
 	
 	@Override

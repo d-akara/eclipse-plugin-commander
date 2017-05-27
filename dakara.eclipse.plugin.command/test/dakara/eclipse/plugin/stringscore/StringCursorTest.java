@@ -76,8 +76,6 @@ public class StringCursorTest {
 		assertEquals("ghi", cursor.setCursorPosition(8).wordAtCursor());
 		assertEquals("ghi", cursor.setCursorPosition(9).wordAtCursor());
 		assertEquals("ghi", cursor.setCursorPosition(10).wordAtCursor());
-		
-
 	}
 	
 	@Test
@@ -91,8 +89,25 @@ public class StringCursorTest {
 	@Test
 	public void verifyMarkRange() {
 		StringCursor cursor = new StringCursor("abc def ghi");
-		assertEquals("def", cursor.moveCursorIndexOf("def").markRangeForward(3).markersAsString());
-		assertEquals("i", cursor.moveCursorIndexOf("i").markRangeForward(1).markersAsString());
+		assertEquals("def", cursor.moveCursorIndexOf("def").markFillRangeForward(3).markersAsString());
+		
+		cursor.clearMarkers();
+		assertEquals("i", cursor.moveCursorIndexOf("i").markFillRangeForward(1).markersAsString());
+	}
+	
+	@Test
+	public void verifyWordGaps() {
+		StringCursor cursor = new StringCursor("abc def ghi abc def ghi");
+		cursor.addMarker(1).addMarker(10);
+		assertEquals(1, cursor.wordGapsBetweenMarkedRegions(0, 1));
+		
+		cursor.clearMarkers().addMarker(1).addMarker(22);
+		assertEquals(4, cursor.wordGapsBetweenMarkedRegions(0, 1));
+
+		cursor.clearMarkers().addMarker(0).addMarker(12);
+		assertEquals(2, cursor.wordGapsBetweenMarkedRegions(0, 1));
+		
+		
 	}
 	
 }

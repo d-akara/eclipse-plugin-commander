@@ -19,7 +19,7 @@ public class ListRankAndFilter<T> {
 	// TODO make generic list and filter not dependent on any UI
 	public ListRankAndFilter(List<ColumnOptions<T>> columnOptions, Function<InputCommand, List<T>> listContentProvider, BiFunction<String, String, Score> rankingStrategy, Function<T, String> sortFieldResolver) {
 		this.listContentProvider = listContentProvider;
-		this.columnOptions = columnOptions;
+		this.columnOptions = columnOptions.stream().filter(option -> option.isSearchable()).collect(Collectors.toList());
 		this.rankingStrategy = rankingStrategy;
 		this.sortFieldResolver = sortFieldResolver;
 	}
@@ -33,36 +33,18 @@ public class ListRankAndFilter<T> {
 					   collect(Collectors.toList());
 	}
 	
-	// TODO generic way to determine field filters vs inputCommand
-	// map inputCommand filters to column id's (index)
-//	private KaviListItem<T> setItemRank(KaviListItem<T> listItem, final InputCommand inputCommand) {
-//		listItem.setScoreModeByColumn(inputCommand.isColumnFiltering);
-//		
-//		if (true) {
-//			columnOptions.stream()	
-//				.filter(options -> options.isSearchable())
-//				// TODO need to change the column index - 1 which takes into account the alpha index column
-//				.forEach(options -> listItem.addScore(rankingStrategy.apply(inputCommand.getColumnFilter(options.getColumnIndex() - 1), options.getColumnContentFn().apply(listItem.dataItem, -1)), options.getColumnIndex())); 
-//		} else {
-//			setItemRankAcrossColumns(listItem, inputCommand);
-//		}
-//		return listItem;
-//	}
-	
 	private KaviListItem<T> setItemRank(KaviListItem<T> listItem, final InputCommand inputCommand) {
 		listItem.setScoreModeByColumn(inputCommand.isColumnFiltering);
 		
 		if (inputCommand.isColumnFiltering) {
 			int searchableColumnCount = 0;
 			for (ColumnOptions<T> options : columnOptions) {
-				if (!options.isSearchable()) continue;
 				listItem.addScore(rankingStrategy.apply(inputCommand.getColumnFilter(searchableColumnCount), options.getColumnContentFn().apply(listItem.dataItem, -1)), options.getColumnIndex());
 				searchableColumnCount++;
 			} 
 		} else {
 			List<Score> scores = scoreAllAsOneColumn(listItem, inputCommand);
 			for (ColumnOptions<T> options : columnOptions) {
-				if (!options.isSearchable()) continue;
 				listItem.addScore(scores.remove(0), options.getColumnIndex());
 			} 
 		}
@@ -76,15 +58,11 @@ public class ListRankAndFilter<T> {
 		
 		Score allColumnScore = rankingStrategy.apply( inputCommand.getColumnFilter(0), allColumnText.toString());
 		if (allColumnScore.rank > 0) {
-			System.out.println(new StringCursor(allColumnText.toString()).setMarkers(allColumnScore.matches).markersAsString());
-
 			return convertScoreToMatchesPerColumn(allColumnText.toString(), allColumnScore, indexesOfColumnBreaks);
-
 		} else {
 			// There was no match.  Add the empty to score to all columns
 			List<Score> scores = new ArrayList<>();
 			for (ColumnOptions<T> options : columnOptions) {
-				if (!options.isSearchable()) continue;
 				scores.add(allColumnScore);
 			} 
 			return scores;

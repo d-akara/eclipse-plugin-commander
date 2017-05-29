@@ -20,7 +20,7 @@ public class CommanderHandler extends AbstractHandler {
 		
 		EclipseCommandProvider eclipseCommandProvider = new EclipseCommandProvider();
 		KaviPickListDialog<QuickAccessElement> kaviPickList = new KaviPickListDialog<>();
-		kaviPickList.addColumn(item -> item.getLabel()).width(420);
+		kaviPickList.addColumn(item -> item.getLabel()).width(520);
 		kaviPickList.addColumn(item -> item.getProvider().getName()).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		kaviPickList.setListContentProvider(eclipseCommandProvider::getAllCommands);
 		//kavaPickList.setListInitialContentProvider();

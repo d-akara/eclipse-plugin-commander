@@ -35,6 +35,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		super(ProgressManagerUtil.getDefaultParent(), SWT.RESIZE, true, true, false, true, true, null, "Central Command");
 		// persistedSettings = new CommandDialogPersistedSettings();
 		kavaList = new KaviList<T>(KaviPickListDialog.this);
+		kavaList.setListContentChangedAction(list -> setInfoText("items: " +list.size()));
 		create();
 		// persistedSettings.loadSettings();
 	}
@@ -101,9 +102,9 @@ public class KaviPickListDialog<T> extends PopupDialog {
 
 	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
 		kavaList.setListRankingStrategy(rankStringFn);
+		
 	}
-	
-	
+
 	public void setSortFieldResolver(Function<T, String> sortFieldResolver) {
 		kavaList.setSortFieldResolver(sortFieldResolver);
 	}

@@ -55,5 +55,40 @@ public class StringScoreTest {
 		
 		score = StringScore.scoreAsAcronym("ax", "abc def ghi jklmn mop xyz");
 		Assert.assertEquals(0, score.rank);
-	}	
+	}
+	
+	@Test
+	public void verifyCombinationScoring() {
+		Score score = StringScore.scoreCombination("abc", "abc def ghi jkl");
+		Assert.assertEquals(4, score.rank);
+		
+		score = StringScore.scoreCombination("ad", "abc def ghi jkl");
+		Assert.assertEquals(4, score.rank);
+		
+		score = StringScore.scoreCombination("aj", "abc def ghi jkl");
+		Assert.assertEquals(3, score.rank);
+		
+		score = StringScore.scoreCombination("adz", "abc def ghi jklmn");
+		Assert.assertEquals(0, score.rank);
+		
+		score = StringScore.scoreCombination("dgj", "abc def ghi jklmn");
+		Assert.assertEquals(3, score.rank);
+		
+		score = StringScore.scoreCombination("dj", "abc def ghi jklmn");
+		Assert.assertEquals(2, score.rank);
+		
+		score = StringScore.scoreCombination("ax", "abc def ghi jklmn mop xyz");
+		Assert.assertEquals(0, score.rank);
+		
+	}
+	
+	@Test
+	public void emptyScoring() {
+		Score score = StringScore.scoreCombination("", "abc def ghi jklmn mop xyz");
+		Assert.assertEquals(0, score.rank);	
+		
+		score = StringScore.scoreAsContains("", "abc def ghi jklmn mop xyz");
+		Assert.assertEquals(0, score.rank);
+	}
+	
 }

@@ -3,7 +3,6 @@ package dakara.eclipse.plugin.command.handlers;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
@@ -14,13 +13,7 @@ import dakara.eclipse.plugin.stringscore.StringScore;
 
 
 @SuppressWarnings("restriction")
-public class CommanderHandler extends AbstractHandler implements IStartup {
-
-	@Override
-	public void earlyStartup() {
-		System.out.println("Dakara startup");
-		
-	}
+public class CommanderHandler extends AbstractHandler {
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
@@ -31,7 +24,7 @@ public class CommanderHandler extends AbstractHandler implements IStartup {
 		kaviPickList.addColumn(item -> item.getProvider().getName()).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		kaviPickList.setListContentProvider(eclipseCommandProvider::getAllCommands);
 		//kavaPickList.setListInitialContentProvider();
-		kaviPickList.setListRankingStrategy((columnText, filter) -> StringScore.scoreCombination(filter, columnText));
+		kaviPickList.setListRankingStrategy((filter, columnText) -> StringScore.scoreCombination(filter, columnText));
 		kaviPickList.setSortFieldResolver(item -> item.getLabel());
 		// set id function.  So that histories can be created
 		// kaviPickList.setItemIdResolver(item -> item.getId() + ":" + item.getProvider().getId);

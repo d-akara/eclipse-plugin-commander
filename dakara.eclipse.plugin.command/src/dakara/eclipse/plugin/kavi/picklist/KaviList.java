@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -44,6 +45,7 @@ public class KaviList<T> {
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 	private KaviListColumns<T> kaviListColumn;
 	private InputCommand previousInputCommand = null;
+	private Consumer<List<KaviListItem<T>>> changedAction = null;
 
 	private TableViewer tableViewer;
 	private Table table;
@@ -53,6 +55,10 @@ public class KaviList<T> {
 		this.rapidInputPickList = rapidInputPickList;
 	}
 
+	public void setListContentChangedAction(Consumer<List<KaviListItem<T>>> changedAction) {
+		this.changedAction = changedAction;
+	}
+	
 	public void setListContentProvider(Function<InputCommand, List<T>> listContentProvider) {
 		this.listContentProvider = listContentProvider;
 	}
@@ -82,6 +88,7 @@ public class KaviList<T> {
 			alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 			table.removeAll();
 			table.setItemCount(tableEntries.size());
+			changedAction.accept(tableEntries);
 		}
 		fastSelectItem(inputCommand);
 	}
@@ -124,6 +131,13 @@ public class KaviList<T> {
 	
     public int getTotalColumnWidth() {
     	return Stream.of(table.getColumns()).map(column -> column.getWidth()).reduce((width1, width2) -> width1 + width2).orElse(400);
+    }
+    
+    private int numberOfItemsVisible(Table table) {
+		Rectangle rectange = table.getClientArea();
+		int itemHeight = table.getItemHeight();
+		int headerHeight = table.getHeaderHeight();
+		return (rectange.height - headerHeight ) / itemHeight;
     }
 
 	public void initialize(Composite composite, int defaultOrientation) {
@@ -199,11 +213,13 @@ public class KaviList<T> {
 			public void keyPressed(KeyEvent e) {
 				
 				if (isKeys(SWT.CTRL, 'j', e)) {
-					e.doit = false;
-					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()+1);
+					e.doit = false; // prevent beeping
+					int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
+					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()+itemsInViewPort);
 				}
 				if (isKeys(SWT.CTRL, 'k', e)) {
-					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()-1);
+					int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
+					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()-itemsInViewPort);
 				}
 				switch (e.keyCode) {
 				case SWT.ARROW_DOWN:

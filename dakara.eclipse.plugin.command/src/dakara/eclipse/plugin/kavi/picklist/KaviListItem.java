@@ -7,7 +7,7 @@ import dakara.eclipse.plugin.stringscore.StringScore.Score;
 public final class KaviListItem<T> {
 	public final T dataItem;
 	private LinkedHashMap<Integer, Score> scores = new LinkedHashMap<>();
-	private boolean allColumnsRequired = false;
+	private boolean scorePerColumn = false;
 	public KaviListItem(T dataItem) {
 		this.dataItem = dataItem;
 	}
@@ -21,13 +21,18 @@ public final class KaviListItem<T> {
 		return scores.get(columnIndex);
 	}
 	
-	public void setScoreModeAllRequired(boolean allColumnsRequired) {
-		this.allColumnsRequired = allColumnsRequired;
+	public void setScoreModeByColumn(boolean scorePerColumn) {
+		this.scorePerColumn = scorePerColumn;
 	}
 	
 	public int totalScore() {
-		if (allColumnsRequired)
-			if (scores.values().stream().mapToInt(score -> score.rank).anyMatch(rank -> rank <= 0)) return 0;
+		if (scorePerColumn) {
+			if (scores.values().stream().mapToInt(score -> score.rank).anyMatch(rank -> rank == 0)) return 0;
+			return scores.values().stream().mapToInt(score -> score.rank).sum();
+		}
+		
 		return scores.values().stream().mapToInt(score -> score.rank).sum();
+		// Each score has the same rank when not scoring per column.  It the the score of the entire row.
+		//return scores.values().stream().mapToInt(score -> score.rank).findFirst().getAsInt();
 	}
 }

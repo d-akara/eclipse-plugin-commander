@@ -11,10 +11,6 @@
       </fragment>
    </extension>
    -->
-   <extension point="org.eclipse.ui.startup">
-     <startup class="dakara.eclipse.plugin.command.handlers.CommanderHandler"/>
-   </extension>   
-   
    
     <extension
          point="org.eclipse.ui.commands">

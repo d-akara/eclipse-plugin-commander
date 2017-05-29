@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import dakara.eclipse.plugin.stringscore.ListRankAndFilter2;
 import dakara.eclipse.plugin.stringscore.StringScore;
 
 public class ListRankAndSelectorTest {
@@ -14,7 +15,6 @@ public class ListRankAndSelectorTest {
 	@Before
 	public void makeMultiColumnData() {
 		List<ColumnOptions<TestItem>> options = new ArrayList<>();
-		// TODO does not work because column index is not set
 		options.add(new ColumnOptions<TestItem>((item, column) -> item.field1, 0));
 		options.add(new ColumnOptions<TestItem>((item, column) -> item.field2, 1));
 		options.add(new ColumnOptions<TestItem>((item, column) -> item.field3, 2));
@@ -24,8 +24,12 @@ public class ListRankAndSelectorTest {
 		itemList.add(new TestItem("2", "two",  "3"));
 		itemList.add(new TestItem("3", "three","2"));
 		itemList.add(new TestItem("4", "four", "1"));
+		itemList.add(new TestItem("5", "abc def ghi", "xyz"));
+		itemList.add(new TestItem("6", "abc def ghi", "abc"));
+		itemList.add(new TestItem("7", "abc def ghi", "ghi"));
+		itemList.add(new TestItem("8", "abc def ghi", "adg"));
 		
-		rankSelectorMultiColumn = new ListRankAndFilter<>(options, filter -> itemList, StringScore::scoreAsContains, item -> item.field1);
+		rankSelectorMultiColumn = new ListRankAndFilter<>(options, filter -> itemList, StringScore::scoreCombination, item -> item.field1);
 	}
 	
 	@Test
@@ -52,6 +56,13 @@ public class ListRankAndSelectorTest {
 	
 	@Test
 	public void verifyColumnSelection3() {
+		InputCommand inputCommand = InputCommand.parse("||3").get(0);
+		List<KaviListItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		Assert.assertEquals("2", listItems.get(0).dataItem.field1);
+	}
+	
+	@Test
+	public void verifyMatch() {
 		InputCommand inputCommand = InputCommand.parse("||3").get(0);
 		List<KaviListItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
 		Assert.assertEquals("2", listItems.get(0).dataItem.field1);

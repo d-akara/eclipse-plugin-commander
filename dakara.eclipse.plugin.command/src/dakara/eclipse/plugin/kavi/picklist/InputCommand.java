@@ -9,23 +9,23 @@ public class InputCommand {
 	private final List<String> filter;
 	public final String fastSelectIndex;
 	public final boolean fastSelect;
-	public final boolean filterAnyColumn;
+	public final boolean isColumnFiltering;
 	public final ListType listType;
 	public enum ListType {
 		CONTENT,
 		INTERNAL_COMMAND
 	};
-	public InputCommand(List<String> filter, String fastSelectIndex, boolean fastSelect, boolean filterAnyColumn, ListType listType) {
+	public InputCommand(List<String> filter, String fastSelectIndex, boolean fastSelect, boolean isColumnFiltering, ListType listType) {
 		this.filter = filter;
 		this.fastSelectIndex = fastSelectIndex;
 		this.fastSelect = fastSelect;
-		this.filterAnyColumn = filterAnyColumn;
+		this.isColumnFiltering = isColumnFiltering;
 		this.listType = listType;
 	}
 	
 	public String getColumnFilter(final int column) {
 		// When we only have 1 filter it should be applied to all columns
-		if (filterAnyColumn) return filter.get(0);
+		if (!isColumnFiltering) return filter.get(0);
 		
 		if (column >= filter.size()) return "";
 		
@@ -40,12 +40,12 @@ public class InputCommand {
 	}
 	
 	public boolean isFilterEqual(InputCommand otherInput) {
-		return filter.equals(otherInput.filter) && filterAnyColumn == otherInput.filterAnyColumn;
+		return filter.equals(otherInput.filter) && isColumnFiltering == otherInput.isColumnFiltering;
 	}
 
 	private static InputCommand makeInputCommand(String commandPart) {
 		boolean fastSelectActive = commandPart.contains("/");
-		boolean filterAnyColumn = !commandPart.contains("|");
+		boolean isColumnFiltering = commandPart.contains("|");
 		
 		String[] splitPart = commandPart.split("/");
 		String[] filters = splitPart[0].split("\\|");
@@ -55,6 +55,6 @@ public class InputCommand {
 			fastSelect = splitPart[1];
 		}
 		
-		return new InputCommand(Arrays.asList(filters), fastSelect, fastSelectActive, filterAnyColumn, ListType.CONTENT);
+		return new InputCommand(Arrays.asList(filters), fastSelect, fastSelectActive, isColumnFiltering, ListType.CONTENT);
 	}
 }

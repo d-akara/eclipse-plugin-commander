@@ -41,6 +41,8 @@ public class StringScore {
 	private static final Score NOT_FOUND_SCORE = new Score(-1, Collections.emptyList());
 	
 	public static Score scoreCombination(String match, String target) {
+		if (match.length() == 0) return NOT_FOUND_SCORE;
+		
 		final String[] words = splitWords(match);
 		Score wordsScore = scoreMultipleContainsAnyOrder(words, target);
 		if (words.length == 1) {

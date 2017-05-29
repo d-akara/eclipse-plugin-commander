@@ -60,12 +60,16 @@ public class ListRankAndFilter<T> {
 				searchableColumnCount++;
 			} 
 		} else {
-			setItemRankAcrossColumns(listItem, inputCommand);
+			List<Score> scores = scoreAllAsOneColumn(listItem, inputCommand);
+			for (ColumnOptions<T> options : columnOptions) {
+				if (!options.isSearchable()) continue;
+				listItem.addScore(scores.remove(0), options.getColumnIndex());
+			} 
 		}
 		return listItem;
 	}
 	
-	private KaviListItem<T> setItemRankAcrossColumns(KaviListItem<T> listItem, final InputCommand inputCommand) {
+	private List<Score> scoreAllAsOneColumn(KaviListItem<T> listItem, final InputCommand inputCommand) {
 		List<Integer> indexesOfColumnBreaks = new ArrayList<>();
 		StringBuilder allColumnText = new StringBuilder();
 		buildAllColumnTextAndIndexes(listItem, indexesOfColumnBreaks, allColumnText);
@@ -73,15 +77,18 @@ public class ListRankAndFilter<T> {
 		Score allColumnScore = rankingStrategy.apply( inputCommand.getColumnFilter(0), allColumnText.toString());
 		if (allColumnScore.rank > 0) {
 			System.out.println(new StringCursor(allColumnText.toString()).setMarkers(allColumnScore.matches).markersAsString());
-			List<Score> columnScores = splitScoreByColumns(allColumnText.toString(), allColumnScore, indexesOfColumnBreaks);
-			int columnIndex = 1;
-			for (Score score : columnScores) {
-				listItem.addScore(score, columnIndex++);
-			} 
+
+			return convertScoreToMatchesPerColumn(allColumnText.toString(), allColumnScore, indexesOfColumnBreaks);
+
 		} else {
-			listItem.addScore(allColumnScore, 1);
+			// There was no match.  Add the empty to score to all columns
+			List<Score> scores = new ArrayList<>();
+			for (ColumnOptions<T> options : columnOptions) {
+				if (!options.isSearchable()) continue;
+				scores.add(allColumnScore);
+			} 
+			return scores;
 		}
-		return listItem;
 	}
 
 	private void buildAllColumnTextAndIndexes(KaviListItem<T> listItem, List<Integer> indexesOfColumnBreaks, StringBuilder allColumnText) {
@@ -94,7 +101,7 @@ public class ListRankAndFilter<T> {
 		}
 	}	
 	
-	private List<Score> splitScoreByColumns(String originalText, Score allColumnScore, List<Integer> indexesOfColumnBreaks) {
+	private List<Score> convertScoreToMatchesPerColumn(String originalText, Score allColumnScore, List<Integer> indexesOfColumnBreaks) {
 		List<Score> scores = new ArrayList<>();
 		List<Integer> matches = new ArrayList<>();
 		int offset = 0;

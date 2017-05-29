@@ -106,8 +106,22 @@ public class StringCursorTest {
 
 		cursor.clearMarkers().addMark(0).addMark(12);
 		assertEquals(2, cursor.countUnMarkedWordsBetweenMarkers(0, 1));
+	}
+	
+	@Test
+	public void verifyOrderOfMarks() {
+		StringCursor cursor = new StringCursor("abc def ghi abc def ghi");
+		cursor.addMark(1).addMark(10);
+		assertEquals(1, cursor.countUnMarkedWordsBetweenMarkers(0, 1));
 		
+		cursor.clearMarkers().addMark(10).addMark(1);
+		assertEquals(1, cursor.countUnMarkedWordsBetweenMarkers(0, 1));
 		
+		cursor.clearMarkers().setCursorPosition(4).markFillRangeForward(3).setCursorPosition(0).markFillRangeForward(3);
+		assertEquals("abcdef", cursor.markersAsString());
+		
+		cursor.clearMarkers().setCursorPosition(0).markFillRangeForward(3).setCursorPosition(4).markFillRangeForward(3);
+		assertEquals("abcdef", cursor.markersAsString());
 	}
 	
 }

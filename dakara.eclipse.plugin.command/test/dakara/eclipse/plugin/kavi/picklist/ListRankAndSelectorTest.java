@@ -7,7 +7,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import dakara.eclipse.plugin.stringscore.ListRankAndFilter2;
 import dakara.eclipse.plugin.stringscore.StringScore;
 
 public class ListRankAndSelectorTest {
@@ -62,10 +61,12 @@ public class ListRankAndSelectorTest {
 	}
 	
 	@Test
-	public void verifyMatch() {
-		InputCommand inputCommand = InputCommand.parse("||3").get(0);
+	public void multipleWordsOutOfOrder() {
+		InputCommand inputCommand = InputCommand.parse("def abc").get(0);
 		List<KaviListItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
-		Assert.assertEquals("2", listItems.get(0).dataItem.field1);
+		KaviListItem<TestItem> listItem = listItems.get(0);
+		Assert.assertEquals("5", listItem.dataItem.field1);
+		Assert.assertEquals(6, (listItem.getColumnScore(1).matches.size()));
 	}
 	
 	private class TestItem {

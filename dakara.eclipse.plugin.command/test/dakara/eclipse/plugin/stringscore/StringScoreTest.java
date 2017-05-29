@@ -91,4 +91,13 @@ public class StringScoreTest {
 		Assert.assertEquals(0, score.rank);
 	}
 	
+	@Test
+	public void multiWordOutOfOrderScoring() {
+		Score score = StringScore.scoreCombination("def abc", "abc def ghi jklmn mop xyz");
+		Assert.assertEquals(4, score.rank);	
+		Assert.assertEquals(6, score.matches.size());	
+		
+
+	}
+	
 }

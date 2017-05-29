@@ -2,6 +2,7 @@ package dakara.eclipse.plugin.stringscore;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 /**
  * scoring strategies:
@@ -66,6 +67,8 @@ public class StringScore {
 			totalRank += score.rank;
 			matches.addAll(score.matches);
 		}
+		
+		matches.sort(Comparator.naturalOrder());
 		return new Score(totalRank, matches);
 	}
 	

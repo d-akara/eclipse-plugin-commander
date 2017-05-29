@@ -45,9 +45,19 @@ public class StringCursor {
 		return 0;
 	}
 	
-	public StringCursor addMark(int index) {
-		if (index >= text.length()) throw new IllegalArgumentException("Index is greater than text length " +index);
-		markers.add(index);
+	public StringCursor addMark(int indexOfMarkToAdd) {
+		if (indexOfMarkToAdd >= text.length()) throw new IllegalArgumentException("Index is greater than text length " +indexOfMarkToAdd);
+		
+		// insert all marks in order
+		int markerNumber = 0;
+		for (Integer markerIndex : markers) {
+			if (indexOfMarkToAdd > markerIndex) {
+				markerNumber++;
+			}
+		}
+		
+		markers.add(markerNumber, indexOfMarkToAdd);
+		//markers.add(indexOfMarkToAdd);
 		return this;
 	}
 	
@@ -59,7 +69,7 @@ public class StringCursor {
 	public StringCursor markFillRangeForward(int charsForward) {
 		if (charsForward + indexOfCursor > text.length()) throw new IllegalArgumentException("Index is greater than text length. index " + indexOfCursor + " range " + charsForward + " '" + text + "'");
 		for (int index = indexOfCursor; index < indexOfCursor + charsForward; index++) {
-			markers.add(index);
+			addMark(index);
 		}
 		return this;
 	}

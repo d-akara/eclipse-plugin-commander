@@ -27,11 +27,6 @@ import java.util.List;
  *  - gaps between words or acronym
  *  - matches in middle of word
  *  
- *  TODO - Need a new way to score across fields or columns vs doing each field individually as we do now
- *         Multiple words should match across fields as if the fields were concatenated as a single field
- *         All words must be found, but can exist across fields
- *         This will require some redesign, but will be very powerful
- *  
  *  TODO - remaining match strategies to implement
  *         1) camel case matching.  will be more useful when used for filename matching, not so much in commands
  *         2) sequence matching. there can be any distance between all letters, but must be in same order.

@@ -18,8 +18,6 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
@@ -90,6 +88,8 @@ public class KaviList<T> {
 			table.setItemCount(tableEntries.size());
 			changedAction.accept(tableEntries);
 		}
+		
+		// TODO option to show all items when no input filter
 		fastSelectItem(inputCommand);
 	}
 	
@@ -105,11 +105,15 @@ public class KaviList<T> {
 
 	private void fastSelectItem(final InputCommand inputCommand) {
 		List<ColumnOptions<T>> columnOptions = kaviListColumn.getColumnOptions();
+		final boolean isFastSelectShowing = columnOptions.get(0).width() > 0;
 		// show fast select index if we are typing a fast select expression
-		if (inputCommand.fastSelect) {
+		if ((inputCommand.fastSelect && !isFastSelectShowing)) {
 			int columnWidth = averageCharacterWidth(columnOptions.get(0).getFont()) * alphaColumnConverter.getNumberOfCharacters() + 5;
 			columnOptions.get(0).width(columnWidth);
-		} else {
+			columnOptions.get(1).changeWidth(-columnWidth + 1);
+		} else if (!inputCommand.fastSelect && isFastSelectShowing) {
+			// change column 1 the amount of column 0
+			columnOptions.get(1).changeWidth(columnOptions.get(0).width() - 1);
 			columnOptions.get(0).width(0);
 		}
 		
@@ -168,19 +172,15 @@ public class KaviList<T> {
 			}
 		});
 
-		table.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				handleSelection();
-			}
-		});
+		table.addListener(SWT.Selection, event-> handleSelection());
 		
 		kaviListColumn = new KaviListColumns<T>(tableViewer);
         kaviListColumn.addColumn((item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
+        
+		composite.getShell().addListener(SWT.Resize, event -> {
+			if (kaviListColumn.getColumnOptions().size() > 1)
+				kaviListColumn.getColumnOptions().get(1).width(composite.getShell().getSize().x - 110);	// TODO compute size
+		});
 	}
 	
 	private boolean isMouseEventOverSelection(MouseEvent event) {
@@ -214,11 +214,13 @@ public class KaviList<T> {
 				
 				if (isKeys(SWT.CTRL, 'j', e)) {
 					e.doit = false; // prevent beeping
+					// TODO wrap around
 					int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
 					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()+itemsInViewPort);
 				}
 				if (isKeys(SWT.CTRL, 'k', e)) {
 					int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
+					// TODO wrap around
 					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()-itemsInViewPort);
 				}
 				switch (e.keyCode) {

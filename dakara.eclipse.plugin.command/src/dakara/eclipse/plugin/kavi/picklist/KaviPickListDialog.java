@@ -77,9 +77,9 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	protected void adjustBounds() {
 		Point size = getDefaultSize();
 		Point location = getInitialLocation(size);
-		// Add 30 to width to include edge with scroll bar
+		// Add 25 to width to include edge with scroll bar
 		// TODO figure out how to set size precisely
-		getShell().setBounds(getConstrainedShellBounds(new Rectangle(location.x, location.y, size.x + 30, size.y)));
+		getShell().setBounds(getConstrainedShellBounds(new Rectangle(location.x, location.y, size.x + 25, size.y)));
 	}
 
 	public void setResolvedAction(Consumer<T> handleSelectFn) {

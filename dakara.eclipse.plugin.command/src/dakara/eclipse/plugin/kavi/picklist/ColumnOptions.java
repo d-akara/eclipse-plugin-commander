@@ -36,6 +36,15 @@ public class ColumnOptions<T> {
 		return this;
 	}
 	
+	public int width() {
+		return column.getWidth();
+	}
+	
+	public ColumnOptions<T> changeWidth(int change) {
+		column.setWidth(column.getWidth() + change);
+		return this;
+	}
+	
 	public ColumnOptions<T> right() {
 		column.setAlignment(SWT.RIGHT);
 		return this;

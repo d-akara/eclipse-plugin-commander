@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 /**
  * scoring strategies:
  * - rank by distance found from beginning of string
@@ -36,11 +38,19 @@ public class StringScore {
 	private static final Score EMPTY_SCORE = new Score(0, Collections.emptyList());
 	private static final Score NOT_FOUND_SCORE = new Score(-1, Collections.emptyList());
 	
-	public static Score scoreCombination(String match, String target) {
+	private BiFunction<String, StringCursor, Integer> contiguousSequenceRankingProvider;
+	private Function<StringCursor, Integer> acronymRankingProvider;
+	
+	public StringScore(BiFunction<String, StringCursor, Integer> contiguousSequenceRankingProvider, Function<StringCursor, Integer> acronymRankingProvider) {
+		this.contiguousSequenceRankingProvider = contiguousSequenceRankingProvider;
+		this.acronymRankingProvider = acronymRankingProvider;
+	}
+	
+	public Score scoreCombination(String match, String target) {
 		if (match.length() == 0) return NOT_FOUND_SCORE;
 		
 		final String[] words = splitWords(match);
-		Score wordsScore = scoreMultipleContainsAnyOrder(words, target);
+		Score wordsScore = scoreMultipleContiguousSequencesAnyOrder(words, target);
 		if (words.length == 1) {
 			Score acronymScore = scoreAsAcronym(match.toLowerCase(), target.toLowerCase());
 			if (acronymScore.rank > wordsScore.rank) {
@@ -50,11 +60,11 @@ public class StringScore {
 		return wordsScore;
 	}
 	
-	public static Score scoreMultipleContainsAnyOrder(final String[] words, final String target) {
+	public Score scoreMultipleContiguousSequencesAnyOrder(final String[] words, final String target) {
 		int totalRank = 0;
 		List<Integer> matches = new ArrayList<>();
 		for (String word : words) {
-			Score score = scoreAsContains(word, maskRegions(target, matches));
+			Score score = scoreAsContiguousSequence(word, maskRegions(target, matches));
 			if ( score.rank <= 0) {
 				totalRank = 0;
 				break;  // all words must be found
@@ -67,7 +77,7 @@ public class StringScore {
 		return new Score(totalRank, matches);
 	}
 	
-	public static Score scoreAsContains(String match, String target) {
+	public Score scoreAsContiguousSequence(String match, String target) {
 		if ((match == null) || (match.length() == 0)) return EMPTY_SCORE;
 		
 		match = match.toLowerCase();
@@ -76,35 +86,15 @@ public class StringScore {
 		
 		int rank = 0;
 		if (!targetCursor.moveCursorIndexOf(match).cursorPositionTerminal()) {
-			rank = rankContainsMatches(match, targetCursor);
+			rank = contiguousSequenceRankingProvider.apply(match, targetCursor);
 		}
 		
 		if (rank > 0)
 			return new Score(rank, targetCursor.markFillRangeForward(match.length()).markers());
 		return NOT_FOUND_SCORE;
-	}
-
-	private static int rankContainsMatches(String match, StringCursor targetCursor) {
-		int rank = 0;
-		final boolean fullMatch = targetCursor.wordAtCursor().equals(match);  // did we match full word
-		if ( fullMatch ) {
-			rank = 3;
-		} else {
-			if (targetCursor.cursorAtWordStart())
-				rank = 2;
-			else if (match.length() > 2)  // 1 or 2 character matches are very weak when not at beginning of word, lets not show them at all.
-				rank = 1;
-		}
-		
-		// bonuses
-		if (targetCursor.indexOfCursor() == 0) {
-			// Our match is at the very beginning
-			rank += 1;
-		}
-		return rank;
 	}		
 	
-	public static Score scoreAsAcronym(String searchInput, String text) {
+	public Score scoreAsAcronym(String searchInput, String text) {
 		StringCursor matchesCursor = new StringCursor(text);
 		StringCursor acronymCursor = addMarkersForAcronym(new StringCursor(text));
 		StringCursor inputCursor = new StringCursor(searchInput);
@@ -119,31 +109,14 @@ public class StringScore {
 		
 		// did we complete all matches from the input
 		if (inputCursor.cursorPositionTerminal()) {
-			int rank = rankAcronymMatches(matchesCursor);
+			int rank = acronymRankingProvider.apply(matchesCursor);
 			return new Score(rank, matchesCursor.markers());
 		}
 		
 		return EMPTY_SCORE;
 	}
-
-	private static int rankAcronymMatches(StringCursor matchesCursor) {
-		int rank = 3;
-		// apply bonus for first character match
-		if (matchesCursor.setFirstMarkCurrent().indexOfCurrentMark() == 0) 
-			rank += 1;
-		// subtract for weak matches.  If there are more than 1 gap reduce ranking
-		// if there are a large number of gaps, remove entirely
-		int countUnMarkedWords = matchesCursor.countUnMarkedWordsBetweenMarkers(0, matchesCursor.markers().size() - 1);
-		if (countUnMarkedWords > 0) {
-			rank -=1;
-		}
-		if (countUnMarkedWords > 2) {
-			rank = 0;
-		}
-		return rank;
-	}
 	
-	private static StringCursor addMarkersForAcronym(StringCursor text) {
+	private StringCursor addMarkersForAcronym(StringCursor text) {
 		while (!text.cursorPositionTerminal()) {
 			if (Character.isAlphabetic(text.currentChar()) && !Character.isAlphabetic(text.peekPreviousChar())) {
 				text.addMark(text.indexOfCursor());
@@ -157,14 +130,14 @@ public class StringScore {
 	/*
 	 * replace matched regions with space so we don't match them again
 	 */
-	private static String maskRegions(String text, List<Integer> maskIndexes) {
+	private String maskRegions(String text, List<Integer> maskIndexes) {
 		if (maskIndexes.size() == 0) return text;
 		StringBuilder builder = new StringBuilder(text);
 		maskIndexes.stream().forEach(index -> builder.setCharAt(index, ' '));
 		return builder.toString();
 	}
 	
-	private static String[] splitWords(String text) {
+	private String[] splitWords(String text) {
 		String[] words = text.split(" ");
 		return words;
 	}

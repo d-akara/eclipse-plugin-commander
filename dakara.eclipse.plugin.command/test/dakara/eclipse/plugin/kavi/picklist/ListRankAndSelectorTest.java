@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import dakara.eclipse.plugin.stringscore.StringScore;
+import dakara.eclipse.plugin.stringscore.StringScoreRanking;
 
 public class ListRankAndSelectorTest {
 	private ListRankAndFilter<TestItem> rankSelectorMultiColumn = null;
@@ -28,7 +29,8 @@ public class ListRankAndSelectorTest {
 		itemList.add(new TestItem("7", "abc def ghi", "ghi"));
 		itemList.add(new TestItem("8", "abc def ghi", "adg"));
 		
-		rankSelectorMultiColumn = new ListRankAndFilter<>(options, filter -> itemList, StringScore::scoreCombination, item -> item.field1);
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking());
+		rankSelectorMultiColumn = new ListRankAndFilter<>(options, filter -> itemList, stringScore::scoreCombination, item -> item.field1);
 	}
 	
 	@Test

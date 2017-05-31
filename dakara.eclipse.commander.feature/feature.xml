@@ -2,16 +2,13 @@
 <feature
       id="dakara.eclipse.commander.feature"
       label="Commander Feature"
-      version="1.0.0">
+      version="1.0.1">
 
    <description url="http://www.example.com/description">
       Commander command pallete.
-Add a new key binding to &apos;Commander&apos; to enable feature after installation.
+Add a new key binding to &apos;Commander&apos; to enable feature after
+installation.
    </description>
-
-   <copyright url="http://www.example.com/copyright">
-      [Enter Copyright Description here.]
-   </copyright>
 
    <license url="http://www.example.com/license">
       Copyright 2017 Chad Meadows

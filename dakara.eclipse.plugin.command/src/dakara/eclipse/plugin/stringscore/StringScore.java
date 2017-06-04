@@ -40,24 +40,39 @@ public class StringScore {
 	
 	private BiFunction<String, StringCursor, Integer> contiguousSequenceRankingProvider;
 	private Function<StringCursor, Integer> acronymRankingProvider;
+	private Function<StringCursor, Integer> nonContiguousSequenceRankingProvider;
 	
-	public StringScore(BiFunction<String, StringCursor, Integer> contiguousSequenceRankingProvider, Function<StringCursor, Integer> acronymRankingProvider) {
+	// TODO consider the scoring strategies could be converted to streams and made parallel
+	public StringScore(BiFunction<String, StringCursor, Integer> contiguousSequenceRankingProvider, Function<StringCursor, Integer> acronymRankingProvider, Function<StringCursor, Integer> nonContiguousSequenceRankingProvider) {
 		this.contiguousSequenceRankingProvider = contiguousSequenceRankingProvider;
 		this.acronymRankingProvider = acronymRankingProvider;
+		this.nonContiguousSequenceRankingProvider = nonContiguousSequenceRankingProvider;
 	}
 	
 	public Score scoreCombination(String match, String target) {
 		if (match.length() == 0) return NOT_FOUND_SCORE;
 		
 		final String[] words = splitWords(match);
-		Score wordsScore = scoreMultipleContiguousSequencesAnyOrder(words, target);
+		Score score;
 		if (words.length == 1) {
+			score = scoreAsContiguousSequence(match, target);
+			if (score.rank == 4) return score;  // perfect whole word match
+			
 			Score acronymScore = scoreAsAcronym(match.toLowerCase(), target.toLowerCase());
-			if (acronymScore.rank > wordsScore.rank) {
-				return acronymScore;
+			if (acronymScore.rank > score.rank) {
+				score = acronymScore;
 			} 
+			
+			if (match.length() > 2) {
+				Score nonContiguousScore = scoreAsNonContiguousSequence(match, target);
+				if (nonContiguousScore.rank > score.rank) {
+					score = nonContiguousScore;
+				}
+			}
+		} else {
+			score = scoreMultipleContiguousSequencesAnyOrder(words, target);			
 		}
-		return wordsScore;
+		return score;
 	}
 	
 	public Score scoreMultipleContiguousSequencesAnyOrder(final String[] words, final String target) {
@@ -126,6 +141,50 @@ public class StringScore {
 		return text;
 	}
 	
+	public Score scoreAsNonContiguousSequence(String match, String target) {
+		if ((match == null) || (match.length() < 2)) return EMPTY_SCORE;
+		
+		match = match.toLowerCase();
+		target = target.toLowerCase();
+		StringCursor targetCursor = new StringCursor(target);
+		StringCursor matchCursor = new StringCursor(match);
+		matchCursor.addMark(0);
+		while (!matchCursor.cursorPositionTerminal()) {
+			if (!longestMatchingSequence(matchCursor, targetCursor)) break;
+			
+			if (!targetCursor.cursorAtWordStart() && matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark() == 1) {
+				break; // non contiguous match not at word start.  bail out
+			}
+			
+			targetCursor.markFillAlphaRangeForward(matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark());
+			targetCursor.maskRegions(targetCursor.markers());
+			if (!matchCursor.cursorPositionTerminal()) {
+				matchCursor.addMark(matchCursor.indexOfCursor());
+				matchCursor.setNextMarkCurrent();
+			}
+		}
+		
+		if (targetCursor.markers().size() == match.length()) {
+			return new Score(nonContiguousSequenceRankingProvider.apply(targetCursor), 	targetCursor.markers());
+		} else {
+			return NOT_FOUND_SCORE;
+		}
+	}
+	
+	private boolean longestMatchingSequence(StringCursor matchCursor, StringCursor target) {
+		boolean partialMatchExists = false;
+		int lastFoundIndex = -1;
+		while(!matchCursor.cursorPositionTerminal() && !target.cursorPositionTerminal()) {
+			target.moveCursorForwardIndexOfAlphaSequenceWrapAround(matchCursor.text.substring(matchCursor.indexOfCurrentMark(), matchCursor.indexOfCursor() + 1));  // search for alpha sequence
+
+			if (!target.cursorPositionTerminal()) matchCursor.moveCursorForward();  // match was found in target, keep advancing match
+			else break; // no match found
+			lastFoundIndex = target.indexOfCursor();  // track last found so target cursor can be set to starting index of sequence
+			partialMatchExists = true;
+		}
+		target.setCursorPosition(lastFoundIndex);
+		return partialMatchExists;
+	}
 	
 	/*
 	 * replace matched regions with space so we don't match them again

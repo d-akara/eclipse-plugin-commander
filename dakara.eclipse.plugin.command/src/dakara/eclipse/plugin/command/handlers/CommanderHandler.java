@@ -20,7 +20,7 @@ public class CommanderHandler extends AbstractHandler {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 		
 		EclipseCommandProvider eclipseCommandProvider = new EclipseCommandProvider();
-		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking());
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		
 		KaviPickListDialog<QuickAccessElement> kaviPickList = new KaviPickListDialog<>();
 		kaviPickList.addColumn(item -> item.getLabel()).width(520);

@@ -8,7 +8,7 @@ import dakara.eclipse.plugin.stringscore.StringScore.Score;
 public class StringScoreTest {
 	@Test
 	public void verifyEmptyMatch() {
-		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking());
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		
 		Score score = stringScore.scoreAsContiguousSequence("", "abc");
 		Assert.assertEquals(0, score.rank);
@@ -16,7 +16,7 @@ public class StringScoreTest {
 	
 	@Test
 	public void verifyContainsScoring() {
-		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking());
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		
 		Score score = stringScore.scoreAsContiguousSequence("abc", "abc def ghi jkl");
 		Assert.assertEquals(4, score.rank);
@@ -39,7 +39,7 @@ public class StringScoreTest {
 	
 	@Test
 	public void verifyAcronymScoring() {
-		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking());
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		
 		Score score = stringScore.scoreAsAcronym("abc", "abc def ghi jkl");
 		Assert.assertEquals(0, score.rank);
@@ -65,7 +65,7 @@ public class StringScoreTest {
 	
 	@Test
 	public void verifyCombinationScoring() {
-		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking());
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		
 		Score score = stringScore.scoreCombination("abc", "abc def ghi jkl");
 		Assert.assertEquals(4, score.rank);
@@ -92,7 +92,7 @@ public class StringScoreTest {
 	
 	@Test
 	public void emptyScoring() {
-		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking());
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		// TODO investigate inconsistencies between scores of 0 and -1
 		Score score = stringScore.scoreCombination("", "abc def ghi jklmn mop xyz");
 		Assert.assertEquals(-1, score.rank);	
@@ -103,12 +103,37 @@ public class StringScoreTest {
 	
 	@Test
 	public void multiWordOutOfOrderScoring() {
-		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking());
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		Score score = stringScore.scoreCombination("def abc", "abc def ghi jklmn mop xyz");
 		Assert.assertEquals(6, score.matches.size());	
 		Assert.assertEquals(7, score.rank);	
 		
 
+	}
+	
+	@Test
+	public void nonContiguousSequenceScoring() {
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
+		Score score = stringScore.scoreAsNonContiguousSequence("defghi", "abc def ghi jklmn mop xyz");
+		Assert.assertEquals(6, score.matches.size());	
+		Assert.assertEquals(3, score.rank);	
+		Assert.assertEquals("defghi", new StringCursor("abc def ghi jklmn mop xyz").setMarkers(score.matches).markersAsString());
+		
+		score = stringScore.scoreAsNonContiguousSequence("ghidef", "abc def ghi jklmn mop xyz");
+		Assert.assertEquals(6, score.matches.size());	
+		Assert.assertEquals(3, score.rank);			
+		
+		score = stringScore.scoreAsNonContiguousSequence("ghidef", "abc def jklmn mop xyz ghi");
+		Assert.assertEquals(6, score.matches.size());	
+		Assert.assertEquals(2, score.rank);			
+		
+		score = stringScore.scoreAsNonContiguousSequence("defghi", "abc defg jklmn mop xyz ghi");
+		Assert.assertEquals(6, score.matches.size());	
+		Assert.assertEquals(2, score.rank);			
+		
+		score = stringScore.scoreAsNonContiguousSequence("defghi", "abcd vbe deb def xyz ghi");
+		Assert.assertEquals(6, score.matches.size());	
+		Assert.assertEquals(2, score.rank);			
 	}
 	
 }

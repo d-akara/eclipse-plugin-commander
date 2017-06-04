@@ -124,4 +124,18 @@ public class StringCursorTest {
 		assertEquals("abcdef", cursor.markersAsString());
 	}
 	
+	@Test
+	public void verifyMoveCursorIndexAlphaSequence() {
+		StringCursor cursor = new StringCursor("abc def ghi abc def ghi");
+		cursor.moveCursorForwardIndexOfAlphaSequence("fgh");
+		assertEquals(6, cursor.indexOfCursor());
+		
+		cursor = new StringCursor("fabc def ghi abc def ghi");
+		cursor.moveCursorForwardIndexOfAlphaSequence("fgh");
+		assertEquals(7, cursor.indexOfCursor());
+		
+		cursor = new StringCursor("fabc def ghi abc def ghi");
+		cursor.moveCursorForwardIndexOfAlphaSequence("fgha");
+		assertEquals(-1, cursor.indexOfCursor());
+	}
 }

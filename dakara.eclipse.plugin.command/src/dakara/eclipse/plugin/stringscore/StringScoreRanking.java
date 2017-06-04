@@ -49,4 +49,42 @@ public class StringScoreRanking {
 		}
 		return rank;
 	}
+	
+	public static Function<StringCursor, Integer> standardNonContiguousSequenceRanking() {
+		return StringScoreRanking::rankNonContiguousSequence;
+	}
+	
+	private static int rankNonContiguousSequence(StringCursor targetCursor) {
+		int rank = 2;
+		
+		int gaps = 0;
+		while(!targetCursor.markerPositionTerminal()) {
+			int numCharactersBetween = targetCursor.countAlphabeticCharsBetween(targetCursor.indexOfCurrentMark(), targetCursor.indexOfNextMark());
+			if (numCharactersBetween > 0) {
+				gaps++;
+			}
+			
+//			if (targetCursor.currentMarkIsFirstOfMarkedRegion()) {
+//				if (!targetCursor.setCursorPosition(targetCursor.indexOfCurrentMark()).cursorAtWordStart()) {
+//					
+//				}
+//			}
+			
+			// TODO count lentgh of marked region.  Single chars in middle of word should rank 0
+			targetCursor.setNextMarkCurrent();
+		}
+		
+		if (gaps == 0) {
+			rank +=1;
+		}
+		
+		if (targetCursor.setFirstMarkCurrent().indexOfCurrentMark() == 0) 
+			rank += 1;
+		
+		if (gaps > targetCursor.markers().size() / 3) {
+			rank = 0;
+		}
+		
+		return rank;
+	}
 }

@@ -29,7 +29,7 @@ public class ListRankAndSelectorTest {
 		itemList.add(new TestItem("7", "abc def ghi", "ghi"));
 		itemList.add(new TestItem("8", "abc def ghi", "adg"));
 		
-		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking());
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		rankSelectorMultiColumn = new ListRankAndFilter<>(options, filter -> itemList, stringScore::scoreCombination, item -> item.field1);
 	}
 	

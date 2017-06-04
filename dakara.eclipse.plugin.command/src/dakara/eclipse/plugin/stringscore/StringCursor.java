@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 
 public class StringCursor {
-	public final String text;
+	public String text;
 	private int indexOfCursor = 0;
 	private int currentMarker = 0;
 	
@@ -74,6 +74,19 @@ public class StringCursor {
 		return this;
 	}
 	
+	public StringCursor markFillAlphaRangeForward(int charsForward) {
+		final int originalCursorPosition = indexOfCursor;
+		for (int count = 0; count < charsForward; count++) {
+			
+			addMark(indexOfCursor);
+			moveCursorForwardNextAlpha();
+		}
+		
+		indexOfCursor = originalCursorPosition;
+		
+		return this;
+	}
+	
 	public List<Integer> markers() {
 		return markers;
 	}
@@ -122,6 +135,21 @@ public class StringCursor {
 		return count;
 	}
 	
+	public int countAlphabeticCharsBetween(int startIndex, int endIndex) {
+		final int originalCursorPosition = indexOfCursor;
+		indexOfCursor = startIndex + 1;
+		int count = 0;
+		while(indexOfCursor < endIndex) {
+			if (Character.isAlphabetic(text.charAt(indexOfCursor))) {
+				count++;
+			} 
+			indexOfCursor++;
+		}
+		indexOfCursor = originalCursorPosition;
+		
+		return count;
+	}
+	
 	public StringCursor setCurrentMarkToEndOfCurrentMarkedRegion() {
 		if (markerPositionTerminal()) return this;
 		
@@ -130,6 +158,14 @@ public class StringCursor {
 			setNextMarkCurrent();
 		}
 		return this;
+	}
+	
+	public boolean currentMarkIsFirstOfMarkedRegion() {
+		if (markers.size() == 0) return false;
+		if (markerPositionTerminal()) return false;
+		if (currentMarker == 0) return true;
+		// is previous marker's index next to this marker
+		return markers.get(currentMarker - 1) != markers.get(currentMarker) - 1;
 	}
 	
 	public String wordAtCursor() {
@@ -179,8 +215,8 @@ public class StringCursor {
 		return 0;
 	}
 	
-	public StringCursor moveCursorForwardUntil(Function<StringCursor, Boolean> shouldContinue) {
-		while(!shouldContinue.apply(this) && !cursorPositionTerminal()) {
+	public StringCursor moveCursorForwardUntil(Function<StringCursor, Boolean> shouldStop) {
+		while(!shouldStop.apply(this) && !cursorPositionTerminal()) {
 			indexOfCursor++;
 		}
 		return this;
@@ -205,8 +241,73 @@ public class StringCursor {
 		 return this;
 	}
 	
+	public StringCursor moveCursorForwardIndexOfAlphaSequenceWrapAround(String match) {
+		if (indexOfCursor > 0) {
+			moveCursorForwardIndexOfAlphaSequence(match);
+			if (cursorPositionTerminal()) {
+				// we did not find from current until end.  Try again from beginning
+				indexOfCursor = 0;
+				moveCursorForwardIndexOfAlphaSequence(match);
+			}
+		} else {
+			moveCursorForwardIndexOfAlphaSequence(match);
+		}
+		
+		return this;
+	}
+	
+	public StringCursor moveCursorForwardIndexOfAlphaSequence(String match) {
+		
+		 StringCursor matchCursor = new StringCursor(match);
+		 int startOfSequenceIndex = -1;
+		 while(!matchCursor.cursorPositionTerminal()) {
+			 if (matchCursor.indexOfCursor == 0) {
+				 moveCursorForwardIndexOf(matchCursor.currentChar());
+				 startOfSequenceIndex = indexOfCursor;
+				 if (cursorPositionTerminal()) break;				 
+			 } else {
+				 moveCursorForwardNextAlpha();
+				 if (cursorPositionTerminal()) break; 				 
+				 if (currentChar() != matchCursor.currentChar()) {
+					 // next char was not found. try again from the beginning
+					 setCursorPosition(startOfSequenceIndex + 1);
+					 matchCursor.setCursorPosition(0);
+					 continue;
+				 } 				 
+			 }
+			 matchCursor.moveCursorForward();
+		 }
+		 
+		 // We matched all chars if we are at terminal position.  Reset cursor to initial index
+		 if (matchCursor.cursorPositionTerminal()) {
+			 indexOfCursor = startOfSequenceIndex;
+		 } 
+		 
+		 return this;
+	}
+	
+	public StringCursor moveCursorForwardIndexOf(char match) {
+		 indexOfCursor = text.indexOf(match, indexOfCursor);
+		 return this;
+	}
+	
+	public StringCursor moveCursorForwardNextWord() {
+		 moveCursorNextAlphaBoundary();  // end of current word
+		 moveCursorForward(); // char beyond word
+		 moveCursorForwardUntil(cursor -> Character.isAlphabetic(cursor.text.charAt(indexOfCursor))); // move until first char of next word
+		 return this;
+	}
+	
 	public StringCursor moveCursorForward() {
 		 indexOfCursor++;
+		 return this;
+	}
+	
+	public StringCursor moveCursorForwardNextAlpha() {
+		 while(!cursorPositionTerminal()) {
+			 indexOfCursor++;
+			 if (cursorPositionTerminal() || Character.isAlphabetic(text.charAt(indexOfCursor))) break;
+		 }
 		 return this;
 	}
 	
@@ -254,8 +355,16 @@ public class StringCursor {
 		return -1;
 	}
 	
+	public StringCursor maskRegions(List<Integer> maskIndexes) {
+		if (maskIndexes.size() == 0) return this;
+		StringBuilder builder = new StringBuilder(text);
+		maskIndexes.stream().forEach(index -> builder.setCharAt(index, ' '));
+		text = builder.toString();
+		return this;
+	}
+	
 	@Override
 	public String toString() {
-		return text;
+		return text + ":: cursorIndex[" + indexOfCursor + "] markerNumIndex[" + currentMarker + "," + indexOfCurrentMark()+ "] markers " + markers;
 	}
 }

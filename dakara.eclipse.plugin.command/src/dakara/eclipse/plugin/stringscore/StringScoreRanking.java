@@ -73,10 +73,10 @@ public class StringScoreRanking {
 			// TODO count lentgh of marked region.  Single chars in middle of word should rank 0
 			targetCursor.setNextMarkCurrent();
 		}
-		
-		if (gaps == 0) {
-			rank +=1;
-		}
+//		
+//		if (gaps == 0) {
+//			rank +=1;
+//		}
 		
 		if (targetCursor.setFirstMarkCurrent().indexOfCurrentMark() == 0) 
 			rank += 1;

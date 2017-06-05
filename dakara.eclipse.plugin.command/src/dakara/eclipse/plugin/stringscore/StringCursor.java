@@ -195,6 +195,11 @@ public class StringCursor {
 		return !Character.isAlphabetic(peekPreviousChar());
 	}
 	
+	public boolean cursorAtWordEnd() {
+		if (!Character.isAlphabetic(text.charAt(indexOfCursor))) return false;
+		return !Character.isAlphabetic(peekNextChar());
+	}
+	
 	public char currentChar() {
 		if (indexOfCursor < text.length())
 			return text.charAt(indexOfCursor);
@@ -237,7 +242,12 @@ public class StringCursor {
 	}
 	
 	public StringCursor moveCursorIndexOf(String match) {
-		 indexOfCursor = text.indexOf(match);
+		indexOfCursor = text.indexOf(match);
+		return this;
+	}
+	
+	public StringCursor moveCursorForwardIndexOf(String match) {
+		 indexOfCursor = text.indexOf(match, indexOfCursor);
 		 return this;
 	}
 	

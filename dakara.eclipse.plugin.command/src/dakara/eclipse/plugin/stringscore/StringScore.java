@@ -59,6 +59,8 @@ public class StringScore {
 			if (score.rank == 4) return score;  // perfect whole word match
 			
 			Score acronymScore = scoreAsAcronym(match.toLowerCase(), target.toLowerCase());
+			if (acronymScore.rank == 4) return acronymScore; // perfect acronym match;
+			
 			if (acronymScore.rank > score.rank) {
 				score = acronymScore;
 			} 
@@ -152,7 +154,7 @@ public class StringScore {
 		while (!matchCursor.cursorPositionTerminal()) {
 			if (!longestMatchingSequence(matchCursor, targetCursor)) break;
 			
-			if (!targetCursor.cursorAtWordStart() && matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark() == 1) {
+			if (shouldBailOut(targetCursor, matchCursor)) {
 				break; // non contiguous match not at word start.  bail out
 			}
 			
@@ -162,6 +164,9 @@ public class StringScore {
 				matchCursor.addMark(matchCursor.indexOfCursor());
 				matchCursor.setNextMarkCurrent();
 			}
+			
+			// attempt to find earliest match for all matches
+			targetCursor.setCursorPosition(0);
 		}
 		
 		if (targetCursor.markers().size() == match.length()) {
@@ -170,13 +175,24 @@ public class StringScore {
 			return NOT_FOUND_SCORE;
 		}
 	}
+
+	private boolean shouldBailOut(StringCursor targetCursor, StringCursor matchCursor) {
+		// If we are not at the start and selected count less than 2, this is too weak.
+		if (!targetCursor.cursorAtWordStart() && matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark() < 3) return true;
+		// If we are starting at the end of a word, this is a weak match
+		if (targetCursor.cursorAtWordEnd()) return true;
+		
+		return false;
+	}
 	
 	private boolean longestMatchingSequence(StringCursor matchCursor, StringCursor target) {
 		boolean partialMatchExists = false;
 		int lastFoundIndex = -1;
 		while(!matchCursor.cursorPositionTerminal() && !target.cursorPositionTerminal()) {
-			target.moveCursorForwardIndexOfAlphaSequenceWrapAround(matchCursor.text.substring(matchCursor.indexOfCurrentMark(), matchCursor.indexOfCursor() + 1));  // search for alpha sequence
-
+			String remainingPartToMatch = matchCursor.text.substring(matchCursor.indexOfCurrentMark(), matchCursor.indexOfCursor() + 1);
+			//target.moveCursorForwardIndexOfAlphaSequence(remainingPartToMatch);  // search for alpha sequence
+			target.moveCursorForwardIndexOf(remainingPartToMatch);
+			
 			if (!target.cursorPositionTerminal()) matchCursor.moveCursorForward();  // match was found in target, keep advancing match
 			else break; // no match found
 			lastFoundIndex = target.indexOfCursor();  // track last found so target cursor can be set to starting index of sequence

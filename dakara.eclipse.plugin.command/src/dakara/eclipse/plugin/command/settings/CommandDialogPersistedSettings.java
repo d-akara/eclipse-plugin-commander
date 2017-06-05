@@ -1,34 +1,34 @@
 package dakara.eclipse.plugin.command.settings;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Function;
 
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.ui.internal.WorkbenchPlugin;
-import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
-import org.eclipse.ui.internal.quickaccess.QuickAccessProvider;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.gson.Gson;
 
 public class CommandDialogPersistedSettings {
-	private final Map<String, QuickAccessProvider> providersMap = new HashMap<>();
 	private final String ID = "dakara.eclipse.plugin.command";
-	
-	private CommanderSettings commanderSettings = new CommanderSettings(new ArrayList<CommandHistoryEntry>());
+	private final int historyLimit;
+	private final Function<Object, String> historyItemIdResolver;
+	private CommanderSettings commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
 	static final String DIALOG_SETTINGS_KEY = "DIALOG_SETTINGS";
-	
-	public CommandDialogPersistedSettings(QuickAccessProvider[] providers) {
-		for (int i = 0; i < providers.length; i++) {
-			providersMap.put(providers[i].getId(), providers[i]);
-		}
+	// TODO separate history and settings store
+	// TODO keep a recent history of last 100
+	// TODO keep long term history of all items
+	// show 1 most recent always at top
+	// show next 10-20 most frequent
+	// remaining list of long term history
+	public CommandDialogPersistedSettings(int historyLimit, Function<Object, String> historyItemIdResolver) {
+		this.historyLimit = historyLimit;
+		this.historyItemIdResolver = historyItemIdResolver;
 	}
-	
-	public void saveSettings() {
+
+	public CommandDialogPersistedSettings saveSettings() {
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(ID);
 		Gson gson = new Gson();
 		preferences.put(DIALOG_SETTINGS_KEY, gson.toJson(commanderSettings));
@@ -38,58 +38,50 @@ public class CommandDialogPersistedSettings {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return this;
 	}
 
-	public void loadSettings() {
+	public CommandDialogPersistedSettings loadSettings() {
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(ID);
 		Gson gson = new Gson();
 		String keyValue = preferences.get(DIALOG_SETTINGS_KEY, null);
 		if (keyValue != null) {
 			commanderSettings = gson.fromJson(keyValue, CommanderSettings.class );
 		}
+		return this;
+	}
+
+	public List<HistoryEntry> getHistory() {
+		return commanderSettings.entries;
 	}
 	
-	private QuickAccessElement getCommandElementFromProvider(String commandId, String providerId) {
-		QuickAccessProvider quickAccessProvider = (QuickAccessProvider) providersMap.get(providerId);
-		return quickAccessProvider.getElementForId(commandId);
-	}
-	
-	public QuickAccessElement getMostRecentCommandByUserInput(String userInput) {
-		if (userInput == null) return null;
-		for (CommandHistoryEntry entry : commanderSettings.entries) {
-			if (userInput.equals(entry.userInput)) {
-				System.out.println("perfect match found " + userInput);
-				return getCommandElementFromProvider(entry.commandId, entry.providerId);
-			}
-		}
-		return null;
-	}
-	
-	public void addSelectedCommandToHistory(QuickAccessElement element) {
-		CommandHistoryEntry newHistoryEntry = new CommandHistoryEntry(element.getId(), element.getProvider().getId());
-		commanderSettings.entries.remove(newHistoryEntry);
+	public CommandDialogPersistedSettings addToHistory(Object historyItem) {
+		HistoryEntry newHistoryEntry = new HistoryEntry(historyItemIdResolver.apply(historyItem), System.currentTimeMillis());
 		commanderSettings.entries.add(0, newHistoryEntry);
+		if (commanderSettings.entries.size() > historyLimit) {
+			commanderSettings.entries.remove(commanderSettings.entries.size() - 1);
+		}
+		return this;
 	}
 	
 	public static class CommanderSettings {
-		private final List<CommandHistoryEntry> entries;
-		public CommanderSettings(List<CommandHistoryEntry> entries) {
+		private final List<HistoryEntry> entries;
+		public CommanderSettings(List<HistoryEntry> entries) {
 			this.entries = entries;
 		}
 	}
 	
-	public static class CommandHistoryEntry {
+	public static class HistoryEntry {
 		public final String commandId;
-		public final String providerId;
-		public CommandHistoryEntry(String commandId, String providerId) {
+		public final long time;
+		public HistoryEntry(String commandId, long time) {
 			this.commandId = commandId;
-			this.providerId = providerId;
+			this.time = time;
 		}
 		
 		@Override
-		public boolean equals(Object obj) {
-			CommandHistoryEntry otherEntry = (CommandHistoryEntry) obj;
-			return otherEntry.userInput.equals(userInput);
+		public String toString() {
+			return new Date(time) + " : " + commandId;
 		}
 	}
 }

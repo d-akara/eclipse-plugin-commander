@@ -11,10 +11,11 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.gson.Gson;
 
-public class CommandDialogPersistedSettings {
+public class CommandDialogPersistedSettings<T> {
 	private final String ID = "dakara.eclipse.plugin.command";
 	private final int historyLimit;
-	private final Function<Object, String> historyItemIdResolver;
+	private final Function<T, HistoryKey> historyItemIdResolver;
+	private final Function<HistoryKey, T> historyItemResolver;
 	private CommanderSettings commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
 	static final String DIALOG_SETTINGS_KEY = "DIALOG_SETTINGS";
 	// TODO separate history and settings store
@@ -23,12 +24,19 @@ public class CommandDialogPersistedSettings {
 	// show 1 most recent always at top
 	// show next 10-20 most frequent
 	// remaining list of long term history
-	public CommandDialogPersistedSettings(int historyLimit, Function<Object, String> historyItemIdResolver) {
+	// show only history when input field empty
+	//   add all items when no hits in history
+	// alter history item rank so will always be top
+	// remove duplicates from main item list and history
+	// set mode, only history first or combined.  possibly use tab as toggle
+	
+	public CommandDialogPersistedSettings(int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
 		this.historyLimit = historyLimit;
 		this.historyItemIdResolver = historyItemIdResolver;
+		this.historyItemResolver = historyItemResolver;
 	}
 
-	public CommandDialogPersistedSettings saveSettings() {
+	public CommandDialogPersistedSettings<T> saveSettings() {
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(ID);
 		Gson gson = new Gson();
 		preferences.put(DIALOG_SETTINGS_KEY, gson.toJson(commanderSettings));
@@ -41,7 +49,7 @@ public class CommandDialogPersistedSettings {
 		return this;
 	}
 
-	public CommandDialogPersistedSettings loadSettings() {
+	public CommandDialogPersistedSettings<T> loadSettings() {
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(ID);
 		Gson gson = new Gson();
 		String keyValue = preferences.get(DIALOG_SETTINGS_KEY, null);
@@ -55,7 +63,7 @@ public class CommandDialogPersistedSettings {
 		return commanderSettings.entries;
 	}
 	
-	public CommandDialogPersistedSettings addToHistory(Object historyItem) {
+	public CommandDialogPersistedSettings<T> addToHistory(T historyItem) {
 		HistoryEntry newHistoryEntry = new HistoryEntry(historyItemIdResolver.apply(historyItem), System.currentTimeMillis());
 		commanderSettings.entries.add(0, newHistoryEntry);
 		if (commanderSettings.entries.size() > historyLimit) {
@@ -64,19 +72,30 @@ public class CommandDialogPersistedSettings {
 		return this;
 	}
 	
-	public static class CommanderSettings {
+	public class CommanderSettings {
 		private final List<HistoryEntry> entries;
 		public CommanderSettings(List<HistoryEntry> entries) {
 			this.entries = entries;
 		}
 	}
 	
-	public static class HistoryEntry {
-		public final String commandId;
+	public static class HistoryKey {
+		public final String[] keys;
+		public HistoryKey(String ... keys) {
+			this.keys = keys;
+		}
+	}
+	
+	public class HistoryEntry {
+		public final HistoryKey commandId;
 		public final long time;
-		public HistoryEntry(String commandId, long time) {
+		public HistoryEntry(HistoryKey commandId, long time) {
 			this.commandId = commandId;
 			this.time = time;
+		}
+		
+		public T getHistoryItem() {
+			return historyItemResolver.apply(commandId);
 		}
 		
 		@Override

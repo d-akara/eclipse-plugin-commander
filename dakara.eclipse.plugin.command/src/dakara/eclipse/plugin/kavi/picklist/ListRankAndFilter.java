@@ -7,7 +7,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import dakara.eclipse.plugin.stringscore.StringCursor;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 public class ListRankAndFilter<T> {

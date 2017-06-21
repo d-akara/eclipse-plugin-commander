@@ -45,4 +45,12 @@ public class EclipseCommandProvider {
 		}
 		return matchingCommands;
 	}
+	
+	public QuickAccessElement getCommand(String providerId, String commandId) {
+		for (QuickAccessProvider provider : providers) {
+			if (provider.getId().equals(providerId))
+				return provider.getElementForId(commandId);
+		}
+		return null;
+	}
 }

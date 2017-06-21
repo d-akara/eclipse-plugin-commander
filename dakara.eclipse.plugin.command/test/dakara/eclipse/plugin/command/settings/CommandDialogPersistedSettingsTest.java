@@ -1,12 +1,29 @@
 package dakara.eclipse.plugin.command.settings;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import dakara.eclipse.plugin.kavi.picklist.KaviListItem;
+import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.HistoryKey;
 
 public class CommandDialogPersistedSettingsTest {
+	
+	
 	@Test
 	public void verifyHistory() {
-		CommandDialogPersistedSettings settings = new CommandDialogPersistedSettings(10, item -> ((KaviListItem)item).dataItem.toString());
+		CommandDialogPersistedSettings<TestItem> settings = new CommandDialogPersistedSettings<>(10, item -> new HistoryKey(item.field1), historyKey -> new TestItem(historyKey.keys[0], null, null) );
+		settings.addToHistory(new TestItem("one", null, null));
+		Assert.assertEquals("one", settings.getHistory().get(0).getHistoryItem().field1);
 	}
+	
+	private class TestItem {
+		public final String field1;
+		public final String field2;
+		public final String field3;
+		
+		public TestItem(String field1, String field2, String field3) {
+			this.field1 = field1;
+			this.field2 = field2;
+			this.field3 = field3;
+		}
+	}	
 }

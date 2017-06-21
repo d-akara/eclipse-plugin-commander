@@ -108,4 +108,9 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	public void setSortFieldResolver(Function<T, String> sortFieldResolver) {
 		kavaList.setSortFieldResolver(sortFieldResolver);
 	}
+	
+
+	public void setHistoryProvider(Function<T, String> sortFieldResolver) {
+		kavaList.setHistoryProvider(sortFieldResolver);
+	}
 }

@@ -191,6 +191,7 @@ public class StringScore {
 		while(!matchCursor.cursorPositionTerminal() && !target.cursorPositionTerminal()) {
 			String remainingPartToMatch = matchCursor.text.substring(matchCursor.indexOfCurrentMark(), matchCursor.indexOfCursor() + 1);
 			//target.moveCursorForwardIndexOfAlphaSequence(remainingPartToMatch);  // search for alpha sequence
+			// TODO consider repeating to find better match starting at word beginning
 			target.moveCursorForwardIndexOf(remainingPartToMatch);
 			
 			if (!target.cursorPositionTerminal()) matchCursor.moveCursorForward();  // match was found in target, keep advancing match

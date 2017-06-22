@@ -7,6 +7,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
+import dakara.eclipse.plugin.stringscore.RankedItem;
 import dakara.eclipse.plugin.stringscore.StringScore;
 import dakara.eclipse.plugin.stringscore.StringScoreRanking;
 
@@ -15,9 +17,9 @@ public class ListRankAndSelectorTest {
 	@Before
 	public void makeMultiColumnData() {
 		List<ColumnOptions<TestItem>> options = new ArrayList<>();
-		options.add(new ColumnOptions<TestItem>((item, column) -> item.field1, 0));
-		options.add(new ColumnOptions<TestItem>((item, column) -> item.field2, 1));
-		options.add(new ColumnOptions<TestItem>((item, column) -> item.field3, 2));
+		options.add(new ColumnOptions<TestItem>("f1", (item, column) -> item.field1, 0));
+		options.add(new ColumnOptions<TestItem>("f2", (item, column) -> item.field2, 1));
+		options.add(new ColumnOptions<TestItem>("f3", (item, column) -> item.field3, 2));
 		
 		List<TestItem> itemList = new ArrayList<>();
 		itemList.add(new TestItem("1", "one",  "4"));
@@ -36,7 +38,7 @@ public class ListRankAndSelectorTest {
 	@Test
 	public void verifyColumn1Selection() {
 		InputCommand inputCommand = InputCommand.parse("1").get(0);
-		List<KaviListItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
 		Assert.assertEquals("one",  listItems.get(0).dataItem.field2);
 		Assert.assertEquals("four", listItems.get(1).dataItem.field2);
 	}
@@ -44,31 +46,31 @@ public class ListRankAndSelectorTest {
 	@Test
 	public void verifyColumn2Selection2() {
 		InputCommand inputCommand = InputCommand.parse("one").get(0);
-		List<KaviListItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
 		Assert.assertEquals("one", listItems.get(0).dataItem.field2);
 	}
 	
 	@Test
 	public void verifyColumn2OnlySelection() {
 		InputCommand inputCommand = InputCommand.parse("|two").get(0);
-		List<KaviListItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
 		Assert.assertEquals("2", listItems.get(0).dataItem.field1);
 	}
 	
 	@Test
 	public void verifyColumnSelection3() {
 		InputCommand inputCommand = InputCommand.parse("||3").get(0);
-		List<KaviListItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
 		Assert.assertEquals("2", listItems.get(0).dataItem.field1);
 	}
 	
 	@Test
 	public void multipleWordsOutOfOrder() {
 		InputCommand inputCommand = InputCommand.parse("def abc").get(0);
-		List<KaviListItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
-		KaviListItem<TestItem> listItem = listItems.get(0);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		RankedItem<TestItem> listItem = listItems.get(0);
 		Assert.assertEquals("5", listItem.dataItem.field1);
-		Assert.assertEquals(6, (listItem.getColumnScore(1).matches.size()));
+		Assert.assertEquals(6, (listItem.getColumnScore("f2").matches.size()));
 	}
 	
 	private class TestItem {

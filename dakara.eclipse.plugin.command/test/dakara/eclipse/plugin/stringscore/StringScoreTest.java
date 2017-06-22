@@ -116,24 +116,32 @@ public class StringScoreTest {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		Score score = stringScore.scoreAsNonContiguousSequence("defghi", "abc def ghi jklmn mop xyz");
 		Assert.assertEquals(6, score.matches.size());	
-		Assert.assertEquals(3, score.rank);	
+		Assert.assertEquals(2, score.rank);	
 		Assert.assertEquals("defghi", new StringCursor("abc def ghi jklmn mop xyz").setMarkers(score.matches).markersAsString());
 		
 		score = stringScore.scoreAsNonContiguousSequence("ghidef", "abc def ghi jklmn mop xyz");
 		Assert.assertEquals(6, score.matches.size());	
-		Assert.assertEquals(3, score.rank);			
+		Assert.assertEquals(2, score.rank);			
 		
 		score = stringScore.scoreAsNonContiguousSequence("ghidef", "abc def jklmn mop xyz ghi");
 		Assert.assertEquals(6, score.matches.size());	
 		Assert.assertEquals(2, score.rank);			
 		
 		score = stringScore.scoreAsNonContiguousSequence("defghi", "abc defg jklmn mop xyz ghi");
+		Assert.assertEquals(0, score.matches.size());	
+		Assert.assertEquals(-1, score.rank);
+		
+		score = stringScore.scoreAsNonContiguousSequence("deflmn", "abc defg jklmn mop xyz ghi");
 		Assert.assertEquals(6, score.matches.size());	
 		Assert.assertEquals(2, score.rank);			
 		
 		score = stringScore.scoreAsNonContiguousSequence("defghi", "abcd vbe deb def xyz ghi");
 		Assert.assertEquals(6, score.matches.size());	
 		Assert.assertEquals(2, score.rank);			
+
+		score = stringScore.scoreAsNonContiguousSequence("abdexy", "abcd vbe deb def xyz ghi");
+		Assert.assertEquals(6, score.matches.size());	
+		Assert.assertEquals(3, score.rank);			
 	}
 	
 }

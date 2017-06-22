@@ -19,6 +19,8 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableItem;
 
+import dakara.eclipse.plugin.stringscore.RankedItem;
+
 public class KaviListColumns<T> {
 	private final List<ColumnOptions<T>> columnOptions = new ArrayList<>();
 	private final TableViewer tableViewer;
@@ -27,20 +29,20 @@ public class KaviListColumns<T> {
 		this.tableViewer = tableViewer;
 	}
 	
-	public ColumnOptions<T> addColumn(Function<T, String> columnContentFn) {
-		return addColumn((item, columnIndex) -> columnContentFn.apply(item));
+	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
+		return addColumn(columnId, (item, rowIndex) -> columnContentFn.apply(item));
 	}
 	
-	public ColumnOptions<T> addColumn(BiFunction<T, Integer, String> columnContentFn) {
-		final ColumnOptions<T> options = new ColumnOptions<T>(columnContentFn, columnOptions.size());
+	public ColumnOptions<T> addColumn(String columnId, BiFunction<T, Integer, String> columnContentFn) {
+		final ColumnOptions<T> options = new ColumnOptions<T>(columnId, columnContentFn, columnOptions.size());
 		StyledCellLabelProvider labelProvider = new StyledCellLabelProvider(StyledCellLabelProvider.COLORS_ON_SELECTION) {
 			@Override
         	public void update(ViewerCell cell) {
         		// TODO reuse and manage SWT resources
-        		final KaviListItem<T> kaviListItem = applyCellDefaultStyles(options, cell);
-        		resolveCellTextValue(columnContentFn, cell, kaviListItem);
+        		final RankedItem<T> rankedItem = applyCellDefaultStyles(options, cell);
+        		resolveCellTextValue(columnContentFn, cell, rankedItem);
         		if (options.isSearchable())
-        			applyCellScoreMatchStyles(cell, kaviListItem);
+        			applyCellScoreMatchStyles(cell, rankedItem);
                 super.update(cell);
         	}
 		};
@@ -61,13 +63,13 @@ public class KaviListColumns<T> {
     
 	
 	@SuppressWarnings("unchecked")
-	private KaviListItem<T> applyCellDefaultStyles(final ColumnOptions<T> options, ViewerCell cell) {
+	private RankedItem<T> applyCellDefaultStyles(final ColumnOptions<T> options, ViewerCell cell) {
 		cell.setForeground(fromRegistry(options.getFontColor()));
 		cell.setBackground(fromRegistry(options.getBackgroundColor()));
 		Font font = createColumnFont(options, cell);
 		cell.setFont(font);
-		final KaviListItem<T> kaviListItem = (KaviListItem<T>) cell.getElement();
-		return kaviListItem;
+		final RankedItem<T> rankedItem = (RankedItem<T>) cell.getElement();
+		return rankedItem;
 	}
 
 	private Font createColumnFont(final ColumnOptions<T> options, ViewerCell cell) {
@@ -89,11 +91,19 @@ public class KaviListColumns<T> {
 		return color;
 	}
 	
-	private void resolveCellTextValue(BiFunction<T, Integer, String> columnContentFn, ViewerCell cell, final KaviListItem<T> kaviListItem) {
-		cell.setText(columnContentFn.apply(kaviListItem.dataItem, tableViewer.getTable().indexOf((TableItem) cell.getItem())));
+	private void resolveCellTextValue(BiFunction<T, Integer, String> columnContentFn, ViewerCell cell, final RankedItem<T> rankedItem) {
+		cell.setText(columnContentFn.apply(rankedItem.dataItem, tableViewer.getTable().indexOf((TableItem) cell.getItem())));
 	}	
-	private void applyCellScoreMatchStyles(ViewerCell cell, final KaviListItem<T> kaviListItem) {
-		cell.setStyleRanges(createStyles(kaviListItem.getColumnScore(cell.getColumnIndex()).matches));
+	private void applyCellScoreMatchStyles(ViewerCell cell, final RankedItem<T> rankedItem) {
+		cell.setStyleRanges(createStyles(rankedItem.getColumnScore(getColumnIdFromColumnIndex(cell.getColumnIndex())).matches));
+	}
+	
+	private String getColumnIdFromColumnIndex(int columnIndex) {
+		// TODO consider: likely there will never be lots of columns.  Looping is probably optimal here vs a lookup table.
+		for (ColumnOptions options : columnOptions) {
+			if (options.columnIndex == columnIndex) return options.columnId;
+		}
+		throw new IllegalStateException("No matching column index");
 	}
 	
     private StyleRange[] createStyles(List<Integer> matches) {

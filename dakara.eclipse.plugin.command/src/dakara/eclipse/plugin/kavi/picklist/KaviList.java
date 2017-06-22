@@ -31,11 +31,13 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
+import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
+import dakara.eclipse.plugin.stringscore.RankedItem;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 public class KaviList<T> {
 	private final KaviPickListDialog<T> rapidInputPickList;
-	private List<KaviListItem<T>> tableEntries;
+	private List<RankedItem<T>> tableEntries;
 	private Function<InputCommand, List<T>> listContentProvider;
 	private Consumer<T> handleSelectFn;
 	private BiFunction<String, String, Score> rankingStrategy;
@@ -43,7 +45,7 @@ public class KaviList<T> {
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 	private KaviListColumns<T> kaviListColumn;
 	private InputCommand previousInputCommand = null;
-	private Consumer<List<KaviListItem<T>>> changedAction = null;
+	private Consumer<List<RankedItem<T>>> changedAction = null;
 
 	private TableViewer tableViewer;
 	private Table table;
@@ -53,7 +55,7 @@ public class KaviList<T> {
 		this.rapidInputPickList = rapidInputPickList;
 	}
 
-	public void setListContentChangedAction(Consumer<List<KaviListItem<T>>> changedAction) {
+	public void setListContentChangedAction(Consumer<List<RankedItem<T>>> changedAction) {
 		this.changedAction = changedAction;
 	}
 	
@@ -73,8 +75,8 @@ public class KaviList<T> {
 		this.handleSelectFn = handleSelectFn;
 	}
 	
-	public ColumnOptions<T> addColumn(Function<T, String> columnContentFn) {
-		return kaviListColumn.addColumn((item, columnIndex) -> columnContentFn.apply(item));
+	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
+		return kaviListColumn.addColumn(columnId, (item, rowIndex) -> columnContentFn.apply(item));
 	}
 
 	public void refresh(String filter) {
@@ -175,7 +177,7 @@ public class KaviList<T> {
 		table.addListener(SWT.Selection, event-> handleSelection());
 		
 		kaviListColumn = new KaviListColumns<T>(tableViewer);
-        kaviListColumn.addColumn((item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
+        kaviListColumn.addColumn("fastSelect", (item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
         
 		composite.getShell().addListener(SWT.Resize, event -> {
 			if (kaviListColumn.getColumnOptions().size() > 1)
@@ -191,9 +193,9 @@ public class KaviList<T> {
 
 	@SuppressWarnings("unchecked")
 	private void handleSelection() {
-		KaviListItem<T> selectedElement = null;
+		RankedItem<T> selectedElement = null;
 		if (table.getSelectionCount() == 1) {
-			selectedElement = (KaviListItem<T>) table.getSelection()[0].getData();
+			selectedElement = (RankedItem<T>) table.getSelection()[0].getData();
 		}
 		// TODO temp work around until we decide how to auto select
 		// get first item in the list

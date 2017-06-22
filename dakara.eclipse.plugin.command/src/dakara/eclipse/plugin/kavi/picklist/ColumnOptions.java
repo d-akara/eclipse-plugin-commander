@@ -9,7 +9,8 @@ import org.eclipse.swt.widgets.TableColumn;
 
 public class ColumnOptions<T> {
 	private TableColumn column;
-	private int columnIndex;
+	final public int columnIndex;
+	final public String columnId;
 	private boolean searchable = true;
 	private int fontStyle = SWT.NONE;
 	private RGB fontRGB = new RGB(0,0,0);
@@ -17,9 +18,10 @@ public class ColumnOptions<T> {
 	private Font font;
 	private BiFunction<T, Integer, String> columnContentFn;
 	
-	public ColumnOptions(BiFunction<T, Integer, String> columnContentFn, int columnIndex) {
+	public ColumnOptions(String columnId, BiFunction<T, Integer, String> columnContentFn, int columnIndex) {
 		this.columnContentFn = columnContentFn;
 		this.columnIndex = columnIndex;
+		this.columnId = columnId;
 	}
 	
 	public ColumnOptions<T> setColumn(TableColumn column) {

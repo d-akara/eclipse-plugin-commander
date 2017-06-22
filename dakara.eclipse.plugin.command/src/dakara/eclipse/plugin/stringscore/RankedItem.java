@@ -1,24 +1,25 @@
-package dakara.eclipse.plugin.kavi.picklist;
+package dakara.eclipse.plugin.stringscore;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
-public final class KaviListItem<T> {
+public final class RankedItem<T> {
 	public final T dataItem;
-	private LinkedHashMap<Integer, Score> scores = new LinkedHashMap<>();
+	private Map<String, Score> scores = new HashMap<>();
 	private boolean scorePerColumn = false;
-	public KaviListItem(T dataItem) {
+	public RankedItem(T dataItem) {
 		this.dataItem = dataItem;
 	}
 	public T getDataItem() {
 		return dataItem;
 	}
-	public void addScore(Score score, int columnIndex) {
-		scores.put(columnIndex, score);
+	public void addScore(Score score, String fieldId) {
+		scores.put(fieldId, score);
 	}
-	public Score getColumnScore(int columnIndex) {
-		return scores.get(columnIndex);
+	public Score getColumnScore(String fieldId) {
+		return scores.get(fieldId);
 	}
 	
 	public void setScoreModeByColumn(boolean scorePerColumn) {

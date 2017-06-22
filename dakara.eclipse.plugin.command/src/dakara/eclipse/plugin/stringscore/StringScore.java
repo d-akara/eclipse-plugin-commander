@@ -156,6 +156,8 @@ public class StringScore {
 			
 			if (shouldBailOut(targetCursor, matchCursor)) {
 				break; // non contiguous match not at word start.  bail out
+				// TODO - consider that bail out may not be the best behavior.  
+				// optionally we continue but look for better match
 			}
 			
 			targetCursor.markFillAlphaRangeForward(matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark());

@@ -86,8 +86,8 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		kavaList.setSelectionAction(handleSelectFn);
 	}
 
-	public ColumnOptions<T> addColumn(Function<T, String> columnContentFn) {
-		return kavaList.addColumn(columnContentFn);
+	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
+		return kavaList.addColumn(columnId, columnContentFn);
 	}
 
 	public void setListContentProvider(Function<InputCommand, List<T>> listContentProvider) {
@@ -110,7 +110,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	}
 	
 
-	public void setHistoryProvider(Function<T, String> sortFieldResolver) {
-		kavaList.setHistoryProvider(sortFieldResolver);
-	}
+//	public void setHistoryProvider(Function<T, String> sortFieldResolver) {
+//		kavaList.setHistoryProvider(sortFieldResolver);
+//	}
 }

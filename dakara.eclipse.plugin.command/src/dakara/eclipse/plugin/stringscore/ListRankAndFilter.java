@@ -1,4 +1,4 @@
-package dakara.eclipse.plugin.kavi.picklist;
+package dakara.eclipse.plugin.stringscore;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -7,6 +7,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import dakara.eclipse.plugin.kavi.picklist.ColumnOptions;
+import dakara.eclipse.plugin.kavi.picklist.InputCommand;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 public class ListRankAndFilter<T> {
@@ -23,34 +25,34 @@ public class ListRankAndFilter<T> {
 		this.sortFieldResolver = sortFieldResolver;
 	}
 	
-	public List<KaviListItem<T>> rankAndFilter(final InputCommand inputCommand) {
+	public List<RankedItem<T>> rankAndFilter(final InputCommand inputCommand) {
 		return listContentProvider.apply(inputCommand).parallelStream().
-				       map(item -> new KaviListItem<>(item)).
+				       map(item -> new RankedItem<>(item)).
 				       map(item -> setItemRank(item, inputCommand)).
 				       filter(item -> item.totalScore() > 0).
-				       sorted(Comparator.comparing((KaviListItem item) -> item.totalScore()).reversed().thenComparing(item -> sortFieldResolver.apply((T) item.dataItem))).
+				       sorted(Comparator.comparing((RankedItem item) -> item.totalScore()).reversed().thenComparing(item -> sortFieldResolver.apply((T) item.dataItem))).
 					   collect(Collectors.toList());
 	}
 	
-	private KaviListItem<T> setItemRank(KaviListItem<T> listItem, final InputCommand inputCommand) {
-		listItem.setScoreModeByColumn(inputCommand.isColumnFiltering);
+	private RankedItem<T> setItemRank(RankedItem<T> rankedItem, final InputCommand inputCommand) {
+		rankedItem.setScoreModeByColumn(inputCommand.isColumnFiltering);
 		
 		if (inputCommand.isColumnFiltering) {
 			int searchableColumnCount = 0;
 			for (ColumnOptions<T> options : columnOptions) {
-				listItem.addScore(rankingStrategy.apply(inputCommand.getColumnFilter(searchableColumnCount), options.getColumnContentFn().apply(listItem.dataItem, -1)), options.getColumnIndex());
+				rankedItem.addScore(rankingStrategy.apply(inputCommand.getColumnFilter(searchableColumnCount), options.getColumnContentFn().apply(rankedItem.dataItem, -1)), options.columnId);
 				searchableColumnCount++;
 			} 
 		} else {
-			List<Score> scores = scoreAllAsOneColumn(listItem, inputCommand);
+			List<Score> scores = scoreAllAsOneColumn(rankedItem, inputCommand);
 			for (ColumnOptions<T> options : columnOptions) {
-				listItem.addScore(scores.remove(0), options.getColumnIndex());
+				rankedItem.addScore(scores.remove(0), options.columnId);
 			} 
 		}
-		return listItem;
+		return rankedItem;
 	}
 	
-	private List<Score> scoreAllAsOneColumn(KaviListItem<T> listItem, final InputCommand inputCommand) {
+	private List<Score> scoreAllAsOneColumn(RankedItem<T> listItem, final InputCommand inputCommand) {
 		List<Integer> indexesOfColumnBreaks = new ArrayList<>();
 		StringBuilder allColumnText = new StringBuilder();
 		buildAllColumnTextAndIndexes(listItem, indexesOfColumnBreaks, allColumnText);
@@ -68,7 +70,7 @@ public class ListRankAndFilter<T> {
 		}
 	}
 
-	private void buildAllColumnTextAndIndexes(KaviListItem<T> listItem, List<Integer> indexesOfColumnBreaks, StringBuilder allColumnText) {
+	private void buildAllColumnTextAndIndexes(RankedItem<T> listItem, List<Integer> indexesOfColumnBreaks, StringBuilder allColumnText) {
 		for (ColumnOptions<T> column : columnOptions) {
 			if (!column.isSearchable()) continue;
 			

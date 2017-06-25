@@ -1,7 +1,6 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -10,6 +9,7 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.LocalResourceManager;
 import org.eclipse.jface.viewers.ILazyContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.osgi.internal.loader.ModuleClassLoader.GenerationProtectionDomain;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -18,6 +18,7 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
@@ -31,21 +32,19 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
-import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
 import dakara.eclipse.plugin.stringscore.RankedItem;
-import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 public class KaviList<T> {
 	private final KaviPickListDialog<T> rapidInputPickList;
 	private List<RankedItem<T>> tableEntries;
-	private Function<InputCommand, List<T>> listContentProvider;
 	private Consumer<T> handleSelectFn;
-	private BiFunction<String, String, Score> rankingStrategy;
-	private Function<T, String> sortFieldResolver; 
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 	private KaviListColumns<T> kaviListColumn;
 	private InputCommand previousInputCommand = null;
 	private Consumer<List<RankedItem<T>>> changedAction = null;
+	private Function<InputCommand, List<RankedItem<T>>> listContentProvider;
+	private String[] contentModes = new String[]{};
+	private int currentModeIndex = 0;
 
 	private TableViewer tableViewer;
 	private Table table;
@@ -59,16 +58,8 @@ public class KaviList<T> {
 		this.changedAction = changedAction;
 	}
 	
-	public void setListContentProvider(Function<InputCommand, List<T>> listContentProvider) {
+	public void setListContentProvider(Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
 		this.listContentProvider = listContentProvider;
-	}
-	
-	public void setSortFieldResolver(Function<T, String> sortFieldResolver) {
-		this.sortFieldResolver = sortFieldResolver;
-	}
-	
-	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
-		this.rankingStrategy = rankStringFn;
 	}
 	
 	public void setSelectionAction(Consumer<T> handleSelectFn) {
@@ -82,16 +73,15 @@ public class KaviList<T> {
 	public void refresh(String filter) {
 		if (table == null) return;
 		
-		final InputCommand inputCommand = InputCommand.parse(filter).get(0);
+		final InputCommand inputCommand = InputCommand.parse(filter, currentContentMode() ).get(0);
 		if (filterChanged(inputCommand)) {
-			tableEntries = new ListRankAndFilter<T>(kaviListColumn.getColumnOptions(), listContentProvider, rankingStrategy, sortFieldResolver).rankAndFilter(inputCommand);
+			tableEntries = listContentProvider.apply(inputCommand);
 			alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 			table.removeAll();
 			table.setItemCount(tableEntries.size());
 			changedAction.accept(tableEntries);
 		}
 		
-		// TODO option to show all items when no input filter
 		fastSelectItem(inputCommand);
 	}
 	
@@ -101,6 +91,7 @@ public class KaviList<T> {
 			return true;
 		}
 		boolean filterChanged = !inputCommand.isFilterEqual(previousInputCommand);
+		filterChanged |= !inputCommand.contentMode.equals(previousInputCommand.contentMode);
 		previousInputCommand = inputCommand;
 		return filterChanged;
 	}
@@ -238,11 +229,18 @@ public class KaviList<T> {
 				case SWT.ESC:
 					close();
 					break;
+				case SWT.TAB:
+					nextContentMode();
+					table.getDisplay().asyncExec(() -> refresh(( (Text) e.widget).getText()));
+					break;
 				}
 			}
 			@Override
 			public void keyReleased(KeyEvent e) {}
 		});
+		
+		// capture all keys in the input.  So we can capture TAB etc
+		filterText.addTraverseListener((TraverseListener) event -> event.doit = false);
 		
 		filterText.addModifyListener((ModifyListener) event -> refresh(((Text) event.widget).getText()));
 	}
@@ -268,6 +266,21 @@ public class KaviList<T> {
 		} else {
 			table.setSelection(table.getItemCount() - 1);
 		}
+	}
+	
+	private void nextContentMode() {
+		if (contentModes.length <= 1) return;
+		currentModeIndex++;
+		if (currentModeIndex == contentModes.length) currentModeIndex = 0;
+	}
+	
+	private String currentContentMode() {
+		if (contentModes.length == 0) return "";
+		return contentModes[currentModeIndex];
+	}
+	
+	public void setContentModes(String ... modes) {
+		contentModes = modes;
 	}
 	
 	protected void close() {

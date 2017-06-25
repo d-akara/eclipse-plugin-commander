@@ -14,14 +14,9 @@ import dakara.eclipse.plugin.stringscore.StringScoreRanking;
 
 public class ListRankAndSelectorTest {
 	private ListRankAndFilter<TestItem> rankSelectorMultiColumn = null;
+	private List<TestItem> itemList = new ArrayList<>();
 	@Before
 	public void makeMultiColumnData() {
-		List<ColumnOptions<TestItem>> options = new ArrayList<>();
-		options.add(new ColumnOptions<TestItem>("f1", (item, column) -> item.field1, 0));
-		options.add(new ColumnOptions<TestItem>("f2", (item, column) -> item.field2, 1));
-		options.add(new ColumnOptions<TestItem>("f3", (item, column) -> item.field3, 2));
-		
-		List<TestItem> itemList = new ArrayList<>();
 		itemList.add(new TestItem("1", "one",  "4"));
 		itemList.add(new TestItem("2", "two",  "3"));
 		itemList.add(new TestItem("3", "three","2"));
@@ -29,16 +24,19 @@ public class ListRankAndSelectorTest {
 		itemList.add(new TestItem("5", "abc def ghi", "xyz"));
 		itemList.add(new TestItem("6", "abc def ghi", "abc"));
 		itemList.add(new TestItem("7", "abc def ghi", "ghi"));
-		itemList.add(new TestItem("8", "abc def ghi", "adg"));
+		itemList.add(new TestItem("8", "abc def ghi", "adg "));
 		
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
-		rankSelectorMultiColumn = new ListRankAndFilter<>(options, filter -> itemList, stringScore::scoreCombination, item -> item.field1);
+		rankSelectorMultiColumn = new ListRankAndFilter<>(stringScore::scoreCombination, item -> item.field1);
+		rankSelectorMultiColumn.addField("f1", item -> item.field1);
+		rankSelectorMultiColumn.addField("f2", item -> item.field2);
+		rankSelectorMultiColumn.addField("f3", item -> item.field3);
 	}
 	
 	@Test
 	public void verifyColumn1Selection() {
 		InputCommand inputCommand = InputCommand.parse("1").get(0);
-		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("one",  listItems.get(0).dataItem.field2);
 		Assert.assertEquals("four", listItems.get(1).dataItem.field2);
 	}
@@ -46,31 +44,47 @@ public class ListRankAndSelectorTest {
 	@Test
 	public void verifyColumn2Selection2() {
 		InputCommand inputCommand = InputCommand.parse("one").get(0);
-		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("one", listItems.get(0).dataItem.field2);
 	}
 	
 	@Test
 	public void verifyColumn2OnlySelection() {
 		InputCommand inputCommand = InputCommand.parse("|two").get(0);
-		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("2", listItems.get(0).dataItem.field1);
 	}
 	
 	@Test
 	public void verifyColumnSelection3() {
 		InputCommand inputCommand = InputCommand.parse("||3").get(0);
-		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("2", listItems.get(0).dataItem.field1);
 	}
 	
 	@Test
 	public void multipleWordsOutOfOrder() {
 		InputCommand inputCommand = InputCommand.parse("def abc").get(0);
-		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		RankedItem<TestItem> listItem = listItems.get(0);
 		Assert.assertEquals("5", listItem.dataItem.field1);
 		Assert.assertEquals(6, (listItem.getColumnScore("f2").matches.size()));
+	}
+	
+	@Test
+	public void spaceAtEndShouldNotMatch() {
+		InputCommand inputCommand = InputCommand.parse("xyz ").get(0);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		Assert.assertEquals(0, listItems.size());
+	}
+	
+	@Test
+	public void spaceAtEndShouldMatch() {
+		InputCommand inputCommand = InputCommand.parse("adg ").get(0);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		RankedItem<TestItem> listItem = listItems.get(0);
+		Assert.assertEquals("8", listItem.dataItem.field1);
+		Assert.assertEquals(4, (listItem.getColumnScore("f3").matches.size()));
 	}
 	
 	private class TestItem {

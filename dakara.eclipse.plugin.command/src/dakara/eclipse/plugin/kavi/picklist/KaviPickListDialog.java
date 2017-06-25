@@ -1,10 +1,8 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.eclipse.jface.dialogs.PopupDialog;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -19,7 +17,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.internal.progress.ProgressManagerUtil;
 
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
-import dakara.eclipse.plugin.stringscore.StringScore.Score;
+import dakara.eclipse.plugin.stringscore.RankedItem;
 /*
  * TODO - add page numbers to bottom
  * add item count
@@ -63,9 +61,10 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	}
 
 	@Override
-	public boolean close() {
-		// persistedSettings.saveSettings();
-		return super.close();
+	public int open() {
+		int openResult = super.open();
+		kavaList.refresh("");
+		return openResult;
 	}
 
 	@Override
@@ -89,28 +88,13 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
 		return kavaList.addColumn(columnId, columnContentFn);
 	}
-
-	public void setListContentProvider(Function<InputCommand, List<T>> listContentProvider) {
+	
+	public void setListContentProvider(Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
 		kavaList.setListContentProvider(listContentProvider);
 	}
-	
-	public void setListContentProvider(Supplier<List<T>> listContentProvider) {
-		// We can cache the list from a supplier since it doesn't change
-	    List<T> cachedItemsFromProvider = listContentProvider.get();
-		kavaList.setListContentProvider(filter -> cachedItemsFromProvider);
-	}
 
-	public void setListRankingStrategy(BiFunction<String, String, Score> rankStringFn) {
-		kavaList.setListRankingStrategy(rankStringFn);
+	public void setContentModes(String ... modes) {
+		kavaList.setContentModes(modes);
 		
 	}
-
-	public void setSortFieldResolver(Function<T, String> sortFieldResolver) {
-		kavaList.setSortFieldResolver(sortFieldResolver);
-	}
-	
-
-//	public void setHistoryProvider(Function<T, String> sortFieldResolver) {
-//		kavaList.setHistoryProvider(sortFieldResolver);
-//	}
 }

@@ -14,10 +14,10 @@ import com.google.gson.Gson;
 public class CommandDialogPersistedSettings<T> {
 	private final String ID = "dakara.eclipse.plugin.command";
 	private final int historyLimit;
-	private final Function<T, HistoryKey> historyItemIdResolver;
-	private final Function<HistoryKey, T> historyItemResolver;
+	public final Function<T, HistoryKey> historyItemIdResolver;
+	public final Function<HistoryKey, T> historyItemResolver;
 	private CommanderSettings commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
-	static final String DIALOG_SETTINGS_KEY = "DIALOG_SETTINGS";
+	static final String HISTORY_KEY = "HISTORY";
 	// TODO separate history and settings store
 	// TODO keep a recent history of last 100
 	// TODO keep long term history of all items
@@ -39,7 +39,7 @@ public class CommandDialogPersistedSettings<T> {
 	public CommandDialogPersistedSettings<T> saveSettings() {
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(ID);
 		Gson gson = new Gson();
-		preferences.put(DIALOG_SETTINGS_KEY, gson.toJson(commanderSettings));
+		preferences.put(HISTORY_KEY, gson.toJson(commanderSettings));
 		try {
 			preferences.flush();
 		} catch (BackingStoreException e) {
@@ -52,7 +52,7 @@ public class CommandDialogPersistedSettings<T> {
 	public CommandDialogPersistedSettings<T> loadSettings() {
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(ID);
 		Gson gson = new Gson();
-		String keyValue = preferences.get(DIALOG_SETTINGS_KEY, null);
+		String keyValue = preferences.get(HISTORY_KEY, null);
 		if (keyValue != null) {
 			commanderSettings = gson.fromJson(keyValue, CommanderSettings.class );
 		}
@@ -60,7 +60,12 @@ public class CommandDialogPersistedSettings<T> {
 	}
 
 	public List<HistoryEntry> getHistory() {
-		return commanderSettings.entries;
+		List<HistoryEntry> entries = new ArrayList<>();
+		for (HistoryEntry entry : commanderSettings.entries) {
+			entry.historyItem = historyItemResolver.apply(entry.commandId);
+			entries.add(entry);
+		}
+		return entries;
 	}
 	
 	public CommandDialogPersistedSettings<T> addToHistory(T historyItem) {
@@ -89,13 +94,14 @@ public class CommandDialogPersistedSettings<T> {
 	public class HistoryEntry {
 		public final HistoryKey commandId;
 		public final long time;
+		private transient T historyItem;
 		public HistoryEntry(HistoryKey commandId, long time) {
 			this.commandId = commandId;
 			this.time = time;
 		}
 		
 		public T getHistoryItem() {
-			return historyItemResolver.apply(commandId);
+			return historyItem;
 		}
 		
 		@Override

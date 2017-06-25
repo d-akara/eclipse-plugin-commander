@@ -160,7 +160,7 @@ public class StringScore {
 				// optionally we continue but look for better match
 			}
 			
-			targetCursor.markFillAlphaRangeForward(matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark());
+			targetCursor.markFillRangeForward(matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark());
 			targetCursor.maskRegions(targetCursor.markers());
 			if (!matchCursor.cursorPositionTerminal()) {
 				matchCursor.addMark(matchCursor.indexOfCursor());

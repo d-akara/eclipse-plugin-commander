@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableItem;
 
 import dakara.eclipse.plugin.stringscore.RankedItem;
+import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 public class KaviListColumns<T> {
 	private final List<ColumnOptions<T>> columnOptions = new ArrayList<>();
@@ -95,7 +96,10 @@ public class KaviListColumns<T> {
 		cell.setText(columnContentFn.apply(rankedItem.dataItem, tableViewer.getTable().indexOf((TableItem) cell.getItem())));
 	}	
 	private void applyCellScoreMatchStyles(ViewerCell cell, final RankedItem<T> rankedItem) {
-		cell.setStyleRanges(createStyles(rankedItem.getColumnScore(getColumnIdFromColumnIndex(cell.getColumnIndex())).matches));
+		Score score = rankedItem.getColumnScore(getColumnIdFromColumnIndex(cell.getColumnIndex()));
+		if (score != null) {
+			cell.setStyleRanges(createStyles(score.matches));
+		}
 	}
 	
 	private String getColumnIdFromColumnIndex(int columnIndex) {

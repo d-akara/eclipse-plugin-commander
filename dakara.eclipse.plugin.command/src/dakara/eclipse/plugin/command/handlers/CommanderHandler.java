@@ -1,6 +1,10 @@
 package dakara.eclipse.plugin.command.handlers;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -11,8 +15,13 @@ import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 
 import dakara.eclipse.plugin.command.eclipse.internal.EclipseCommandProvider;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
+import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.HistoryEntry;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.HistoryKey;
+import dakara.eclipse.plugin.kavi.picklist.InputCommand;
 import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
+import dakara.eclipse.plugin.stringscore.FieldResolver;
+import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
+import dakara.eclipse.plugin.stringscore.RankedItem;
 import dakara.eclipse.plugin.stringscore.StringScore;
 import dakara.eclipse.plugin.stringscore.StringScoreRanking;
 
@@ -24,22 +33,46 @@ public class CommanderHandler extends AbstractHandler {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 		
 		EclipseCommandProvider eclipseCommandProvider = new EclipseCommandProvider();
+		List<QuickAccessElement> allEclipseCommands = eclipseCommandProvider.getAllCommands();
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		Function<HistoryKey, QuickAccessElement> historyItemResolver = historyKey -> eclipseCommandProvider.getCommand(historyKey.keys[0], historyKey.keys[1]);
-		CommandDialogPersistedSettings historyStore = new CommandDialogPersistedSettings<QuickAccessElement>(10, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
+		CommandDialogPersistedSettings<QuickAccessElement> historyStore = new CommandDialogPersistedSettings<>(10, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
+		historyStore.loadSettings();
+		
+		FieldResolver<QuickAccessElement> labelField = new FieldResolver<>("label",  item -> item.getLabel());
+		FieldResolver<QuickAccessElement> providerField = new FieldResolver<>("provider",  item -> item.getProvider().getName());
+		ListRankAndFilter<QuickAccessElement> listRankAndFilter = new ListRankAndFilter<>(
+																	(filter, columnText) -> stringScore.scoreCombination(filter, columnText),
+																	item -> item.getLabel());
+		
+		listRankAndFilter.addField(labelField.fieldId, labelField.fieldResolver);
+		listRankAndFilter.addField(providerField.fieldId, providerField.fieldResolver);
+		
+		Consumer<QuickAccessElement> resolvedAction = (item) -> {
+			window.getShell().getDisplay().asyncExec(item::execute);
+			historyStore.addToHistory(item);
+			historyStore.saveSettings();
+		};
+		
+		Function<InputCommand, List<RankedItem<QuickAccessElement>>> listContentProvider = (inputCommand) -> {
+			//if (!inputCommand.isColumnFiltering && inputCommand.getColumnFilter(0).length() == 0) {
+			if (inputCommand.contentMode.equals("history")) {
+				List<QuickAccessElement> historyItems = new ArrayList<>();
+				for (HistoryEntry entry : historyStore.getHistory()) {
+					historyItems.add((QuickAccessElement) entry.getHistoryItem());
+				}
+				historyItems = historyItems.stream().distinct().collect(Collectors.toList());
+				return listRankAndFilter.rankAndFilter(inputCommand, historyItems);
+			}
+			return listRankAndFilter.rankAndFilter(inputCommand, allEclipseCommands);
+		};
 		
 		KaviPickListDialog<QuickAccessElement> kaviPickList = new KaviPickListDialog<>();
-		kaviPickList.addColumn("label", item -> item.getLabel()).width(520);
-		kaviPickList.addColumn("provider", item -> item.getProvider().getName()).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
-		kaviPickList.setListContentProvider(eclipseCommandProvider::getAllCommands);
-		//kavaPickList.setListInitialContentProvider();
-		kaviPickList.setListRankingStrategy((filter, columnText) -> stringScore.scoreCombination(filter, columnText));
-		kaviPickList.setSortFieldResolver(item -> item.getLabel());
-		//kaviPickList.setHistoryProvider(historyStore::getHistory);
-		// kaviPickList.setItemIdResolver(item -> item.getId() + ":" + item.getProvider().getId);
-		// set list augmentation
-		// auto select on exact match
-		kaviPickList.setResolvedAction(item -> window.getShell().getDisplay().asyncExec(item::execute));
+		kaviPickList.addColumn(labelField.fieldId, labelField.fieldResolver).width(520);
+		kaviPickList.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
+		kaviPickList.setListContentProvider(listContentProvider);
+		kaviPickList.setContentModes("normal", "history");
+		kaviPickList.setResolvedAction(resolvedAction);
 		kaviPickList.open();
 		
 		return null;

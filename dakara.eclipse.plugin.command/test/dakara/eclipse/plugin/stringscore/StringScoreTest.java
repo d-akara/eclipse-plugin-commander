@@ -141,7 +141,11 @@ public class StringScoreTest {
 
 		score = stringScore.scoreAsNonContiguousSequence("abdexy", "abcd vbe deb def xyz ghi");
 		Assert.assertEquals(6, score.matches.size());	
-		Assert.assertEquals(3, score.rank);			
+		Assert.assertEquals(3, score.rank);	
+		
+		score = stringScore.scoreAsNonContiguousSequence("", "abc");
+		Assert.assertEquals(3, score.matches.size());	
+		Assert.assertEquals(4, score.rank);	
 	}
 	
 }

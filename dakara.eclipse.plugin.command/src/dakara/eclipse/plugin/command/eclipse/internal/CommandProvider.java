@@ -2,6 +2,8 @@ package dakara.eclipse.plugin.command.eclipse.internal;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.commands.Command;
@@ -27,6 +29,7 @@ public class CommandProvider extends QuickAccessProvider {
 	private final IHandlerService handlerService;
 	private final ICommandService commandService;
 	private final EHandlerService ehandlerService;
+	private final Map<String, QuickAccessElement> commandById;
 	
 	public CommandProvider(IEvaluationContext evaluationContext) {
 		this.evaluationContext = evaluationContext;
@@ -34,6 +37,7 @@ public class CommandProvider extends QuickAccessProvider {
 		ehandlerService = context.get(EHandlerService.class);
 		handlerService  = context.get(IHandlerService.class);
 		commandService  = context.get(ICommandService.class);
+		commandById = new HashMap<>();
 	}
 
 	@Override
@@ -43,7 +47,8 @@ public class CommandProvider extends QuickAccessProvider {
 
 	@Override
 	public QuickAccessElement getElementForId(String id) {
-		throw new RuntimeException("Not implemented");
+		getElements();
+		return commandById.get(id);
 	}
 	
 	public QuickAccessElement[] getElements() {
@@ -52,6 +57,7 @@ public class CommandProvider extends QuickAccessProvider {
 			  .filter(ehandlerService::canExecute)
 			  .flatMap(paramCommand -> getCombinations(paramCommand.getCommand()).stream().filter( item -> item != null) )
 			  .map(paramCommand -> new CommandElement((ParameterizedCommand) paramCommand, paramCommand.getId(), this))
+			  .peek(element -> commandById.put(element.getId(), element))
 			  .collect(Collectors.toList())
 			  .toArray(new QuickAccessElement[]{});
 	}

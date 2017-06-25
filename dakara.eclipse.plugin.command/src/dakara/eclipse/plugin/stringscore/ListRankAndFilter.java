@@ -7,26 +7,28 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import dakara.eclipse.plugin.kavi.picklist.ColumnOptions;
 import dakara.eclipse.plugin.kavi.picklist.InputCommand;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 public class ListRankAndFilter<T> {
-	private Function<InputCommand, List<T>> listContentProvider;
-	private List<ColumnOptions<T>> columnOptions;
+	private List<FieldResolver<T>> fields = new ArrayList<>();
 	private BiFunction<String, String, Score> rankingStrategy;
 	private Function<T, String> sortFieldResolver;
 	
-	// TODO make generic list and filter not dependent on any UI
-	public ListRankAndFilter(List<ColumnOptions<T>> columnOptions, Function<InputCommand, List<T>> listContentProvider, BiFunction<String, String, Score> rankingStrategy, Function<T, String> sortFieldResolver) {
-		this.listContentProvider = listContentProvider;
-		this.columnOptions = columnOptions.stream().filter(option -> option.isSearchable()).collect(Collectors.toList());
+	public ListRankAndFilter(BiFunction<String, String, Score> rankingStrategy, Function<T, String> sortFieldResolver) {
 		this.rankingStrategy = rankingStrategy;
 		this.sortFieldResolver = sortFieldResolver;
 	}
 	
-	public List<RankedItem<T>> rankAndFilter(final InputCommand inputCommand) {
-		return listContentProvider.apply(inputCommand).parallelStream().
+	public ListRankAndFilter<T> addField(String fieldId, Function<T, String> fieldResolver) {
+		fields.add(new FieldResolver<>(fieldId, fieldResolver));
+		return this;
+	}
+	
+	public List<RankedItem<T>> rankAndFilter(final InputCommand inputCommand, List<T> items) {
+		if (!inputCommand.isColumnFiltering && inputCommand.getColumnFilter(0).length() == 0) return makeRankedList(items);
+		
+		return items.parallelStream().
 				       map(item -> new RankedItem<>(item)).
 				       map(item -> setItemRank(item, inputCommand)).
 				       filter(item -> item.totalScore() > 0).
@@ -34,19 +36,26 @@ public class ListRankAndFilter<T> {
 					   collect(Collectors.toList());
 	}
 	
+	private List<RankedItem<T>> makeRankedList(List<T> items) {
+		return items.parallelStream().
+	       map(item -> new RankedItem<>(item)).
+	       sorted(Comparator.comparing((RankedItem item) -> item.totalScore()).reversed().thenComparing(item -> sortFieldResolver.apply((T) item.dataItem))).
+		   collect(Collectors.toList());
+	}
+	
 	private RankedItem<T> setItemRank(RankedItem<T> rankedItem, final InputCommand inputCommand) {
 		rankedItem.setScoreModeByColumn(inputCommand.isColumnFiltering);
 		
 		if (inputCommand.isColumnFiltering) {
 			int searchableColumnCount = 0;
-			for (ColumnOptions<T> options : columnOptions) {
-				rankedItem.addScore(rankingStrategy.apply(inputCommand.getColumnFilter(searchableColumnCount), options.getColumnContentFn().apply(rankedItem.dataItem, -1)), options.columnId);
+			for (FieldResolver<T> field : fields) {
+				rankedItem.addScore(rankingStrategy.apply(inputCommand.getColumnFilter(searchableColumnCount), field.fieldResolver.apply(rankedItem.dataItem)), field.fieldId);
 				searchableColumnCount++;
 			} 
 		} else {
 			List<Score> scores = scoreAllAsOneColumn(rankedItem, inputCommand);
-			for (ColumnOptions<T> options : columnOptions) {
-				rankedItem.addScore(scores.remove(0), options.columnId);
+			for (FieldResolver<T> field : fields) {
+				rankedItem.addScore(scores.remove(0), field.fieldId);
 			} 
 		}
 		return rankedItem;
@@ -63,19 +72,23 @@ public class ListRankAndFilter<T> {
 		} else {
 			// There was no match.  Add the empty to score to all columns
 			List<Score> scores = new ArrayList<>();
-			for (ColumnOptions<T> options : columnOptions) {
+			for (FieldResolver<T> field : fields) {
 				scores.add(allColumnScore);
 			} 
 			return scores;
 		}
 	}
 
+	/*
+	 * concatenate all columns together with space separators.
+	 * create list of index's where columns were joined
+	 */
 	private void buildAllColumnTextAndIndexes(RankedItem<T> listItem, List<Integer> indexesOfColumnBreaks, StringBuilder allColumnText) {
-		for (ColumnOptions<T> column : columnOptions) {
-			if (!column.isSearchable()) continue;
-			
-			String columnContent = column.getColumnContentFn().apply(listItem.dataItem, -1);
-			allColumnText.append(columnContent).append(" ");
+		for (int index = 0; index < fields.size(); index++) {
+			FieldResolver<T> column = fields.get(index);
+			String columnContent = column.fieldResolver.apply(listItem.dataItem);
+			allColumnText.append(columnContent);
+			if (index < fields.size() - 1) allColumnText.append(" ");
 			indexesOfColumnBreaks.add(allColumnText.length() - 1);
 		}
 	}	

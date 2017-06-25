@@ -36,7 +36,7 @@ public class CommanderHandler extends AbstractHandler {
 		List<QuickAccessElement> allEclipseCommands = eclipseCommandProvider.getAllCommands();
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		Function<HistoryKey, QuickAccessElement> historyItemResolver = historyKey -> eclipseCommandProvider.getCommand(historyKey.keys[0], historyKey.keys[1]);
-		CommandDialogPersistedSettings<QuickAccessElement> historyStore = new CommandDialogPersistedSettings<>(10, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
+		CommandDialogPersistedSettings<QuickAccessElement> historyStore = new CommandDialogPersistedSettings<>(100, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
 		historyStore.loadSettings();
 		
 		FieldResolver<QuickAccessElement> labelField = new FieldResolver<>("label",  item -> item.getLabel());
@@ -54,17 +54,27 @@ public class CommanderHandler extends AbstractHandler {
 			historyStore.saveSettings();
 		};
 		
+		final List<QuickAccessElement> historyItems = new ArrayList<>();
+		for (HistoryEntry entry : historyStore.getHistory()) {
+			historyItems.add((QuickAccessElement) entry.getHistoryItem());
+		}
+		
 		Function<InputCommand, List<RankedItem<QuickAccessElement>>> listContentProvider = (inputCommand) -> {
-			//if (!inputCommand.isColumnFiltering && inputCommand.getColumnFilter(0).length() == 0) {
+			historyStore.setContentMode(inputCommand.contentMode);
+			
 			if (inputCommand.contentMode.equals("history")) {
-				List<QuickAccessElement> historyItems = new ArrayList<>();
-				for (HistoryEntry entry : historyStore.getHistory()) {
-					historyItems.add((QuickAccessElement) entry.getHistoryItem());
-				}
-				historyItems = historyItems.stream().distinct().collect(Collectors.toList());
-				return listRankAndFilter.rankAndFilter(inputCommand, historyItems);
+
+				List<QuickAccessElement> uniqueHistoryItems = historyItems.stream().distinct().collect(Collectors.toList());
+				List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputCommand, uniqueHistoryItems);
+				if (inputCommand.getColumnFilter(0).length() == 0)
+					return listRankAndFilter.moveItem(filteredList, historyItems.get(0), 0);
+				else return filteredList;
 			}
-			return listRankAndFilter.rankAndFilter(inputCommand, allEclipseCommands);
+			
+			List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputCommand, allEclipseCommands);
+			if ((inputCommand.getColumnFilter(0).length() == 0) && (historyItems.size() > 0))
+				return listRankAndFilter.moveItem(filteredList, historyItems.get(0), 0);
+			else return filteredList;
 		};
 		
 		KaviPickListDialog<QuickAccessElement> kaviPickList = new KaviPickListDialog<>();
@@ -72,6 +82,7 @@ public class CommanderHandler extends AbstractHandler {
 		kaviPickList.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		kaviPickList.setListContentProvider(listContentProvider);
 		kaviPickList.setContentModes("normal", "history");
+		kaviPickList.setContentMode(historyStore.getContentMode());
 		kaviPickList.setResolvedAction(resolvedAction);
 		kaviPickList.open();
 		

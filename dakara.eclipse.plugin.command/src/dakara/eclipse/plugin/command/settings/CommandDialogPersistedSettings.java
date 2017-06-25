@@ -77,8 +77,18 @@ public class CommandDialogPersistedSettings<T> {
 		return this;
 	}
 	
+	public CommandDialogPersistedSettings<T> setContentMode(String mode) {
+		commanderSettings.contentMode = mode;
+		return this;
+	}
+	
+	public String getContentMode() {
+		return commanderSettings.contentMode;
+	}
+	
 	public class CommanderSettings {
 		private final List<HistoryEntry> entries;
+		private String contentMode;
 		public CommanderSettings(List<HistoryEntry> entries) {
 			this.entries = entries;
 		}

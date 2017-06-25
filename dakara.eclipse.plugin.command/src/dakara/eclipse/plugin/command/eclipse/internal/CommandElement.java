@@ -12,12 +12,14 @@ import org.eclipse.ui.statushandlers.StatusManager;
 public class CommandElement extends QuickAccessElement {
 	public static final String separator = " - "; //$NON-NLS-1$
 	private ParameterizedCommand parameterizedCommand;
-	private String id;
+	private final String id;
+	private final int hashCode;
 
 	public CommandElement(ParameterizedCommand command, String id, CommandProvider commandProvider) {
 		super(commandProvider);
 		this.id = id;
 		this.parameterizedCommand = command;
+		hashCode = id.hashCode() ^ getProvider().getId().hashCode();
 	}
 
 	public ParameterizedCommand getParameterizedCommand() {
@@ -35,6 +37,21 @@ public class CommandElement extends QuickAccessElement {
 		return;
 	}
 
+	@Override
+	public int hashCode() {
+		return hashCode;
+	}
+	
+	@Override
+	public boolean equals(Object object) {
+		if (this == object) return true;
+		if (object == null) return false;
+		if (!(object instanceof CommandElement)) return false;
+		CommandElement element = (CommandElement) object;
+		if (!element.id.equals(id)) return false;
+		return (element.getProvider().getId().equals(getProvider().getId()));
+	}
+	
 	@Override
 	public String getId() {
 		return id;

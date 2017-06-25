@@ -16,7 +16,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.internal.progress.ProgressManagerUtil;
 
-import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 /*
  * TODO - add page numbers to bottom
@@ -25,24 +24,21 @@ import dakara.eclipse.plugin.stringscore.RankedItem;
  */
 @SuppressWarnings("restriction")
 public class KaviPickListDialog<T> extends PopupDialog {
-	private CommandDialogPersistedSettings persistedSettings;
-	private KaviList<T> kavaList;
+	private KaviList<T> kaviList;
 	private Text listFilterInputControl;
 
 	public KaviPickListDialog() {
 		super(ProgressManagerUtil.getDefaultParent(), SWT.RESIZE, true, true, false, true, true, null, "Central Command");
-		// persistedSettings = new CommandDialogPersistedSettings();
-		kavaList = new KaviList<T>(KaviPickListDialog.this);
-		kavaList.setListContentChangedAction(list -> setInfoText("items: " +list.size()));
+		kaviList = new KaviList<T>(KaviPickListDialog.this);
+		kaviList.setListContentChangedAction(list -> setInfoText("mode: " + kaviList.currentContentMode() + " / items: " +list.size()));
 		create();
-		// persistedSettings.loadSettings();
 	}
 
 	@Override
 	protected Control createTitleControl(Composite parent) {
 		listFilterInputControl = new Text(parent, SWT.NONE);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(listFilterInputControl);
-		kavaList.bindInputField(listFilterInputControl);
+		kaviList.bindInputField(listFilterInputControl);
 		return listFilterInputControl;
 	}
 
@@ -51,7 +47,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		Composite composite = (Composite) super.createDialogArea(parent);
 		boolean isWin32 = Util.isWindows();
 		GridLayoutFactory.fillDefaults().extendedMargins(isWin32 ? 0 : 3, 3, 2, 2).applyTo(composite);
-		kavaList.initialize(composite, getDefaultOrientation());
+		kaviList.initialize(composite, getDefaultOrientation());
 		return composite;
 	}
 
@@ -63,13 +59,13 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	@Override
 	public int open() {
 		int openResult = super.open();
-		kavaList.refresh("");
+		kaviList.refresh("");
 		return openResult;
 	}
 
 	@Override
 	protected Point getDefaultSize() {
-		return new Point(kavaList.getTotalColumnWidth(), 400);
+		return new Point(kaviList.getTotalColumnWidth(), 400);
 	}
 	
 	@Override
@@ -82,19 +78,22 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	}
 
 	public void setResolvedAction(Consumer<T> handleSelectFn) {
-		kavaList.setSelectionAction(handleSelectFn);
+		kaviList.setSelectionAction(handleSelectFn);
 	}
 
 	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
-		return kavaList.addColumn(columnId, columnContentFn);
+		return kaviList.addColumn(columnId, columnContentFn);
 	}
 	
 	public void setListContentProvider(Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
-		kavaList.setListContentProvider(listContentProvider);
+		kaviList.setListContentProvider(listContentProvider);
 	}
 
 	public void setContentModes(String ... modes) {
-		kavaList.setContentModes(modes);
-		
+		kaviList.setContentModes(modes);	
+	}
+	
+	public void setContentMode(String mode) {
+		kaviList.setContentMode(mode);
 	}
 }

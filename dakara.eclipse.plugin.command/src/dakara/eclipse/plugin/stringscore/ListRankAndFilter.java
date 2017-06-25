@@ -36,6 +36,12 @@ public class ListRankAndFilter<T> {
 					   collect(Collectors.toList());
 	}
 	
+	public List<RankedItem<T>> moveItem(List<RankedItem<T>> itemList, T item, int order) {
+		List<RankedItem<T>> filteredList = itemList.stream().filter(listItem -> !listItem.getDataItem().equals(item)).collect(Collectors.toList());
+		filteredList.add(order, new RankedItem<T>(item));
+		return filteredList;
+	}
+	
 	private List<RankedItem<T>> makeRankedList(List<T> items) {
 		return items.parallelStream().
 	       map(item -> new RankedItem<>(item)).

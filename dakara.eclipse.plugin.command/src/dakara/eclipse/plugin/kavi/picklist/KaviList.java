@@ -9,7 +9,6 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.LocalResourceManager;
 import org.eclipse.jface.viewers.ILazyContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.osgi.internal.loader.ModuleClassLoader.GenerationProtectionDomain;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -274,9 +273,19 @@ public class KaviList<T> {
 		if (currentModeIndex == contentModes.length) currentModeIndex = 0;
 	}
 	
-	private String currentContentMode() {
+	public String currentContentMode() {
 		if (contentModes.length == 0) return "";
 		return contentModes[currentModeIndex];
+	}
+	
+	public void setContentMode(String mode) {
+		if (contentModes.length == 0 || mode == null) return;
+		for (int contentIndex = 0; contentIndex < contentModes.length; contentIndex++) {
+			if (mode.equals(contentModes[contentIndex])) {
+				currentModeIndex = contentIndex;
+				break;
+			}
+		}
 	}
 	
 	public void setContentModes(String ... modes) {

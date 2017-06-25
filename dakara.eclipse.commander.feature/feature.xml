@@ -2,7 +2,7 @@
 <feature
       id="dakara.eclipse.commander.feature"
       label="Commander Feature"
-      version="1.0.1">
+      version="1.0.2">
 
    <description url="http://www.example.com/description">
       Commander command pallete.

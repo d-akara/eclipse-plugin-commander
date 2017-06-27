@@ -62,8 +62,15 @@ public class CommandDialogPersistedSettings<T> {
 	public List<HistoryEntry> getHistory() {
 		List<HistoryEntry> entries = new ArrayList<>();
 		for (HistoryEntry entry : commanderSettings.entries) {
-			entry.historyItem = historyItemResolver.apply(entry.commandId);
-			entries.add(entry);
+			try {
+				entry.historyItem = historyItemResolver.apply(entry.commandId);
+				if (entry.historyItem != null)
+					entries.add(entry);
+			} catch (Exception e) {
+				// TODO - how to report errors to eclipse error log
+				System.err.println("unable to restore " + entry.commandId + " due to " + e.getMessage());
+				e.printStackTrace();
+			}
 		}
 		return entries;
 	}

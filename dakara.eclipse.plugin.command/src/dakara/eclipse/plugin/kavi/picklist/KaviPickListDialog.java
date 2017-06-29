@@ -62,7 +62,24 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		kaviList.refresh("");
 		return openResult;
 	}
+	
+	public void hide() {
+		getShell().setVisible(false);
+	}
 
+	public void show() {
+		listFilterInputControl.setText("");
+		getShell().setVisible(true);
+		listFilterInputControl.setFocus();
+	}
+	
+	@Override
+	public boolean close() {
+		// This is to prevent workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=152010
+		// closing when we hide the dialog
+		return false;
+	}
+	
 	@Override
 	protected Point getDefaultSize() {
 		return new Point(kaviList.getTotalColumnWidth(), 400);

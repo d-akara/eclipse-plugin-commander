@@ -14,6 +14,9 @@ import com.google.gson.Gson;
 public class CommandDialogPersistedSettings<T> {
 	private final String ID = "dakara.eclipse.plugin.command";
 	private final int historyLimit;
+	private List<HistoryEntry> currentEntries = new ArrayList<>();
+	private boolean historyChangedSinceCheck = false;
+	
 	public final Function<T, HistoryKey> historyItemIdResolver;
 	public final Function<HistoryKey, T> historyItemResolver;
 	private CommanderSettings commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
@@ -59,23 +62,34 @@ public class CommandDialogPersistedSettings<T> {
 		return this;
 	}
 
+	private void checkAndClearOnChanged() {
+		if (historyChangedSinceCheck) {
+			currentEntries.clear();
+		}
+		historyChangedSinceCheck = false;
+	}
+	
 	public List<HistoryEntry> getHistory() {
-		List<HistoryEntry> entries = new ArrayList<>();
+		checkAndClearOnChanged();
+		
+		if (!currentEntries.isEmpty()) return currentEntries;
+		
 		for (HistoryEntry entry : commanderSettings.entries) {
 			try {
 				entry.historyItem = historyItemResolver.apply(entry.commandId);
 				if (entry.historyItem != null)
-					entries.add(entry);
+					currentEntries.add(entry);
 			} catch (Exception e) {
 				// TODO - how to report errors to eclipse error log
 				System.err.println("unable to restore " + entry.commandId + " due to " + e.getMessage());
 				e.printStackTrace();
 			}
 		}
-		return entries;
+		return currentEntries;
 	}
 	
 	public CommandDialogPersistedSettings<T> addToHistory(T historyItem) {
+		historyChangedSinceCheck = true;
 		HistoryEntry newHistoryEntry = new HistoryEntry(historyItemIdResolver.apply(historyItem), System.currentTimeMillis());
 		commanderSettings.entries.add(0, newHistoryEntry);
 		if (commanderSettings.entries.size() > historyLimit) {

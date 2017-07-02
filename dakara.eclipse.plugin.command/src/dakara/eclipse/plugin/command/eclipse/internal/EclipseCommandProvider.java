@@ -45,6 +45,7 @@ public class EclipseCommandProvider {
 		providers.add(new PreferenceProvider());
 		providers.add(new PropertiesProvider());
 		providers.add(new WizardProvider());
+		providers.add(new LaunchProvider());
 		
 		getAllCommands();
 		

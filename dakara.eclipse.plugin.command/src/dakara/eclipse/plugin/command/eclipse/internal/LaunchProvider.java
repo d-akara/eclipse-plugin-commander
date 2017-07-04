@@ -38,7 +38,7 @@ public class LaunchProvider extends QuickAccessProvider {
 		try {
 			ILaunchConfiguration[] launchConfigurations = DebugPlugin.getDefault().getLaunchManager().getLaunchConfigurations();
 			for (ILaunchConfiguration configuration : launchConfigurations) {
-				elements.add(new LauncherElement(this, configuration.getMemento(), configuration.getName()));
+				elements.add(new LauncherElement(this, configuration.getMemento(), configuration.getName(), configuration.getType().getName()));
 			}
 		} catch (CoreException e) {
 			// TODO Auto-generated catch block
@@ -59,7 +59,13 @@ public class LaunchProvider extends QuickAccessProvider {
 	
 	@Override
 	public QuickAccessElement getElementForId(String id) {
-		// TODO Auto-generated method stub
+		try {
+			ILaunchConfiguration configuration = DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(id);
+			return new LauncherElement(this, configuration.getMemento(), configuration.getName(), configuration.getType().getName());
+		} catch (CoreException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return null;
 	}
 

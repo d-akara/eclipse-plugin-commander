@@ -144,8 +144,8 @@ public class StringScoreTest {
 		Assert.assertEquals(3, score.rank);	
 		
 		score = stringScore.scoreAsNonContiguousSequence("", "abc");
-		Assert.assertEquals(3, score.matches.size());	
-		Assert.assertEquals(4, score.rank);	
+		Assert.assertEquals(0, score.matches.size());	
+		Assert.assertEquals(0, score.rank);	
 	}
 	
 }

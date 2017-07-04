@@ -5,17 +5,19 @@ import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 
 public class LauncherElement extends QuickAccessElement {
 	private final String name;
+	private final String typeName;
 	private final String id;
 	
-	public LauncherElement(LaunchProvider provider, String id, String name) {
+	public LauncherElement(LaunchProvider provider, String id, String name, String typeName) {
 		super(provider);
 		this.id = id;
 		this.name = name;
+		this.typeName = typeName;
 	}
 	
 	@Override
 	public String getLabel() {
-		return name;
+		return "Launch - " + typeName + ": " + name;
 	}
 
 	@Override
@@ -34,5 +36,15 @@ public class LauncherElement extends QuickAccessElement {
 		LaunchProvider provider = (LaunchProvider) getProvider();
 		provider.execute(this);
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return id.equals(obj);
+	}
 
+	@Override
+	public int hashCode() {
+		return id.hashCode();
+	}
+	
 }

@@ -12,10 +12,14 @@
    </extension>
    -->
    
-    <extension
-         point="org.eclipse.ui.commands">
+    <extension point="org.eclipse.ui.commands">
+      <category
+            name="Dakara"
+            id="dakara.eclipse.plugin.category">
+      </category>    
       <command
             name="Commander"
+            categoryId="dakara.eclipse.plugin.category"
             id="dakara.handler.commander">
       </command>
    </extension>  

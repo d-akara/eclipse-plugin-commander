@@ -44,6 +44,7 @@ public class KaviList<T> {
 	private Function<InputCommand, List<RankedItem<T>>> listContentProvider;
 	private String[] contentModes = new String[]{};
 	private int currentModeIndex = 0;
+	private boolean showAllWhenNoFilter = true;
 
 	private TableViewer tableViewer;
 	private Table table;
@@ -68,9 +69,21 @@ public class KaviList<T> {
 	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
 		return kaviListColumn.addColumn(columnId, (item, rowIndex) -> columnContentFn.apply(item));
 	}
+	
+	public void setShowAllWhenNoFilter(boolean showAllWhenNoFilter) {
+		this.showAllWhenNoFilter = showAllWhenNoFilter;
+	}
 
 	public void refresh(String filter) {
 		if (table == null) return;
+		
+		if (!showAllWhenNoFilter && filter.length() == 0) {
+			table.removeAll();
+			table.setItemCount(0);
+			tableEntries.clear();
+			previousInputCommand = null;
+			return;
+		}
 		
 		final InputCommand inputCommand = InputCommand.parse(filter, currentContentMode() ).get(0);
 		if (filterChanged(inputCommand)) {
@@ -170,8 +183,10 @@ public class KaviList<T> {
         kaviListColumn.addColumn("fastSelect", (item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
         
 		composite.getShell().addListener(SWT.Resize, event -> {
-			if (kaviListColumn.getColumnOptions().size() > 1)
-				kaviListColumn.getColumnOptions().get(1).width(composite.getShell().getSize().x - 110);	// TODO compute size
+			if (kaviListColumn.getColumnOptions().size() > 1) {
+				int widthRightOfFirstColumn = getTotalColumnWidth() - kaviListColumn.getColumnOptions().get(1).width() + 25;
+				kaviListColumn.getColumnOptions().get(1).width(composite.getShell().getSize().x - widthRightOfFirstColumn);	// TODO compute size
+			}
 		});
 	}
 	

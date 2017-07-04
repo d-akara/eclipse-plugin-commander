@@ -70,12 +70,13 @@ public class FinderHandler extends AbstractHandler {
 		FieldResolver<ResourceItem> projectResolver = new FieldResolver<>("project", resource -> resource.project);
 		
 		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
-		finder.addColumn(nameResolver.fieldId, nameResolver.fieldResolver).width(100);
+		finder.addColumn(nameResolver.fieldId, nameResolver.fieldResolver).width(200);
 		finder.addColumn(projectResolver.fieldId, projectResolver.fieldResolver).width(200);
 		finder.addColumn(pathResolver.fieldId, pathResolver.fieldResolver).width(300).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		finder.setListContentProvider(listContentProvider(listRankAndFilter(nameResolver, pathResolver), files));
+		finder.setListContentProvider(listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), files));
 		finder.setResolvedAction(resourceItem -> openFile(workbenchPage, workspace, resourceItem));
+		finder.setShowAllWhenNoFilter(false);
 		finder.open();	
 		return null;
 	}
@@ -96,13 +97,14 @@ public class FinderHandler extends AbstractHandler {
 		};
 	}
 	
-	public static ListRankAndFilter<ResourceItem> listRankAndFilter(FieldResolver<ResourceItem> nameField, FieldResolver<ResourceItem> pathField) {
+	public static ListRankAndFilter<ResourceItem> listRankAndFilter(FieldResolver<ResourceItem> nameField, FieldResolver<ResourceItem> pathField, FieldResolver<ResourceItem> projectField) {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		ListRankAndFilter<ResourceItem> listRankAndFilter = new ListRankAndFilter<>(
 																	(filter, columnText) -> stringScore.scoreCombination(filter, columnText),
 																	nameField.fieldResolver);
 		
 		listRankAndFilter.addField(nameField.fieldId, nameField.fieldResolver);
+		listRankAndFilter.addField(projectField.fieldId, projectField.fieldResolver);
 		listRankAndFilter.addField(pathField.fieldId, pathField.fieldResolver);
 		return listRankAndFilter;
 	}

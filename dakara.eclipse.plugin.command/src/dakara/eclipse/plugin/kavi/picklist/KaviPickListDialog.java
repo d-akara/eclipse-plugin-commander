@@ -113,4 +113,8 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	public void setContentMode(String mode) {
 		kaviList.setContentMode(mode);
 	}
+	
+	public void setShowAllWhenNoFilter(boolean showAll) {
+		kaviList.setShowAllWhenNoFilter(showAll);
+	}
 }

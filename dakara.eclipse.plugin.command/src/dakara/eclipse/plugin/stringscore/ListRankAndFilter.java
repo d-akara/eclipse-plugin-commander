@@ -104,20 +104,17 @@ public class ListRankAndFilter<T> {
 		List<Integer> matches = new ArrayList<>();
 		int offset = 0;
 		
-		for (int index = 0; index < originalText.length(); index++) {
-			if (allColumnScore.matches.size() > 0 && index == allColumnScore.matches.get(0)) {
-				allColumnScore.matches.remove(0);
-				matches.add(index - offset);
+		for (Integer endOfColumnIndex : indexesOfColumnBreaks) {
+			for (int index = offset; index <= endOfColumnIndex.intValue(); index++) {
+				if (allColumnScore.matches.size() > 0 && index == allColumnScore.matches.get(0)) {
+					allColumnScore.matches.remove(0);
+					matches.add(index - offset);
+				}
 			}
-			
-			if (index == indexesOfColumnBreaks.get(0) || index == originalText.length() - 1) {
-				indexesOfColumnBreaks.remove(0);
-				scores.add(new Score(allColumnScore.rank, matches));
-				matches = new ArrayList<>();
-				offset += index + 1;
-			}
-		}
-		
+			scores.add(new Score(allColumnScore.rank, matches));
+			matches = new ArrayList<>();
+			offset = endOfColumnIndex + 1;
+		}		
 		return scores;
 	}
 }

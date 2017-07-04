@@ -29,7 +29,7 @@ public final class RankedItem<T> {
 	public int totalScore() {
 		if (scorePerColumn) {
 			if (scores.values().stream().mapToInt(score -> score.rank).anyMatch(rank -> rank == 0)) return 0;
-			return scores.values().stream().mapToInt(score -> score.rank).sum();
+			return scores.values().stream().mapToInt(score -> score.rank).filter(rank -> rank >= 0).sum();
 		}
 		
 		return scores.values().stream().mapToInt(score -> score.rank).sum();

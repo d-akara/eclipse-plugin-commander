@@ -6,6 +6,7 @@ import org.junit.runners.Suite;
 import dakara.eclipse.plugin.baseconverter.BaseAlpha26ConverterTest;
 import dakara.eclipse.plugin.kavi.picklist.InputCommandTest;
 import dakara.eclipse.plugin.kavi.picklist.ListRankAndSelectorTest;
+import dakara.eclipse.plugin.kavi.picklist.ListRankAndSelectorTest2;
 import dakara.eclipse.plugin.stringscore.StringCursorTest;
 import dakara.eclipse.plugin.stringscore.StringScoreTest;
 
@@ -14,6 +15,7 @@ import dakara.eclipse.plugin.stringscore.StringScoreTest;
 	StringCursorTest.class,
 	StringScoreTest.class,
 	ListRankAndSelectorTest.class,
+	ListRankAndSelectorTest2.class,
 	InputCommandTest.class,
 	BaseAlpha26ConverterTest.class
 })

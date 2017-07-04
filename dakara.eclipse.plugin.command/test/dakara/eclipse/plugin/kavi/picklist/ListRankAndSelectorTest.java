@@ -25,6 +25,8 @@ public class ListRankAndSelectorTest {
 		itemList.add(new TestItem("6", "abc def ghi", "abc"));
 		itemList.add(new TestItem("7", "abc def ghi", "ghi"));
 		itemList.add(new TestItem("8", "abc def ghi", "adg "));
+		itemList.add(new TestItem("9", null,			 ""));
+		itemList.add(new TestItem("0", "",			 ""));
 		
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		rankSelectorMultiColumn = new ListRankAndFilter<>(stringScore::scoreCombination, item -> item.field1);
@@ -85,6 +87,17 @@ public class ListRankAndSelectorTest {
 		RankedItem<TestItem> listItem = listItems.get(0);
 		Assert.assertEquals("8", listItem.dataItem.field1);
 		Assert.assertEquals(4, (listItem.getColumnScore("f3").matches.size()));
+	}
+	
+	@Test
+	public void findMatchTrailingEmptyColumns() {
+		InputCommand inputCommand = InputCommand.parse("0").get(0);
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		RankedItem<TestItem> listItem = listItems.get(0);
+		Assert.assertEquals("0", listItem.dataItem.field1);
+		Assert.assertEquals(0, (listItem.getColumnScore("f3").matches.size()));
+		Assert.assertEquals(0, (listItem.getColumnScore("f2").matches.size()));
+		Assert.assertEquals(1, (listItem.getColumnScore("f1").matches.size()));
 	}
 	
 	private class TestItem {

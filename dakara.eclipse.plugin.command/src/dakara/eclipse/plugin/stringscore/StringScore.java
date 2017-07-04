@@ -50,7 +50,7 @@ public class StringScore {
 	}
 	
 	public Score scoreCombination(String match, String target) {
-		if (match.length() == 0) return NOT_FOUND_SCORE;
+		if ((match.length() == 0) || (target == null) || (target.length() == 0)) return NOT_FOUND_SCORE;
 		
 		final String[] words = splitWords(match);
 		Score score;

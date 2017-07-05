@@ -26,13 +26,10 @@ import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
 import dakara.eclipse.plugin.stringscore.RankedItem;
-import dakara.eclipse.plugin.stringscore.StringScore;
-import dakara.eclipse.plugin.stringscore.StringScoreRanking;
 
 /**
- * Our sample handler extends AbstractHandler, an IHandler base class.
- * @see org.eclipse.core.commands.IHandler
- * @see org.eclipse.core.commands.AbstractHandler
+ * TODO - types - org.eclipse.jdt.internal.ui.dialogs.FilteredTypesSelectionDialog.TypeSearchRequestor
+ * org.eclipse.jdt.core.search.TypeNameMatchRequestor
  */
 public class FinderHandler extends AbstractHandler {
 
@@ -40,6 +37,25 @@ public class FinderHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchPage workbenchPage = HandlerUtil.getActiveWorkbenchWindowChecked(event).getActivePage();
 		IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
+		List<ResourceItem> files = collectAllWorkspaceFiles(workspace);	
+		
+		FieldResolver<ResourceItem> nameResolver    = new FieldResolver<>("name",    resource -> resource.name);
+		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> resource.path);
+		FieldResolver<ResourceItem> projectResolver = new FieldResolver<>("project", resource -> resource.project);
+		
+		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
+		finder.addColumn(nameResolver.fieldId, nameResolver.fieldResolver).width(200);
+		finder.addColumn(projectResolver.fieldId, projectResolver.fieldResolver).width(200).fontColor(155, 103, 4);
+		finder.addColumn(pathResolver.fieldId, pathResolver.fieldResolver).width(300).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
+		
+		finder.setListContentProvider(listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), files));
+		finder.setResolvedAction(resourceItem -> openFile(workbenchPage, workspace, resourceItem));
+		finder.setShowAllWhenNoFilter(false);
+		finder.open();	
+		return null;
+	}
+
+	private List<ResourceItem> collectAllWorkspaceFiles(IWorkspaceRoot workspace) {
 		List<ResourceItem> files = new ArrayList<>();
 		
 		IResourceProxyVisitor visitor = new IResourceProxyVisitor() {
@@ -63,22 +79,8 @@ public class FinderHandler extends AbstractHandler {
 			}
 		} catch (CoreException e) {
 			throw new RuntimeException(e);
-		}	
-		
-		FieldResolver<ResourceItem> nameResolver = new FieldResolver<>("name", resource -> resource.name);
-		FieldResolver<ResourceItem> pathResolver = new FieldResolver<>("path", resource -> resource.path);
-		FieldResolver<ResourceItem> projectResolver = new FieldResolver<>("project", resource -> resource.project);
-		
-		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
-		finder.addColumn(nameResolver.fieldId, nameResolver.fieldResolver).width(200);
-		finder.addColumn(projectResolver.fieldId, projectResolver.fieldResolver).width(200);
-		finder.addColumn(pathResolver.fieldId, pathResolver.fieldResolver).width(300).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
-		
-		finder.setListContentProvider(listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), files));
-		finder.setResolvedAction(resourceItem -> openFile(workbenchPage, workspace, resourceItem));
-		finder.setShowAllWhenNoFilter(false);
-		finder.open();	
-		return null;
+		}
+		return files;
 	}
 	
 	public static void openFile(IWorkbenchPage workbenchPage, IWorkspaceRoot workspace, ResourceItem resourceItem) {
@@ -98,11 +100,7 @@ public class FinderHandler extends AbstractHandler {
 	}
 	
 	public static ListRankAndFilter<ResourceItem> listRankAndFilter(FieldResolver<ResourceItem> nameField, FieldResolver<ResourceItem> pathField, FieldResolver<ResourceItem> projectField) {
-		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
-		ListRankAndFilter<ResourceItem> listRankAndFilter = new ListRankAndFilter<>(
-																	(filter, columnText) -> stringScore.scoreCombination(filter, columnText),
-																	nameField.fieldResolver);
-		
+		ListRankAndFilter<ResourceItem> listRankAndFilter = ListRankAndFilter.make(nameField.fieldResolver);
 		listRankAndFilter.addField(nameField.fieldId, nameField.fieldResolver);
 		listRankAndFilter.addField(projectField.fieldId, projectField.fieldResolver);
 		listRankAndFilter.addField(pathField.fieldId, pathField.fieldResolver);

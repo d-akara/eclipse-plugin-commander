@@ -1,13 +1,11 @@
 package dakara.eclipse.plugin.command.handlers;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
@@ -15,11 +13,9 @@ import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 import dakara.eclipse.plugin.command.eclipse.internal.EclipseCommandProvider;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.HistoryKey;
-import dakara.eclipse.plugin.kavi.picklist.InputCommand;
 import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
-import dakara.eclipse.plugin.stringscore.RankedItem;
 
 
 @SuppressWarnings("restriction")
@@ -64,7 +60,7 @@ public class CommanderHandler extends AbstractHandler {
 //		kaviPickList.addChoice("commander initial mode:")
 //					.addCommand("set history", (selectedItems) -> historyStore.remove(selectedItems))
 //		            .addCommand("set normal", (selectedItems) -> historyStore.remove(selectedItems));
-		kaviPickList.setContentModes("normal", "history");
+		kaviPickList.setContentModes("discovery", "recall");
 		kaviPickList.setContentMode(historyStore.getContentMode());
 		kaviPickList.setResolvedAction(resolvedAction(display, historyStore));
 		kaviPickList.open();	

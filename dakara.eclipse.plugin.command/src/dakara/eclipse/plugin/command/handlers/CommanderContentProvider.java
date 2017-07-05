@@ -14,8 +14,6 @@ import dakara.eclipse.plugin.kavi.picklist.InputCommand;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
 import dakara.eclipse.plugin.stringscore.RankedItem;
-import dakara.eclipse.plugin.stringscore.StringScore;
-import dakara.eclipse.plugin.stringscore.StringScoreRanking;
 
 @SuppressWarnings("restriction")
 public class CommanderContentProvider {
@@ -29,7 +27,7 @@ public class CommanderContentProvider {
 				historyItems.add((QuickAccessElement) entry.getHistoryItem());
 			}
 			
-			if (inputCommand.contentMode.equals("history")) {
+			if (inputCommand.contentMode.equals("recall")) {
 
 				List<QuickAccessElement> uniqueHistoryItems = historyItems.stream().distinct().collect(Collectors.toList());
 				List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputCommand, uniqueHistoryItems);
@@ -46,11 +44,7 @@ public class CommanderContentProvider {
 	}
 	
 	public static ListRankAndFilter<QuickAccessElement> listRankAndFilter(FieldResolver<QuickAccessElement> labelField, FieldResolver<QuickAccessElement> providerField) {
-		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
-		ListRankAndFilter<QuickAccessElement> listRankAndFilter = new ListRankAndFilter<>(
-																	(filter, columnText) -> stringScore.scoreCombination(filter, columnText),
-																	item -> item.getLabel());
-		
+		ListRankAndFilter<QuickAccessElement> listRankAndFilter = ListRankAndFilter.make(labelField.fieldResolver);
 		listRankAndFilter.addField(labelField.fieldId, labelField.fieldResolver);
 		listRankAndFilter.addField(providerField.fieldId, providerField.fieldResolver);
 		return listRankAndFilter;

@@ -80,7 +80,7 @@ public class KaviList<T> {
 		if (!showAllWhenNoFilter && filter.length() == 0) {
 			table.removeAll();
 			table.setItemCount(0);
-			tableEntries.clear();
+			if (tableEntries != null) tableEntries.clear();
 			previousInputCommand = null;
 			return;
 		}

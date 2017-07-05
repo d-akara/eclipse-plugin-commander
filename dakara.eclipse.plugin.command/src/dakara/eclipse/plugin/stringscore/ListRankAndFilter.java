@@ -20,6 +20,13 @@ public class ListRankAndFilter<T> {
 		this.sortFieldResolver = sortFieldResolver;
 	}
 	
+	public static <T> ListRankAndFilter<T> make(Function<T, String> sortFieldResolver) {
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
+		return new ListRankAndFilter<>(
+				(filter, columnText) -> stringScore.scoreCombination(filter, columnText),
+				sortFieldResolver);
+	}
+	
 	public ListRankAndFilter<T> addField(String fieldId, Function<T, String> fieldResolver) {
 		fields.add(new FieldResolver<>(fieldId, fieldResolver));
 		return this;

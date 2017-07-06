@@ -54,7 +54,11 @@ public class StringScore {
 		
 		final String[] words = splitWords(match);
 		Score score;
-		if (words.length == 1) {
+		
+		if (match.charAt(0) == ' ') {
+			// If there is a leading space, then treat all chars following as literal
+			score = scoreAsContiguousSequence(match.substring(1), target);
+		} else if (words.length == 1) {
 			score = scoreAsContiguousSequence(match, target);
 			if (score.rank == 4) return score;  // perfect whole word match
 			

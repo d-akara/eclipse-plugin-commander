@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.internal.progress.ProgressManagerUtil;
 
+import dakara.eclipse.plugin.kavi.picklist.KaviList.KaviListContentProvider;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 /*
  * TODO - add page numbers to bottom
@@ -28,7 +29,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	private Text listFilterInputControl;
 
 	public KaviPickListDialog() {
-		super(ProgressManagerUtil.getDefaultParent(), SWT.RESIZE, true, true, false, true, true, null, "Central Command");
+		super(ProgressManagerUtil.getDefaultParent(), SWT.RESIZE | SWT.NO_BACKGROUND, true, true, false, true, true, null, "Central Command");
 		kaviList = new KaviList<T>(KaviPickListDialog.this);
 		kaviList.setListContentChangedAction(list -> setInfoText("mode: " + kaviList.currentContentMode() + " / items: " +list.size()));
 		create();
@@ -97,21 +98,13 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	public void setResolvedAction(Consumer<T> handleSelectFn) {
 		kaviList.setSelectionAction(handleSelectFn);
 	}
-
-	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
-		return kaviList.addColumn(columnId, columnContentFn);
+	
+	public KaviListContentProvider<T> setListContentProvider(String name, Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
+		return kaviList.setListContentProvider(name, listContentProvider);
 	}
 	
-	public void setListContentProvider(Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
-		kaviList.setListContentProvider(listContentProvider);
-	}
-
-	public void setContentModes(String ... modes) {
-		kaviList.setContentModes(modes);	
-	}
-	
-	public void setContentMode(String mode) {
-		kaviList.setContentMode(mode);
+	public void setCurrentProvider(String mode) {
+		kaviList.setCurrentProvider(mode);
 	}
 	
 	public void setShowAllWhenNoFilter(boolean showAll) {

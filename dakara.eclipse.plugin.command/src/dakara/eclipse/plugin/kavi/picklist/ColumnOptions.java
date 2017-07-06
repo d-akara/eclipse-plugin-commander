@@ -1,7 +1,9 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.RGB;
@@ -17,15 +19,22 @@ public class ColumnOptions<T> {
 	private RGB backgroundRGB = new RGB(255,255,255);
 	private Font font;
 	private BiFunction<T, Integer, String> columnContentFn;
+	private KaviListColumns<T> kaviListColumns;
+	private StyledCellLabelProvider labelProvider;
+	private int columnWidth = 100;
+	private int columnAlignment = SWT.LEFT;
 	
-	public ColumnOptions(String columnId, BiFunction<T, Integer, String> columnContentFn, int columnIndex) {
+	public ColumnOptions(KaviListColumns<T> kaviListColumns, String columnId, BiFunction<T, Integer, String> columnContentFn, int columnIndex) {
 		this.columnContentFn = columnContentFn;
 		this.columnIndex = columnIndex;
 		this.columnId = columnId;
+		this.kaviListColumns = kaviListColumns;
 	}
 	
 	public ColumnOptions<T> setColumn(TableColumn column) {
 		this.column = column;
+		column.setWidth(columnWidth);
+		column.setAlignment(columnAlignment);
 		return this;
 	}
 	
@@ -34,7 +43,8 @@ public class ColumnOptions<T> {
 	}
 	
 	public ColumnOptions<T> width(int width) {
-		column.setWidth(width);
+		this.columnWidth = width;
+		if (column != null) column.setWidth(width);
 		return this;
 	}
 	
@@ -48,7 +58,8 @@ public class ColumnOptions<T> {
 	}
 	
 	public ColumnOptions<T> right() {
-		column.setAlignment(SWT.RIGHT);
+		this.columnAlignment = SWT.RIGHT;
+		if (column != null) column.setAlignment(SWT.RIGHT);
 		return this;
 	}
 	
@@ -99,5 +110,21 @@ public class ColumnOptions<T> {
 	
 	public Font getFont() {
 		return this.font;
+	}
+	
+	public void setLabelProvider(StyledCellLabelProvider labelProvider) {
+		this.labelProvider = labelProvider;
+	}
+	
+	public StyledCellLabelProvider getLabelProvider() {
+		return labelProvider;
+	}
+	
+	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
+		return kaviListColumns.addColumn(columnId, columnContentFn);
+	}
+	
+	public TableColumn getColumn() {
+		return column;
 	}
 }

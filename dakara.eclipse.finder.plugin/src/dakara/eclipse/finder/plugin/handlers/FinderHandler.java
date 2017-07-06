@@ -44,11 +44,14 @@ public class FinderHandler extends AbstractHandler {
 		FieldResolver<ResourceItem> projectResolver = new FieldResolver<>("project", resource -> resource.project);
 		
 		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
-		finder.addColumn(nameResolver.fieldId, nameResolver.fieldResolver).width(200);
-		finder.addColumn(projectResolver.fieldId, projectResolver.fieldResolver).width(200).fontColor(155, 103, 4);
-		finder.addColumn(pathResolver.fieldId, pathResolver.fieldResolver).width(300).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
+		finder.setListContentProvider("discovery", listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), files))
+			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).width(200)
+			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).width(200).fontColor(155, 103, 4)
+			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).width(300).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
+
+		// TODO can not automatically set current provider since columns have not been added when content provider is set
+		finder.setCurrentProvider("discovery");
 		
-		finder.setListContentProvider(listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), files));
 		finder.setResolvedAction(resourceItem -> openFile(workbenchPage, workspace, resourceItem));
 		finder.setShowAllWhenNoFilter(false);
 		finder.open();	

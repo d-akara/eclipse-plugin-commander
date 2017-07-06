@@ -57,19 +57,23 @@ public class ListRankAndFilter<T> {
 	}
 	
 	private RankedItem<T> setItemRank(RankedItem<T> rankedItem, final InputCommand inputCommand) {
-		rankedItem.setScoreModeByColumn(inputCommand.isColumnFiltering);
-		
-		if (inputCommand.isColumnFiltering) {
-			int searchableColumnCount = 0;
-			for (FieldResolver<T> field : fields) {
-				rankedItem.addScore(rankingStrategy.apply(inputCommand.getColumnFilter(searchableColumnCount), field.fieldResolver.apply(rankedItem.dataItem)), field.fieldId);
-				searchableColumnCount++;
-			} 
-		} else {
-			List<Score> scores = scoreAllAsOneColumn(rankedItem, inputCommand);
-			for (FieldResolver<T> field : fields) {
-				rankedItem.addScore(scores.remove(0), field.fieldId);
-			} 
+		try {
+			rankedItem.setScoreModeByColumn(inputCommand.isColumnFiltering);
+			
+			if (inputCommand.isColumnFiltering) {
+				int searchableColumnCount = 0;
+				for (FieldResolver<T> field : fields) {
+					rankedItem.addScore(rankingStrategy.apply(inputCommand.getColumnFilter(searchableColumnCount), field.fieldResolver.apply(rankedItem.dataItem)), field.fieldId);
+					searchableColumnCount++;
+				} 
+			} else {
+				List<Score> scores = scoreAllAsOneColumn(rankedItem, inputCommand);
+				for (FieldResolver<T> field : fields) {
+					rankedItem.addScore(scores.remove(0), field.fieldId);
+				} 
+			}
+		} catch (Throwable e) {
+			throw new RuntimeException("Problem setting rank", e);
 		}
 		return rankedItem;
 	}

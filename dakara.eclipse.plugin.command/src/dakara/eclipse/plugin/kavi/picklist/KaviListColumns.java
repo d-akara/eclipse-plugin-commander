@@ -17,6 +17,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 import dakara.eclipse.plugin.stringscore.RankedItem;
@@ -35,25 +36,40 @@ public class KaviListColumns<T> {
 	}
 	
 	public ColumnOptions<T> addColumn(String columnId, BiFunction<T, Integer, String> columnContentFn) {
-		final ColumnOptions<T> options = new ColumnOptions<T>(columnId, columnContentFn, columnOptions.size());
+		final ColumnOptions<T> options = new ColumnOptions<T>(this, columnId, columnContentFn, columnOptions.size());
 		StyledCellLabelProvider labelProvider = new StyledCellLabelProvider(StyledCellLabelProvider.COLORS_ON_SELECTION) {
 			@Override
-        	public void update(ViewerCell cell) {
-        		// TODO reuse and manage SWT resources
-        		final RankedItem<T> rankedItem = applyCellDefaultStyles(options, cell);
-        		resolveCellTextValue(columnContentFn, cell, rankedItem);
-        		if (options.isSearchable())
-        			applyCellScoreMatchStyles(cell, rankedItem);
-                super.update(cell);
-        	}
+	        	public void update(ViewerCell cell) {
+				if (options.getColumn().getWidth() == 0) return;
+	        		// TODO reuse and manage SWT resources
+	        		final RankedItem<T> rankedItem = applyCellDefaultStyles(options, cell);
+	        		resolveCellTextValue(columnContentFn, cell, rankedItem);
+	        		if (options.isSearchable())
+	        			applyCellScoreMatchStyles(cell, rankedItem);
+	                super.update(cell);
+	        	}
 		};
-		options.setColumn(createTableViewerColumn(tableViewer, labelProvider).getColumn());
+		options.setLabelProvider(labelProvider);
 		columnOptions.add(options);
 		return options;
 	}
 	
 	public List<ColumnOptions<T>> getColumnOptions() {
 		return columnOptions;
+	}
+	
+	public KaviListColumns<T> reset() {
+		for (TableColumn column : tableViewer.getTable().getColumns()) {
+			column.dispose();
+		}
+		return this;
+	}
+	
+	public KaviListColumns<T> installColumnsIntoTable() {
+		for (ColumnOptions<T> columnOption : columnOptions) {
+			columnOption.setColumn(createTableViewerColumn(tableViewer, columnOption.getLabelProvider()).getColumn());
+		}
+		return this;
 	}
 	
     private TableViewerColumn createTableViewerColumn(TableViewer tableViewer, StyledCellLabelProvider labelProvider) {
@@ -104,7 +120,7 @@ public class KaviListColumns<T> {
 	
 	private String getColumnIdFromColumnIndex(int columnIndex) {
 		// TODO consider: likely there will never be lots of columns.  Looping is probably optimal here vs a lookup table.
-		for (ColumnOptions options : columnOptions) {
+		for (ColumnOptions<T> options : columnOptions) {
 			if (options.columnIndex == columnIndex) return options.columnId;
 		}
 		throw new IllegalStateException("No matching column index");

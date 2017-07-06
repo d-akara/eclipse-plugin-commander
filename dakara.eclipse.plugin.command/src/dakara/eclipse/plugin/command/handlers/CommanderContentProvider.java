@@ -17,8 +17,24 @@ import dakara.eclipse.plugin.stringscore.RankedItem;
 
 @SuppressWarnings("restriction")
 public class CommanderContentProvider {
-	public static Function<InputCommand, List<RankedItem<QuickAccessElement>>> listContentProvider(ListRankAndFilter<QuickAccessElement> listRankAndFilter, CommandDialogPersistedSettings<QuickAccessElement> historyStore, EclipseCommandProvider eclipseCommandProvider) {
+	
+	public static Function<InputCommand, List<RankedItem<QuickAccessElement>>> listContentDiscoveryProvider(ListRankAndFilter<QuickAccessElement> listRankAndFilter, CommandDialogPersistedSettings<QuickAccessElement> historyStore, EclipseCommandProvider eclipseCommandProvider) {
 		
+		return (inputCommand) -> {
+			List<QuickAccessElement> historyItems = new ArrayList<>();
+			for (HistoryEntry entry : historyStore.getHistory()) {
+				historyItems.add((QuickAccessElement) entry.getHistoryItem());
+			}
+			
+			List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputCommand, eclipseCommandProvider.getAllCommands());
+			if ((inputCommand.getColumnFilter(0).length() == 0) && (historyItems.size() > 0))
+				return listRankAndFilter.moveItem(filteredList, historyItems.get(0), 0);
+			else return filteredList;
+		};
+	}
+	
+	public static Function<InputCommand, List<RankedItem<QuickAccessElement>>> listContentRecallProvider(ListRankAndFilter<QuickAccessElement> listRankAndFilter, CommandDialogPersistedSettings<QuickAccessElement> historyStore, EclipseCommandProvider eclipseCommandProvider) {
+
 		return (inputCommand) -> {
 			historyStore.setContentMode(inputCommand.contentMode);
 			
@@ -27,17 +43,9 @@ public class CommanderContentProvider {
 				historyItems.add((QuickAccessElement) entry.getHistoryItem());
 			}
 			
-			if (inputCommand.contentMode.equals("recall")) {
-
-				List<QuickAccessElement> uniqueHistoryItems = historyItems.stream().distinct().collect(Collectors.toList());
-				List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputCommand, uniqueHistoryItems);
-				if (inputCommand.getColumnFilter(0).length() == 0)
-					return listRankAndFilter.moveItem(filteredList, historyItems.get(0), 0);
-				else return filteredList;
-			}
-			
-			List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputCommand, eclipseCommandProvider.getAllCommands());
-			if ((inputCommand.getColumnFilter(0).length() == 0) && (historyItems.size() > 0))
+			List<QuickAccessElement> uniqueHistoryItems = historyItems.stream().distinct().collect(Collectors.toList());
+			List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputCommand, uniqueHistoryItems);
+			if (inputCommand.getColumnFilter(0).length() == 0)
 				return listRankAndFilter.moveItem(filteredList, historyItems.get(0), 0);
 			else return filteredList;
 		};

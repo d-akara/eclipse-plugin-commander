@@ -1,6 +1,8 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -38,12 +40,12 @@ public class KaviList<T> {
 	private List<RankedItem<T>> tableEntries;
 	private Consumer<T> handleSelectFn;
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
-	private KaviListColumns<T> kaviListColumn;
+	
 	private InputCommand previousInputCommand = null;
 	private Consumer<List<RankedItem<T>>> changedAction = null;
-	private Function<InputCommand, List<RankedItem<T>>> listContentProvider;
-	private String[] contentModes = new String[]{};
-	private int currentModeIndex = 0;
+	private Map<String, KaviListContentProvider<T>> listContentProviders = new LinkedHashMap<>();
+	
+	private String currentContentProvider;
 	private boolean showAllWhenNoFilter = true;
 
 	private TableViewer tableViewer;
@@ -58,16 +60,14 @@ public class KaviList<T> {
 		this.changedAction = changedAction;
 	}
 	
-	public void setListContentProvider(Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
-		this.listContentProvider = listContentProvider;
+	public KaviListContentProvider<T> setListContentProvider(String name, Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
+		KaviListContentProvider<T> contentProvider = new KaviListContentProvider<>(this, name, listContentProvider);
+		this.listContentProviders.put(name, contentProvider);
+		return contentProvider;
 	}
 	
 	public void setSelectionAction(Consumer<T> handleSelectFn) {
 		this.handleSelectFn = handleSelectFn;
-	}
-	
-	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
-		return kaviListColumn.addColumn(columnId, (item, rowIndex) -> columnContentFn.apply(item));
 	}
 	
 	public void setShowAllWhenNoFilter(boolean showAllWhenNoFilter) {
@@ -87,14 +87,15 @@ public class KaviList<T> {
 		
 		final InputCommand inputCommand = InputCommand.parse(filter, currentContentMode() ).get(0);
 		if (filterChanged(inputCommand)) {
-			tableEntries = listContentProvider.apply(inputCommand);
+			KaviListContentProvider<T> contentProvider = listContentProviders.get(currentContentProvider);
+			tableEntries = contentProvider.listContentProvider.apply(inputCommand);
 			alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 			table.removeAll();
 			table.setItemCount(tableEntries.size());
 			changedAction.accept(tableEntries);
 		}
 		
-		fastSelectItem(inputCommand);
+		fastSelectItem(inputCommand);		
 	}
 	
 	private boolean filterChanged(InputCommand inputCommand)	{
@@ -109,13 +110,16 @@ public class KaviList<T> {
 	}
 
 	private void fastSelectItem(final InputCommand inputCommand) {
-		List<ColumnOptions<T>> columnOptions = kaviListColumn.getColumnOptions();
+		List<ColumnOptions<T>> columnOptions = getCurrentContentProvider().kaviListColumns.getColumnOptions();
 		final boolean isFastSelectShowing = columnOptions.get(0).width() > 0;
 		// show fast select index if we are typing a fast select expression
 		if ((inputCommand.fastSelect && !isFastSelectShowing)) {
 			int columnWidth = averageCharacterWidth(columnOptions.get(0).getFont()) * alphaColumnConverter.getNumberOfCharacters() + 5;
 			columnOptions.get(0).width(columnWidth);
 			columnOptions.get(1).changeWidth(-columnWidth + 1);
+			// force redraw
+			table.removeAll();
+			table.setItemCount(tableEntries.size());
 		} else if (!inputCommand.fastSelect && isFastSelectShowing) {
 			// change column 1 the amount of column 0
 			columnOptions.get(1).changeWidth(columnOptions.get(0).width() - 1);
@@ -139,7 +143,7 @@ public class KaviList<T> {
 	}
 	
     public int getTotalColumnWidth() {
-    	return Stream.of(table.getColumns()).map(column -> column.getWidth()).reduce((width1, width2) -> width1 + width2).orElse(400);
+    		return Stream.of(table.getColumns()).map(column -> column.getWidth()).reduce((width1, width2) -> width1 + width2).orElse(400);
     }
     
     private int numberOfItemsVisible(Table table) {
@@ -152,7 +156,7 @@ public class KaviList<T> {
 	public void initialize(Composite composite, int defaultOrientation) {
 		composite.addDisposeListener((DisposeListener) this::dispose);
 		
-		tableViewer = new TableViewer(composite, SWT.SINGLE | SWT.FULL_SELECTION | SWT.VIRTUAL );
+		tableViewer = new TableViewer(composite, SWT.SINGLE | SWT.FULL_SELECTION | SWT.VIRTUAL | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED );
 		table = tableViewer.getTable();
 		
         GridData gridData = new GridData();
@@ -179,15 +183,31 @@ public class KaviList<T> {
 
 		table.addListener(SWT.Selection, event-> handleSelection());
 		
-		kaviListColumn = new KaviListColumns<T>(tableViewer);
-        kaviListColumn.addColumn("fastSelect", (item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
+		listContentProviders.values().forEach(contentProvider -> {
+			KaviListColumns<T> kaviListColumns = new KaviListColumns<T>(tableViewer);
+			kaviListColumns.addColumn("fastSelect", (item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
+			contentProvider.kaviListColumns = kaviListColumns;
+		});
         
 		composite.getShell().addListener(SWT.Resize, event -> {
-			if (kaviListColumn.getColumnOptions().size() > 1) {
-				int widthRightOfFirstColumn = getTotalColumnWidth() - kaviListColumn.getColumnOptions().get(1).width() + 25;
-				kaviListColumn.getColumnOptions().get(1).width(composite.getShell().getSize().x - widthRightOfFirstColumn);	// TODO compute size
-			}
+			autoAdjustColumnWidths(composite);
 		});
+	}
+
+	private void autoAdjustColumnWidths(Composite composite) {
+		KaviListContentProvider<T> contentProvider = getCurrentContentProvider();
+		if (contentProvider == null) return;
+		
+		KaviListColumns<T> kaviListColumns = contentProvider.kaviListColumns;
+		if (kaviListColumns.getColumnOptions().size() > 1) {
+			int widthRightOfFirstColumn = getTotalColumnWidth() - kaviListColumns.getColumnOptions().get(1).width() + 25;
+			kaviListColumns.getColumnOptions().get(1).width(composite.getShell().getSize().x - widthRightOfFirstColumn);	// TODO compute size
+		}
+	}
+	
+	
+	public KaviListContentProvider<T> getCurrentContentProvider() {
+		return listContentProviders.get(currentContentProvider);
 	}
 	
 	private boolean isMouseEventOverSelection(MouseEvent event) {
@@ -226,6 +246,7 @@ public class KaviList<T> {
 					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()+itemsInViewPort);
 				}
 				if (isKeys(SWT.CTRL, 'k', e)) {
+					e.doit = false;
 					int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
 					// TODO wrap around
 					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()-itemsInViewPort);
@@ -283,28 +304,30 @@ public class KaviList<T> {
 	}
 	
 	private void nextContentMode() {
-		if (contentModes.length <= 1) return;
-		currentModeIndex++;
-		if (currentModeIndex == contentModes.length) currentModeIndex = 0;
-	}
-	
-	public String currentContentMode() {
-		if (contentModes.length == 0) return "";
-		return contentModes[currentModeIndex];
-	}
-	
-	public void setContentMode(String mode) {
-		if (contentModes.length == 0 || mode == null) return;
-		for (int contentIndex = 0; contentIndex < contentModes.length; contentIndex++) {
-			if (mode.equals(contentModes[contentIndex])) {
-				currentModeIndex = contentIndex;
+		String[] keys = listContentProviders.keySet().toArray(new String[] {});
+		for (int keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+			String key = keys[keyIndex];
+			if (key.equals(currentContentProvider)) {
+				if (keyIndex < keys.length - 1) setCurrentProvider(keys[keyIndex + 1]);
+				else setCurrentProvider(keys[0]);
 				break;
 			}
 		}
 	}
 	
-	public void setContentModes(String ... modes) {
-		contentModes = modes;
+	public String currentContentMode() {
+		return currentContentProvider;
+	}
+	
+	public void setCurrentProvider(String mode) {
+		if (currentContentProvider != null && currentContentProvider.equals(mode)) return;
+		currentContentProvider = mode;
+		Composite composite = table.getParent();
+		composite.getShell().setRedraw(false);
+		getCurrentContentProvider().setTableColumnsForProvider();
+		autoAdjustColumnWidths(composite);
+		table.getDisplay().asyncExec(() -> composite.getShell().setRedraw(true));
+		//composite.getShell().setRedraw(true);
 	}
 	
 	protected void close() {
@@ -315,6 +338,28 @@ public class KaviList<T> {
 		if (resourceManager != null) {
 			resourceManager.dispose();
 			resourceManager = null;
+		}
+	}
+	
+	public static class KaviListContentProvider<T> {
+		public final Function<InputCommand, List<RankedItem<T>>> listContentProvider; 
+		public final String name;
+		private KaviListColumns<T> kaviListColumns;
+		public KaviListContentProvider(KaviList<T> kaviList, String name, Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
+			this.name = name;
+			this.listContentProvider = listContentProvider;
+			
+			KaviListColumns<T> kaviListColumns = new KaviListColumns<T>(kaviList.tableViewer);
+			kaviListColumns.addColumn("fastSelect", (item, rowIndex) -> kaviList.alphaColumnConverter.toAlpha(rowIndex + 1)).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
+			this.kaviListColumns = kaviListColumns;
+		}
+		
+		public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
+			return kaviListColumns.addColumn(columnId, (item, rowIndex) -> columnContentFn.apply(item));
+		}	
+		
+		private void setTableColumnsForProvider() {
+			kaviListColumns.reset().installColumnsIntoTable();
 		}
 	}
 }

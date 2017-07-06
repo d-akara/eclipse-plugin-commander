@@ -45,23 +45,27 @@ public class CommanderHandler extends AbstractHandler {
 	}
 	
 	public void initialize(Display display) throws ExecutionException {
-		FieldResolver<QuickAccessElement> labelField = labelFieldResolver();
-		FieldResolver<QuickAccessElement> providerField = providerFieldResolver();
+		FieldResolver<QuickAccessElement> providerField = new FieldResolver<>("provider",  item -> item.getProvider().getName());
+		FieldResolver<QuickAccessElement> labelField = new FieldResolver<>("label",  item -> item.getLabel());
 		ListRankAndFilter<QuickAccessElement> listRankAndFilter = CommanderContentProvider.listRankAndFilter(labelField, providerField);
 		
 		eclipseCommandProvider = new EclipseCommandProvider();
 		CommandDialogPersistedSettings<QuickAccessElement> historyStore = createSettingsStore(display, eclipseCommandProvider);
 		
 		kaviPickList = new KaviPickListDialog<>();
-		kaviPickList.addColumn(labelField.fieldId, labelField.fieldResolver).width(520);
-		kaviPickList.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
-		kaviPickList.setListContentProvider(CommanderContentProvider.listContentProvider(listRankAndFilter, historyStore, eclipseCommandProvider));
+		kaviPickList.setListContentProvider("discovery", CommanderContentProvider.listContentDiscoveryProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
+					.addColumn(labelField.fieldId, labelField.fieldResolver).width(520)
+					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
+		
+		kaviPickList.setListContentProvider("recall",    CommanderContentProvider.listContentRecallProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
+					.addColumn(labelField.fieldId, labelField.fieldResolver).width(520)
+					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);		
+		
 //		kaviPickList.addCommand("history: remove", (selectedItems) -> historyStore.remove(selectedItems));
 //		kaviPickList.addChoice("commander initial mode:")
 //					.addCommand("set history", (selectedItems) -> historyStore.remove(selectedItems))
 //		            .addCommand("set normal", (selectedItems) -> historyStore.remove(selectedItems));
-		kaviPickList.setContentModes("discovery", "recall");
-		kaviPickList.setContentMode(historyStore.getContentMode());
+		kaviPickList.setCurrentProvider(historyStore.getContentMode());
 		kaviPickList.setResolvedAction(resolvedAction(display, historyStore));
 		kaviPickList.open();	
 	}
@@ -80,17 +84,5 @@ public class CommanderHandler extends AbstractHandler {
 			historyStore.addToHistory(item);
 			historyStore.saveSettings();
 		};
-	}
-
-	private FieldResolver<QuickAccessElement> providerFieldResolver() {
-		FieldResolver<QuickAccessElement> providerField = new FieldResolver<>("provider",  item -> item.getProvider().getName());
-		return providerField;
-	}
-
-	private FieldResolver<QuickAccessElement> labelFieldResolver() {
-		FieldResolver<QuickAccessElement> labelField = new FieldResolver<>("label",  item -> item.getLabel());
-		return labelField;
-	}
-	
-	
+	}	
 }

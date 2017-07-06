@@ -51,7 +51,8 @@ public class StringScore {
 	
 	public Score scoreCombination(String match, String target) {
 		if ((match.length() == 0) || (target == null) || (target.length() == 0)) return NOT_FOUND_SCORE;
-		
+		match = match.toLowerCase();
+		target = target.toLowerCase();
 		final String[] words = splitWords(match);
 		Score score;
 		
@@ -62,7 +63,7 @@ public class StringScore {
 			score = scoreAsContiguousSequence(match, target);
 			if (score.rank == 4) return score;  // perfect whole word match
 			
-			Score acronymScore = scoreAsAcronym(match.toLowerCase(), target.toLowerCase());
+			Score acronymScore = scoreAsAcronym(match, target);
 			if (acronymScore.rank == 4) return acronymScore; // perfect acronym match;
 			
 			if (acronymScore.rank > score.rank) {
@@ -101,8 +102,6 @@ public class StringScore {
 	public Score scoreAsContiguousSequence(String match, String target) {
 		if ((match == null) || (match.length() == 0)) return EMPTY_SCORE;
 		
-		match = match.toLowerCase();
-		target = target.toLowerCase();
 		StringCursor targetCursor = new StringCursor(target);
 		
 		int rank = 0;
@@ -150,8 +149,6 @@ public class StringScore {
 	public Score scoreAsNonContiguousSequence(String match, String target) {
 		if ((match == null) || (match.length() < 2)) return EMPTY_SCORE;
 		
-		match = match.toLowerCase();
-		target = target.toLowerCase();
 		StringCursor targetCursor = new StringCursor(target);
 		StringCursor matchCursor = new StringCursor(match);
 		matchCursor.addMark(0);

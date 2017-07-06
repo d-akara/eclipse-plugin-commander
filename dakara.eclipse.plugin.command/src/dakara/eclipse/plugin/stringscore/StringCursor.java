@@ -1,22 +1,23 @@
 package dakara.eclipse.plugin.stringscore;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 
 public class StringCursor {
 	public String text;
 	private int indexOfCursor = 0;
 	private int currentMarker = 0;
-	
-	private List<Integer> markers = new ArrayList<>();
+	private IntArrayList markers = new IntArrayList();
+	//private List<Integer> markers = new ArrayList<>();
 	public StringCursor(String text) {
 		this.text = text;
 	}
 	
 	public StringCursor setMarkers(List<Integer> markers) {
-		this.markers = markers;
+		this.markers = new IntArrayList(markers);
 		return this;
 	}
 	
@@ -27,20 +28,20 @@ public class StringCursor {
 	
 	public char currentMarker() {
 		if (currentMarker < markers.size())
-			return text.charAt(markers.get(currentMarker));
+			return text.charAt(markers.getInt(currentMarker));
 		return 0;
 	}	
 	
 	public char peekNextMarker() {
 		int nextMarker = currentMarker + 1;
 		if (nextMarker < markers.size())
-			return text.charAt(markers.get(nextMarker));
+			return text.charAt(markers.getInt(nextMarker));
 		return 0;
 	}
 	
 	public char setPreviousMarkCurrent() {
 		if (currentMarker > 0) {
-			return text.charAt(markers.get(currentMarker - 1));
+			return text.charAt(markers.getInt(currentMarker - 1));
 		}
 		return 0;
 	}
@@ -50,13 +51,14 @@ public class StringCursor {
 		
 		// insert all marks in order
 		int markerNumber = 0;
-		for (Integer markerIndex : markers) {
-			if (indexOfMarkToAdd > markerIndex) {
+		int[] markers = this.markers.elements();
+		for (int markerIndex = 0; markerIndex < this.markers.size(); markerIndex++) {
+			if (indexOfMarkToAdd > markers[markerIndex]) {
 				markerNumber++;
 			}
 		}
 		
-		markers.add(markerNumber, indexOfMarkToAdd);
+		this.markers.add(markerNumber, indexOfMarkToAdd);
 		//markers.add(indexOfMarkToAdd);
 		return this;
 	}
@@ -96,7 +98,7 @@ public class StringCursor {
 		int wordCount = 0;
 		final int originalCursorPosition = indexOfCursor;
 		final int originalMarkerPosition = currentMarker;
-		int startIndex = markers.get(firstMarker);
+		int startIndex = markers.getInt(firstMarker);
 		indexOfCursor = startIndex;
 		
 		setFirstMarkCurrent().setCurrentMarkToEndOfCurrentMarkedRegion();
@@ -165,7 +167,7 @@ public class StringCursor {
 		if (markerPositionTerminal()) return false;
 		if (currentMarker == 0) return true;
 		// is previous marker's index next to this marker
-		return markers.get(currentMarker - 1) != markers.get(currentMarker) - 1;
+		return markers.getInt(currentMarker - 1) != markers.getInt(currentMarker) - 1;
 	}
 	
 	public String wordAtCursor() {
@@ -179,7 +181,7 @@ public class StringCursor {
 	
 	public String markersAsString() {
 		StringBuilder builder = new StringBuilder();
-		for(Integer index : markers) {
+		for(int index : markers) {
 			builder.append(text.charAt(index));
 		}
 		return builder.toString();
@@ -342,11 +344,11 @@ public class StringCursor {
 	}
 	
 	public int indexOfFirstMark() {
-		return markers.get(0);
+		return markers.getInt(0);
 	}
 	
 	public int indexOfLastMark() {
-		return markers.get(markers.size() - 1);
+		return markers.getInt(markers.size() - 1);
 	}
 	
 	public int indexOfCursor() {
@@ -355,20 +357,22 @@ public class StringCursor {
 	
 	public int indexOfNextMark() {
 		if (!markers.isEmpty() && currentMarker + 1 < markers.size())
-			return markers.get(currentMarker + 1);
+			return markers.getInt(currentMarker + 1);
 		return 0;
 	}
 	
 	public int indexOfCurrentMark() {
 		if (!markers.isEmpty() && !markerPositionTerminal())
-			return markers.get(currentMarker);
+			return markers.getInt(currentMarker);
 		return -1;
 	}
 	
 	public StringCursor maskRegions(List<Integer> maskIndexes) {
 		if (maskIndexes.size() == 0) return this;
 		StringBuilder builder = new StringBuilder(text);
-		maskIndexes.stream().forEach(index -> builder.setCharAt(index, ' '));
+		for (int index = 0; index < maskIndexes.size(); index++) {
+			builder.setCharAt(index, ' ');
+		}
 		text = builder.toString();
 		return this;
 	}

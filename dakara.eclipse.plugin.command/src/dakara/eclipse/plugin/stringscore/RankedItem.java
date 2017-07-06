@@ -27,13 +27,21 @@ public final class RankedItem<T> {
 	}
 	
 	public int totalScore() {
+		int sum = 0;
 		if (scorePerColumn) {
-			if (scores.values().stream().mapToInt(score -> score.rank).anyMatch(rank -> rank == 0)) return 0;
-			return scores.values().stream().mapToInt(score -> score.rank).filter(rank -> rank >= 0).sum();
+			for (Score score : scores.values()) {
+				if (score.rank == 0) return 0;
+				if (score.rank < 0) continue;
+				sum += score.rank;
+			}
+
+			return sum;
 		}
-		
-		return scores.values().stream().mapToInt(score -> score.rank).sum();
+
 		// Each score has the same rank when not scoring per column.  It the the score of the entire row.
-		//return scores.values().stream().mapToInt(score -> score.rank).findFirst().getAsInt();
+		for (Score score : scores.values()) {
+			return score.rank;
+		}
+		return sum;
 	}
 }

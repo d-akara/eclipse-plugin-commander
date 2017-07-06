@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import dakara.eclipse.plugin.kavi.picklist.InputCommand;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public class ListRankAndFilter<T> {
 	private List<FieldResolver<T>> fields = new ArrayList<>();
@@ -79,7 +80,7 @@ public class ListRankAndFilter<T> {
 	}
 	
 	private List<Score> scoreAllAsOneColumn(RankedItem<T> listItem, final InputCommand inputCommand) {
-		List<Integer> indexesOfColumnBreaks = new ArrayList<>();
+		IntArrayList indexesOfColumnBreaks = new IntArrayList();
 		StringBuilder allColumnText = new StringBuilder();
 		buildAllColumnTextAndIndexes(listItem, indexesOfColumnBreaks, allColumnText);
 		
@@ -100,7 +101,7 @@ public class ListRankAndFilter<T> {
 	 * concatenate all columns together with space separators.
 	 * create list of index's where columns were joined
 	 */
-	private void buildAllColumnTextAndIndexes(RankedItem<T> listItem, List<Integer> indexesOfColumnBreaks, StringBuilder allColumnText) {
+	private void buildAllColumnTextAndIndexes(RankedItem<T> listItem, IntArrayList indexesOfColumnBreaks, StringBuilder allColumnText) {
 		for (int index = 0; index < fields.size(); index++) {
 			FieldResolver<T> column = fields.get(index);
 			String columnContent = column.fieldResolver.apply(listItem.dataItem);
@@ -110,20 +111,20 @@ public class ListRankAndFilter<T> {
 		}
 	}	
 	
-	private List<Score> convertScoreToMatchesPerColumn(String originalText, Score allColumnScore, List<Integer> indexesOfColumnBreaks) {
+	private List<Score> convertScoreToMatchesPerColumn(String originalText, Score allColumnScore, IntArrayList indexesOfColumnBreaks) {
 		List<Score> scores = new ArrayList<>();
-		List<Integer> matches = new ArrayList<>();
+		IntArrayList matches = new IntArrayList();
 		int offset = 0;
 		
-		for (Integer endOfColumnIndex : indexesOfColumnBreaks) {
-			for (int index = offset; index <= endOfColumnIndex.intValue(); index++) {
+		for (int endOfColumnIndex : indexesOfColumnBreaks) {
+			for (int index = offset; index <= endOfColumnIndex; index++) {
 				if (allColumnScore.matches.size() > 0 && index == allColumnScore.matches.get(0)) {
 					allColumnScore.matches.remove(0);
 					matches.add(index - offset);
 				}
 			}
 			scores.add(new Score(allColumnScore.rank, matches));
-			matches = new ArrayList<>();
+			matches = new IntArrayList();
 			offset = endOfColumnIndex + 1;
 		}		
 		return scores;

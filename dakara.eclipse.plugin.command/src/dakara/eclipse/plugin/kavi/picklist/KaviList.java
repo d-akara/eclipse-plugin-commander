@@ -117,9 +117,6 @@ public class KaviList<T> {
 			int columnWidth = averageCharacterWidth(columnOptions.get(0).getFont()) * alphaColumnConverter.getNumberOfCharacters() + 5;
 			columnOptions.get(0).width(columnWidth);
 			columnOptions.get(1).changeWidth(-columnWidth + 1);
-			// force redraw
-			table.removeAll();
-			table.setItemCount(tableEntries.size());
 		} else if (!inputCommand.fastSelect && isFastSelectShowing) {
 			// change column 1 the amount of column 0
 			columnOptions.get(1).changeWidth(columnOptions.get(0).width() - 1);
@@ -326,8 +323,8 @@ public class KaviList<T> {
 		composite.getShell().setRedraw(false);
 		getCurrentContentProvider().setTableColumnsForProvider();
 		autoAdjustColumnWidths(composite);
+		// do this async to prevent timing related flicker
 		table.getDisplay().asyncExec(() -> composite.getShell().setRedraw(true));
-		//composite.getShell().setRedraw(true);
 	}
 	
 	protected void close() {

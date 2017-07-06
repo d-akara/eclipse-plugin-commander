@@ -40,7 +40,6 @@ public class KaviListColumns<T> {
 		StyledCellLabelProvider labelProvider = new StyledCellLabelProvider(StyledCellLabelProvider.COLORS_ON_SELECTION) {
 			@Override
 	        	public void update(ViewerCell cell) {
-				if (options.getColumn().getWidth() == 0) return;
 	        		// TODO reuse and manage SWT resources
 	        		final RankedItem<T> rankedItem = applyCellDefaultStyles(options, cell);
 	        		resolveCellTextValue(columnContentFn, cell, rankedItem);

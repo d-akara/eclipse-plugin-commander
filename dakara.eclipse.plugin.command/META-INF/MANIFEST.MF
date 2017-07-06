@@ -25,3 +25,5 @@ Import-Package: javax.annotation;version="1.2.0",
  org.eclipse.e4.core.contexts
 Export-Package: dakara.eclipse.plugin.kavi.picklist,
  dakara.eclipse.plugin.stringscore
+Bundle-ClassPath: lib/fastutil-8.1.0.jar,
+ .

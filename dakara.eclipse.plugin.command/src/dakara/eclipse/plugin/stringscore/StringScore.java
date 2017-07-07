@@ -137,11 +137,19 @@ public class StringScore {
 	}
 	
 	private StringCursor addMarkersForAcronym(StringCursor text) {
+		char previousChar = text.peekPreviousChar();
+		boolean previousIsAlpha = Character.isAlphabetic(previousChar);
 		while (!text.cursorPositionTerminal()) {
-			if (Character.isAlphabetic(text.currentChar()) && !Character.isAlphabetic(text.peekPreviousChar())) {
+			char currentChar = text.currentChar();
+			boolean currentIsAlpha = Character.isAlphabetic(currentChar);
+			// TODO hot method
+			// maybe capture current char in variable and reuse for previous char
+			if (currentIsAlpha && !previousIsAlpha) {
 				text.addMark(text.indexOfCursor());
 			}
 			text.moveCursorForward();
+			previousChar = currentChar;
+			previousIsAlpha = currentIsAlpha;
 		}
 		return text;
 	}

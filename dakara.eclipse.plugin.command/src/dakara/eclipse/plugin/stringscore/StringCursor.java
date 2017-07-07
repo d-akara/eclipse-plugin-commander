@@ -10,8 +10,7 @@ public class StringCursor {
 	public String text;
 	private int indexOfCursor = 0;
 	private int currentMarker = 0;
-	private IntArrayList markers = new IntArrayList();
-	//private List<Integer> markers = new ArrayList<>();
+	private IntArrayList markers = new IntArrayList(16);
 	public StringCursor(String text) {
 		this.text = text;
 	}
@@ -89,7 +88,7 @@ public class StringCursor {
 		return this;
 	}
 	
-	public List<Integer> markers() {
+	public IntArrayList markers() {
 		return markers;
 	}
 	
@@ -367,11 +366,12 @@ public class StringCursor {
 		return -1;
 	}
 	
-	public StringCursor maskRegions(List<Integer> maskIndexes) {
+	public StringCursor maskRegions(IntArrayList maskIndexes) {
 		if (maskIndexes.size() == 0) return this;
 		StringBuilder builder = new StringBuilder(text);
+		int masks[] = maskIndexes.elements();
 		for (int index = 0; index < maskIndexes.size(); index++) {
-			builder.setCharAt(index, ' ');
+			builder.setCharAt(masks[index], ' ');
 		}
 		text = builder.toString();
 		return this;

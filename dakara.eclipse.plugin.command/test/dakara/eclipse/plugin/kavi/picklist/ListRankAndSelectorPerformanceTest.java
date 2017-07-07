@@ -30,7 +30,8 @@ public class ListRankAndSelectorPerformanceTest {
 
 	@Test
 	public void verifyColumn1Selection() {
-		for (int i = 0; i < 1000000; i++) {			
+		// 100 iterations currently ~ 13.5 ~ 14.5secs
+		for (int i = 0; i < 100; i++) {			
 			InputCommand inputCommand = InputCommand.parse("defmno").get(0);
 			rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		}

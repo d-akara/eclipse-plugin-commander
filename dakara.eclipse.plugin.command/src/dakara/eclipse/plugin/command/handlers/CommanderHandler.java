@@ -24,12 +24,10 @@ public class CommanderHandler extends AbstractHandler {
 	private KaviPickListDialog<QuickAccessElement> kaviPickList;
 
 	/* TODO's
-	 * - Allow content modes to have separate columns and content provider
 	 * - Add commands to a content mode.
 	 * - allow other commands to reuse dialog to show other lists for faster speed
 	 * - need ability to issue internal commands on lists
 	 *   - for example, need command to remove an item from history
-	 * - Resource version of KAVA - ResourcesPlugin.getWorkspace().getRoot()
 	 * 
 	 * (non-Javadoc)
 	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)

@@ -107,8 +107,6 @@ public class StringScoreTest {
 		Score score = stringScore.scoreCombination("def abc", "abc def ghi jklmn mop xyz");
 		Assert.assertEquals(6, score.matches.size());	
 		Assert.assertEquals(7, score.rank);	
-		
-
 	}
 	
 	@Test
@@ -147,5 +145,13 @@ public class StringScoreTest {
 		Assert.assertEquals(0, score.matches.size());	
 		Assert.assertEquals(0, score.rank);	
 	}
+	
+	@Test
+	public void extraCharacterMatchTest() {
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
+		Score score = stringScore.scoreCombination("eeeeeeee", "dakara.eclipse.commander");
+		Assert.assertEquals(0, score.matches.size());	
+		Assert.assertEquals(0, score.rank);	
+	}	
 	
 }

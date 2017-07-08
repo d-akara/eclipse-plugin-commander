@@ -60,7 +60,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	@Override
 	public int open() {
 		int openResult = super.open();
-		kaviList.refresh("");
+		kaviList.requestRefresh("");
 		return openResult;
 	}
 	

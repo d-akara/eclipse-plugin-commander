@@ -35,7 +35,6 @@ import org.eclipse.swt.widgets.Text;
 
 import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
 import dakara.eclipse.plugin.stringscore.RankedItem;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.ReplaySubject;
 
 public class KaviList<T> {
@@ -53,6 +52,7 @@ public class KaviList<T> {
 
 	private TableViewer tableViewer;
 	private Table table;
+	private Display display;
 	private LocalResourceManager resourceManager = new LocalResourceManager(JFaceResources.getResources());
 	
 	private ReplaySubject<String> subjectFilter = ReplaySubject.create();
@@ -79,18 +79,22 @@ public class KaviList<T> {
 		this.showAllWhenNoFilter = showAllWhenNoFilter;
 	}
 
-	public void refresh(String filter) {
+	public void requestRefresh(String filter) {
 		subjectFilter.onNext(filter);
 	}
 
+	/*
+	 * This will be executed on rxJava thread due to debouncing
+	 * We will handle the computations of filtering on the background thread
+	 * and must let SWT handle the table updates on the UI thread.
+	 */
 	private void handleRefresh(String filter) {
 		if (table == null) return;
 		
 		if (!showAllWhenNoFilter && filter.length() == 0) {
-			table.removeAll();
-			table.setItemCount(0);
 			if (tableEntries != null) tableEntries.clear();
 			previousInputCommand = null;
+			display.asyncExec(this::doTableRefresh);
 			return;
 		}
 		
@@ -99,12 +103,17 @@ public class KaviList<T> {
 			KaviListContentProvider<T> contentProvider = listContentProviders.get(currentContentProvider);
 			tableEntries = contentProvider.listContentProvider.apply(inputCommand);
 			alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
-			table.removeAll();
-			table.setItemCount(tableEntries.size());
-			changedAction.accept(tableEntries);
+			display.asyncExec(this::doTableRefresh);
 		}
 		
-		fastSelectItem(inputCommand);
+		display.asyncExec(() -> fastSelectItem(inputCommand));
+	}
+	
+	private void doTableRefresh() {
+		if (tableEntries == null) return;
+		changedAction.accept(tableEntries);
+		table.removeAll();
+		table.setItemCount(tableEntries.size());	
 	}
 	
 	private boolean filterChanged(InputCommand inputCommand)	{
@@ -160,6 +169,7 @@ public class KaviList<T> {
     }
 
 	public void initialize(Composite composite, int defaultOrientation) {
+		display = composite.getDisplay();
 		composite.addDisposeListener((DisposeListener) this::dispose);
 		
 		tableViewer = new TableViewer(composite, SWT.SINGLE | SWT.FULL_SELECTION | SWT.VIRTUAL | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED );
@@ -199,9 +209,7 @@ public class KaviList<T> {
 			autoAdjustColumnWidths(composite);
 		});
 		
-		subjectFilter.debounce(50, TimeUnit.MILLISECONDS).subscribe( filter -> {
-			table.getDisplay().asyncExec(() -> handleRefresh(filter));
-		});
+		subjectFilter.debounce(50, TimeUnit.MILLISECONDS).subscribe( filter -> handleRefresh(filter));
 	}
 
 	private void autoAdjustColumnWidths(Composite composite) {
@@ -287,7 +295,7 @@ public class KaviList<T> {
 		// capture all keys in the input.  So we can capture TAB etc
 		filterText.addTraverseListener((TraverseListener) event -> event.doit = false);
 		
-		filterText.addModifyListener((ModifyListener) event -> refresh(((Text) event.widget).getText()));
+		filterText.addModifyListener((ModifyListener) event -> requestRefresh(((Text) event.widget).getText()));
 	}
 	
 	private boolean isKeys(int modifier, int keyCode, KeyEvent event) {

@@ -1,5 +1,6 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ import org.eclipse.swt.widgets.Text;
 
 import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
 import dakara.eclipse.plugin.stringscore.RankedItem;
-import io.reactivex.subjects.ReplaySubject;
+import io.reactivex.subjects.PublishSubject;
 
 public class KaviList<T> {
 	private final KaviPickListDialog<T> rapidInputPickList;
@@ -55,7 +56,7 @@ public class KaviList<T> {
 	private Display display;
 	private LocalResourceManager resourceManager = new LocalResourceManager(JFaceResources.getResources());
 	
-	private ReplaySubject<String> subjectFilter = ReplaySubject.create();
+	private PublishSubject<String> subjectFilter = PublishSubject.create();
 
 	public KaviList(KaviPickListDialog<T> rapidInputPickList) {
 		this.rapidInputPickList = rapidInputPickList;
@@ -89,28 +90,33 @@ public class KaviList<T> {
 	 * and must let SWT handle the table updates on the UI thread.
 	 */
 	private void handleRefresh(String filter) {
-		if (table == null) return;
-		
-		if (!showAllWhenNoFilter && filter.length() == 0) {
-			if (tableEntries != null) tableEntries.clear();
-			previousInputCommand = null;
-			display.asyncExec(this::doTableRefresh);
-			return;
+		try {
+			if (table == null) return;
+			
+			if (!showAllWhenNoFilter && filter.length() == 0) {
+				previousInputCommand = null;
+				display.asyncExec(() -> doTableRefresh(new ArrayList<>()));
+				return;
+			}
+			
+			final InputCommand inputCommand = InputCommand.parse(filter, currentContentMode() ).get(0);
+			if (filterChanged(inputCommand)) {
+				KaviListContentProvider<T> contentProvider = listContentProviders.get(currentContentProvider);
+				List<RankedItem<T>> tableEntries = contentProvider.listContentProvider.apply(inputCommand);
+				alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
+				display.asyncExec(() -> doTableRefresh(tableEntries));
+			}
+			
+			display.asyncExec(() -> fastSelectItem(inputCommand));
+		} catch (Throwable e) {
+			// TODO how can we report error?
+			e.printStackTrace();
 		}
-		
-		final InputCommand inputCommand = InputCommand.parse(filter, currentContentMode() ).get(0);
-		if (filterChanged(inputCommand)) {
-			KaviListContentProvider<T> contentProvider = listContentProviders.get(currentContentProvider);
-			tableEntries = contentProvider.listContentProvider.apply(inputCommand);
-			alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
-			display.asyncExec(this::doTableRefresh);
-		}
-		
-		display.asyncExec(() -> fastSelectItem(inputCommand));
 	}
 	
-	private void doTableRefresh() {
+	private void doTableRefresh(List<RankedItem<T>> tableEntries) {
 		if (tableEntries == null) return;
+		this.tableEntries = tableEntries;
 		changedAction.accept(tableEntries);
 		table.removeAll();
 		table.setItemCount(tableEntries.size());	
@@ -209,7 +215,7 @@ public class KaviList<T> {
 			autoAdjustColumnWidths(composite);
 		});
 		
-		subjectFilter.debounce(50, TimeUnit.MILLISECONDS).subscribe( filter -> handleRefresh(filter));
+		subjectFilter.debounce(0, TimeUnit.MILLISECONDS).subscribe( filter -> handleRefresh(filter));
 	}
 
 	private void autoAdjustColumnWidths(Composite composite) {
@@ -284,7 +290,11 @@ public class KaviList<T> {
 					break;
 				case SWT.TAB:
 					nextContentMode();
-					table.getDisplay().asyncExec(() -> handleRefresh(( (Text) e.widget).getText()));
+					//table.getDisplay().asyncExec(() -> handleRefresh(( (Text) e.widget).getText()));
+					//requestRefresh(( (Text) e.widget).getText());
+					table.getParent().getShell().setRedraw(false);
+					handleRefresh(( (Text) e.widget).getText());
+					display.asyncExec(() -> table.getParent().getShell().setRedraw(true));
 					break;
 				}
 			}
@@ -345,7 +355,8 @@ public class KaviList<T> {
 		getCurrentContentProvider().setTableColumnsForProvider();
 		autoAdjustColumnWidths(composite);
 		// do this async to prevent timing related flicker
-		table.getDisplay().asyncExec(() -> composite.getShell().setRedraw(true));
+		display.asyncExec(() -> composite.getShell().setRedraw(true));
+		
 	}
 	
 	protected void close() {

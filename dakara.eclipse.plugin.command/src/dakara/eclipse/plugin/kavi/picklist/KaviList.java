@@ -3,6 +3,7 @@ package dakara.eclipse.plugin.kavi.picklist;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -34,6 +35,8 @@ import org.eclipse.swt.widgets.Text;
 
 import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
 import dakara.eclipse.plugin.stringscore.RankedItem;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.subjects.ReplaySubject;
 
 public class KaviList<T> {
 	private final KaviPickListDialog<T> rapidInputPickList;
@@ -51,6 +54,8 @@ public class KaviList<T> {
 	private TableViewer tableViewer;
 	private Table table;
 	private LocalResourceManager resourceManager = new LocalResourceManager(JFaceResources.getResources());
+	
+	private ReplaySubject<String> subjectFilter = ReplaySubject.create();
 
 	public KaviList(KaviPickListDialog<T> rapidInputPickList) {
 		this.rapidInputPickList = rapidInputPickList;
@@ -75,6 +80,10 @@ public class KaviList<T> {
 	}
 
 	public void refresh(String filter) {
+		subjectFilter.onNext(filter);
+	}
+
+	private void handleRefresh(String filter) {
 		if (table == null) return;
 		
 		if (!showAllWhenNoFilter && filter.length() == 0) {
@@ -95,7 +104,7 @@ public class KaviList<T> {
 			changedAction.accept(tableEntries);
 		}
 		
-		fastSelectItem(inputCommand);		
+		fastSelectItem(inputCommand);
 	}
 	
 	private boolean filterChanged(InputCommand inputCommand)	{
@@ -189,6 +198,10 @@ public class KaviList<T> {
 		composite.getShell().addListener(SWT.Resize, event -> {
 			autoAdjustColumnWidths(composite);
 		});
+		
+		subjectFilter.debounce(50, TimeUnit.MILLISECONDS).subscribe( filter -> {
+			table.getDisplay().asyncExec(() -> handleRefresh(filter));
+		});
 	}
 
 	private void autoAdjustColumnWidths(Composite composite) {
@@ -263,7 +276,7 @@ public class KaviList<T> {
 					break;
 				case SWT.TAB:
 					nextContentMode();
-					table.getDisplay().asyncExec(() -> refresh(( (Text) e.widget).getText()));
+					table.getDisplay().asyncExec(() -> handleRefresh(( (Text) e.widget).getText()));
 					break;
 				}
 			}

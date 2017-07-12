@@ -15,9 +15,9 @@ public class CommandElement extends QuickAccessElement {
 	private final String id;
 	private final int hashCode;
 
-	public CommandElement(ParameterizedCommand command, String id, CommandProvider commandProvider) {
+	public CommandElement(ParameterizedCommand command, CommandProvider commandProvider) {
 		super(commandProvider);
-		this.id = id;
+		this.id = command.serialize();
 		this.parameterizedCommand = command;
 		hashCode = id.hashCode() ^ getProvider().getId().hashCode();
 	}
@@ -44,10 +44,10 @@ public class CommandElement extends QuickAccessElement {
 	
 	@Override
 	public boolean equals(Object object) {
-		if (this == object) return true;
 		if (object == null) return false;
 		if (!(object instanceof CommandElement)) return false;
 		CommandElement element = (CommandElement) object;
+		
 		if (!element.id.equals(id)) return false;
 		return (element.getProvider().getId().equals(getProvider().getId()));
 	}

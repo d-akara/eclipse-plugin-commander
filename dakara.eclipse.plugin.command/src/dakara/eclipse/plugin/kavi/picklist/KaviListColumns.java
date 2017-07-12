@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.TableItem;
 
 import dakara.eclipse.plugin.stringscore.RankedItem;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public class KaviListColumns<T> {
 	private final List<ColumnOptions<T>> columnOptions = new ArrayList<>();
@@ -45,7 +46,7 @@ public class KaviListColumns<T> {
 	        		resolveCellTextValue(columnContentFn, cell, rankedItem);
 	        		if (options.isSearchable())
 	        			applyCellScoreMatchStyles(cell, rankedItem);
-	                super.update(cell);
+	            super.update(cell);
 	        	}
 		};
 		options.setLabelProvider(labelProvider);
@@ -71,8 +72,25 @@ public class KaviListColumns<T> {
 		return this;
 	}
 	
+	public int totalColumnWidth() {
+		int width = 0;
+		for(ColumnOptions<T> options : columnOptions) {
+			width += options.width();
+		}
+		return width;
+	}
+	
+	public int totalFixedColumnWidth() {
+		int width = 0;
+		for(ColumnOptions<T> options : columnOptions) {
+			if (options.widthPercent() == 0)
+				width += options.width();
+		}
+		return width;
+	}
+	
     private TableViewerColumn createTableViewerColumn(TableViewer tableViewer, StyledCellLabelProvider labelProvider) {
-        final TableViewerColumn viewerColumn = new TableViewerColumn(tableViewer, SWT.NONE);
+        final TableViewerColumn viewerColumn = new TableViewerColumn(tableViewer, SWT.NONE | SWT.RESIZE);
         viewerColumn.setLabelProvider(labelProvider);
         return viewerColumn;
     }	
@@ -103,6 +121,7 @@ public class KaviListColumns<T> {
 		Color color = JFaceResources.getColorRegistry().get(symbolicName);
 		if (color == null) {
 			color = new Color(Display.getCurrent(), rgb);
+			JFaceResources.getColorRegistry().put(symbolicName, color.getRGB());
 		}
 		return color;
 	}
@@ -113,6 +132,8 @@ public class KaviListColumns<T> {
 	private void applyCellScoreMatchStyles(ViewerCell cell, final RankedItem<T> rankedItem) {
 		Score score = rankedItem.getColumnScore(getColumnIdFromColumnIndex(cell.getColumnIndex()));
 		if (score != null) {
+			// TODO - investigate performance options
+			// this is currently the bottle neck in UI performance.  Creating and setting styles.
 			cell.setStyleRanges(createStyles(score.matches));
 		}
 	}

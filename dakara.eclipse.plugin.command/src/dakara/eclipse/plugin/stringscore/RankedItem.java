@@ -44,4 +44,16 @@ public final class RankedItem<T> {
 		}
 		return sum;
 	}
+	
+	@SuppressWarnings("rawtypes")
+	public boolean equals(Object obj) {
+		if (!(obj instanceof RankedItem)) return false;
+		
+		return dataItem.equals(((RankedItem)obj).dataItem);
+	};
+	
+	@Override
+	public int hashCode() {
+		return dataItem.hashCode();
+	}
 }

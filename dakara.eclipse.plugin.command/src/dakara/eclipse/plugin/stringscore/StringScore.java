@@ -1,11 +1,10 @@
 package dakara.eclipse.plugin.stringscore;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 /**
  * scoring strategies:
  * - rank by distance found from beginning of string
@@ -35,8 +34,8 @@ import java.util.function.Function;
  */
 
 public class StringScore {
-	private static final Score EMPTY_SCORE = new Score(0, Collections.emptyList());
-	private static final Score NOT_FOUND_SCORE = new Score(-1, Collections.emptyList());
+	private static final Score EMPTY_SCORE = new Score(0, new IntArrayList(0));
+	private static final Score NOT_FOUND_SCORE = new Score(-1, new IntArrayList(0));
 	
 	private BiFunction<String, StringCursor, Integer> contiguousSequenceRankingProvider;
 	private Function<StringCursor, Integer> acronymRankingProvider;
@@ -84,7 +83,7 @@ public class StringScore {
 	
 	public Score scoreMultipleContiguousSequencesAnyOrder(final String[] words, final String target) {
 		int totalRank = 0;
-		List<Integer> matches = new ArrayList<>();
+		IntArrayList matches = new IntArrayList();
 		for (String word : words) {
 			Score score = scoreAsContiguousSequence(word, maskRegions(target, matches));
 			if ( score.rank <= 0) {
@@ -217,7 +216,7 @@ public class StringScore {
 	/*
 	 * replace matched regions with space so we don't match them again
 	 */
-	private String maskRegions(String text, List<Integer> maskIndexes) {
+	private String maskRegions(String text, IntArrayList maskIndexes) {
 		if (maskIndexes.size() == 0) return text;
 		StringBuilder builder = new StringBuilder(text);
 		maskIndexes.stream().forEach(index -> builder.setCharAt(index, ' '));
@@ -231,8 +230,8 @@ public class StringScore {
 	
 	public static class Score {
 		public final int rank;
-		public final List<Integer> matches;
-		public Score(int rank, List<Integer> matches) {
+		public final IntArrayList matches;
+		public Score(int rank, IntArrayList matches) {
 			this.rank = rank;
 			this.matches = matches;
 		}

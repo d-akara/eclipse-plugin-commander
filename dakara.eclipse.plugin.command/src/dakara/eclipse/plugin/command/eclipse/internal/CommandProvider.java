@@ -56,7 +56,7 @@ public class CommandProvider extends QuickAccessProvider {
 			  .map(command -> new ParameterizedCommand(command, null))
 			  .filter(ehandlerService::canExecute)
 			  .flatMap(paramCommand -> getCombinations(paramCommand.getCommand()).stream().filter( item -> item != null) )
-			  .map(paramCommand -> new CommandElement((ParameterizedCommand) paramCommand, paramCommand.getId(), this))
+			  .map(paramCommand -> new CommandElement((ParameterizedCommand) paramCommand, this))
 			  .peek(element -> commandById.put(element.getId(), element))
 			  .collect(Collectors.toList())
 			  .toArray(new QuickAccessElement[]{});

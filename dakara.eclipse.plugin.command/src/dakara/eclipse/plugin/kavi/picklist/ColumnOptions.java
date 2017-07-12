@@ -23,6 +23,7 @@ public class ColumnOptions<T> {
 	private StyledCellLabelProvider labelProvider;
 	private int columnWidth = 100;
 	private int columnAlignment = SWT.LEFT;
+	private int columnWidthPercent = 0;
 	
 	public ColumnOptions(KaviListColumns<T> kaviListColumns, String columnId, BiFunction<T, Integer, String> columnContentFn, int columnIndex) {
 		this.columnContentFn = columnContentFn;
@@ -46,6 +47,15 @@ public class ColumnOptions<T> {
 		this.columnWidth = width;
 		if (column != null) column.setWidth(width);
 		return this;
+	}
+	
+	public ColumnOptions<T> widthPercent(int width) {
+		this.columnWidthPercent = width;
+		return this;
+	}
+	
+	public int widthPercent() {
+		return this.columnWidthPercent;
 	}
 	
 	public int width() {

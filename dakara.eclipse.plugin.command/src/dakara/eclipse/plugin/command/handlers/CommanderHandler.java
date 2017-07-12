@@ -33,12 +33,12 @@ public class CommanderHandler extends AbstractHandler {
 	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)
 	 */
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		if (kaviPickList == null) {
+//		if (kaviPickList == null) {
 			initialize(HandlerUtil.getActiveWorkbenchWindowChecked(event).getShell().getDisplay());
-		} else {
-			eclipseCommandProvider.initializeWithCurrentContext();
-			kaviPickList.show();
-		}
+//		} else {
+//			eclipseCommandProvider.initializeWithCurrentContext();
+//			kaviPickList.show();
+//		}
 		return null;
 	}
 	
@@ -52,17 +52,20 @@ public class CommanderHandler extends AbstractHandler {
 		
 		kaviPickList = new KaviPickListDialog<>();
 		kaviPickList.setListContentProvider("discovery", CommanderContentProvider.listContentDiscoveryProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
-					.addColumn(labelField.fieldId, labelField.fieldResolver).width(520)
+					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
 		kaviPickList.setListContentProvider("recall",    CommanderContentProvider.listContentRecallProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
-					.addColumn(labelField.fieldId, labelField.fieldResolver).width(520)
+					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);		
+		
+		//kaviPickList.setListContentProvider("internal", listContentProvider)
 		
 //		kaviPickList.addCommand("history: remove", (selectedItems) -> historyStore.remove(selectedItems));
 //		kaviPickList.addChoice("commander initial mode:")
 //					.addCommand("set history", (selectedItems) -> historyStore.remove(selectedItems))
 //		            .addCommand("set normal", (selectedItems) -> historyStore.remove(selectedItems));
+		kaviPickList.setBounds(600, 400);
 		kaviPickList.setCurrentProvider(historyStore.getContentMode());
 		kaviPickList.setResolvedAction(resolvedAction(display, historyStore));
 		kaviPickList.open();	

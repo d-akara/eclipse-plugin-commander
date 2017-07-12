@@ -2,13 +2,12 @@ package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class InputCommand {
 	private final List<String> filter;
 	public final String fastSelectIndex;
 	public final boolean fastSelect;
+	public final boolean multiSelect;
 	public final boolean isColumnFiltering;
 	public final ListType listType;
 	public final String contentMode;
@@ -16,10 +15,11 @@ public class InputCommand {
 		CONTENT,
 		INTERNAL_COMMAND
 	};
-	public InputCommand(List<String> filter, String fastSelectIndex, boolean fastSelect, boolean isColumnFiltering, ListType listType, String contentMode) {
+	public InputCommand(List<String> filter, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean isColumnFiltering, ListType listType, String contentMode) {
 		this.filter = filter;
 		this.fastSelectIndex = fastSelectIndex;
 		this.fastSelect = fastSelect;
+		this.multiSelect = multiSelect;
 		this.isColumnFiltering = isColumnFiltering;
 		this.listType = listType;
 		this.contentMode = contentMode;
@@ -34,14 +34,11 @@ public class InputCommand {
 		return filter.get(column);
 	}
 	
-	public static List<InputCommand> parse(String inputText, String mode) {
-		// split on commands
-		return Stream.of(inputText.split(":"))
-			.map(text -> InputCommand.makeInputCommand(text, mode))
-			.collect(Collectors.toList());
+	public static InputCommand parse(String inputText, String mode) {
+		return InputCommand.makeInputCommand(inputText, mode);
 	}
 	
-	public static List<InputCommand> parse(String inputText) {
+	public static InputCommand parse(String inputText) {
 		return parse(inputText, "");
 	}
 	
@@ -51,6 +48,7 @@ public class InputCommand {
 
 	private static InputCommand makeInputCommand(String commandPart, String mode) {
 		boolean fastSelectActive = commandPart.contains("/");
+		boolean multiSelectActive = commandPart.contains("//");
 		boolean isColumnFiltering = commandPart.contains("|");
 		
 		String[] splitPart = commandPart.split("/");
@@ -59,10 +57,9 @@ public class InputCommand {
 		else filters = splitPart[0].split("\\|");
 				
 		String fastSelect = null;
-		if (splitPart.length == 2) {
-			fastSelect = splitPart[1];
-		}
+		if (splitPart.length == 2) fastSelect = splitPart[1];
+		if (splitPart.length == 3) fastSelect = splitPart[2];  // multi select
 		
-		return new InputCommand(Arrays.asList(filters), fastSelect, fastSelectActive, isColumnFiltering, ListType.CONTENT, mode);
+		return new InputCommand(Arrays.asList(filters), fastSelect, fastSelectActive, multiSelectActive, isColumnFiltering, ListType.CONTENT, mode);
 	}
 }

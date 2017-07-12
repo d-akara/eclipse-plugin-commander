@@ -74,7 +74,9 @@ public class ListRankAndFilter<T> {
 				} 
 			}
 		} catch (Throwable e) {
-			throw new RuntimeException("Problem setting rank", e);
+			e.printStackTrace();
+			// TODO need to figure out how to properly handle
+			// currently since this happens in rxjava thread, we can't throw
 		}
 		return rankedItem;
 	}
@@ -118,8 +120,8 @@ public class ListRankAndFilter<T> {
 		
 		for (int endOfColumnIndex : indexesOfColumnBreaks) {
 			for (int index = offset; index <= endOfColumnIndex; index++) {
-				if (allColumnScore.matches.size() > 0 && index == allColumnScore.matches.get(0)) {
-					allColumnScore.matches.remove(0);
+				if (allColumnScore.matches.size() > 0 && index == allColumnScore.matches.getInt(0)) {
+					allColumnScore.matches.removeInt(0);
 					matches.add(index - offset);
 				}
 			}

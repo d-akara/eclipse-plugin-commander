@@ -37,7 +37,7 @@ public class ListRankAndSelectorTest {
 	
 	@Test
 	public void verifyColumn1Selection() {
-		InputCommand inputCommand = InputCommand.parse("1").get(0);
+		InputCommand inputCommand = InputCommand.parse("1");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("one",  listItems.get(0).dataItem.field2);
 		Assert.assertEquals("four", listItems.get(1).dataItem.field2);
@@ -45,28 +45,28 @@ public class ListRankAndSelectorTest {
 	
 	@Test
 	public void verifyColumn2Selection2() {
-		InputCommand inputCommand = InputCommand.parse("one").get(0);
+		InputCommand inputCommand = InputCommand.parse("one");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("one", listItems.get(0).dataItem.field2);
 	}
 	
 	@Test
 	public void verifyColumn2OnlySelection() {
-		InputCommand inputCommand = InputCommand.parse("|two").get(0);
+		InputCommand inputCommand = InputCommand.parse("|two");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("2", listItems.get(0).dataItem.field1);
 	}
 	
 	@Test
 	public void verifyColumnSelection3() {
-		InputCommand inputCommand = InputCommand.parse("||3").get(0);
+		InputCommand inputCommand = InputCommand.parse("||3");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("2", listItems.get(0).dataItem.field1);
 	}
 	
 	@Test
 	public void multipleWordsOutOfOrder() {
-		InputCommand inputCommand = InputCommand.parse("def abc").get(0);
+		InputCommand inputCommand = InputCommand.parse("def abc");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		RankedItem<TestItem> listItem = listItems.get(0);
 		Assert.assertEquals("5", listItem.dataItem.field1);
@@ -75,14 +75,14 @@ public class ListRankAndSelectorTest {
 	
 	@Test
 	public void spaceAtEndShouldNotMatch() {
-		InputCommand inputCommand = InputCommand.parse("xyz ").get(0);
+		InputCommand inputCommand = InputCommand.parse("xyz ");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals(0, listItems.size());
 	}
 	
 	@Test
 	public void spaceAtEndShouldMatch() {
-		InputCommand inputCommand = InputCommand.parse("adg ").get(0);
+		InputCommand inputCommand = InputCommand.parse("adg ");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		RankedItem<TestItem> listItem = listItems.get(0);
 		Assert.assertEquals("8", listItem.dataItem.field1);
@@ -91,7 +91,7 @@ public class ListRankAndSelectorTest {
 	
 	@Test
 	public void findMatchTrailingEmptyColumns() {
-		InputCommand inputCommand = InputCommand.parse("0").get(0);
+		InputCommand inputCommand = InputCommand.parse("0");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		RankedItem<TestItem> listItem = listItems.get(0);
 		Assert.assertEquals("0", listItem.dataItem.field1);

@@ -40,6 +40,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		listFilterInputControl = new Text(parent, SWT.NONE);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(listFilterInputControl);
 		kaviList.bindInputField(listFilterInputControl);
+		kaviList.setFastSelectAction(this::handleFastSelect);
 		return listFilterInputControl;
 	}
 
@@ -82,13 +83,12 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	}
 	
 	@Override
-	protected Point getDefaultSize() {
-		return new Point(kaviList.getTotalColumnWidth(), 400);
+	protected void initializeBounds() {
+		// prevent sizing on creation when the column definition have not been added yet.
 	}
 	
-	@Override
-	protected void adjustBounds() {
-		Point size = getDefaultSize();
+	public void setBounds(int width, int height) {
+		Point size = new Point(width, height);
 		Point location = getInitialLocation(size);
 		// Add 25 to width to include edge with scroll bar
 		// TODO figure out how to set size precisely
@@ -96,7 +96,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	}
 
 	public void setResolvedAction(Consumer<T> handleSelectFn) {
-		kaviList.setSelectionAction(handleSelectFn);
+		kaviList.setResolvedAction(handleSelectFn);
 	}
 	
 	public KaviListContentProvider<T> setListContentProvider(String name, Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
@@ -109,5 +109,12 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	
 	public void setShowAllWhenNoFilter(boolean showAll) {
 		kaviList.setShowAllWhenNoFilter(showAll);
+	}
+	
+	private void handleFastSelect(RankedItem<T> rankedItem, InputCommand command) {
+		String currentText = listFilterInputControl.getText();
+		String newText = currentText.substring(0, currentText.lastIndexOf('/') + 1);
+		listFilterInputControl.setText(newText);
+		listFilterInputControl.setSelection(newText.length());
 	}
 }

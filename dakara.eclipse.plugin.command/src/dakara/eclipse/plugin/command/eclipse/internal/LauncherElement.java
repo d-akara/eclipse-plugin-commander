@@ -39,7 +39,8 @@ public class LauncherElement extends QuickAccessElement {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return id.equals(obj);
+		if (!(obj instanceof LauncherElement)) return false;
+		return id.equals(((LauncherElement)obj).id);
 	}
 
 	@Override

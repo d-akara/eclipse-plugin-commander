@@ -103,6 +103,12 @@ public class KaviList<T> {
 			
 			final InputCommand inputCommand = InputCommand.parse(filter, currentContentMode());
 			if (filterChanged(inputCommand)) {
+				
+				for (int count = 0; count < 5; count++) {
+					KaviListContentProvider<T> contentProvider = listContentProviders.get(currentContentProvider);
+					contentProvider.listContentProvider.apply(inputCommand);
+				}
+				
 				KaviListContentProvider<T> contentProvider = listContentProviders.get(currentContentProvider);
 				List<RankedItem<T>> tableEntries = contentProvider.listContentProvider.apply(inputCommand);
 				alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
@@ -118,11 +124,10 @@ public class KaviList<T> {
 	
 	private void doTableRefresh(List<RankedItem<T>> tableEntries) {
 		if (tableEntries == null) return;
-		//getCurrentContentProvider().storeCurrentTableState(this);
 		getCurrentContentProvider().setTableEntries(tableEntries);
 		changedAction.accept(tableEntries);
-		table.removeAll();
 		table.setItemCount(tableEntries.size());	
+		tableViewer.refresh();
 	}
 	
 	private boolean filterChanged(InputCommand inputCommand)	{
@@ -144,10 +149,12 @@ public class KaviList<T> {
 		if ((inputCommand.fastSelectIndex != null) && (inputCommand.fastSelectIndex.length() == alphaColumnConverter.getNumberOfCharacters())){
 			int rowIndex = alphaColumnConverter.toNumeric(inputCommand.fastSelectIndex) - 1;
 			
-			if (inputCommand.multiSelect) {
+			if (inputCommand.multiSelect && inputCommand.selectRange) {
+				getCurrentContentProvider().selectRange((RankedItem<T>) table.getItem(rowIndex).getData());
+				tableViewer.refresh();
+			} else if (inputCommand.multiSelect) {
 				getCurrentContentProvider().toggleSelectedState((RankedItem<T>) table.getItem(rowIndex).getData());
 				tableViewer.replace(getCurrentContentProvider().getTableEntries().get(rowIndex), rowIndex);
-				table.redraw();
 			} else {
 				table.setSelection(rowIndex);
 				table.getDisplay().asyncExec(this::handleSelection);
@@ -381,6 +388,7 @@ public class KaviList<T> {
 	public static class KaviListContentProvider<T> {
 		private List<RankedItem<T>> tableEntries;
 		private final Set<RankedItem<T>> selectedEntries = new HashSet<>();
+		private RankedItem<T> lastSelectToggled;
 		public final Function<InputCommand, List<RankedItem<T>>> listContentProvider; 
 		public final String name;
 		private KaviListColumns<T> kaviListColumns;
@@ -413,8 +421,45 @@ public class KaviList<T> {
 		private KaviListContentProvider<T> toggleSelectedState(RankedItem<T> item) {
 			if (selectedEntries.contains(item)) selectedEntries.remove(item);
 			else selectedEntries.add(item);
+			lastSelectToggled = item;
 			return this;
 		}
+		
+		private KaviListContentProvider<T> toggleSelectedState() {
+			if (selectedEntries.size() == 0) {
+				selectedEntries.addAll(tableEntries);
+			} else {
+				selectedEntries.clear();
+			}
+			return this;
+		}
+		
+		private KaviListContentProvider<T> selectRange(RankedItem<T> item) {
+			final int lastSelectToggleIndex = tableEntries.indexOf(lastSelectToggled);
+			final int currentItemIndex = tableEntries.indexOf(item);
+			toggleSelectedState(lastSelectToggled);
+			for (int rowIndex = Math.min(lastSelectToggleIndex, currentItemIndex); rowIndex < Math.abs(lastSelectToggleIndex - currentItemIndex) + 1; rowIndex++) {
+				toggleSelectedState(tableEntries.get(rowIndex));
+			}
+			
+			lastSelectToggled = tableEntries.get(currentItemIndex);
+			return this;
+		}
+		
+		
+		
+		private KaviListContentProvider<T> inverseSelectedState() {
+			for (RankedItem<T> rankedItem : tableEntries) {
+				if (selectedEntries.contains(rankedItem)) {
+					selectedEntries.remove(rankedItem);
+				} else {
+					selectedEntries.add(rankedItem);
+				}
+			}
+			return this;
+		}
+		
+		
 		
 		private boolean isSelected(RankedItem<T> item) {
 			return selectedEntries.contains(item);

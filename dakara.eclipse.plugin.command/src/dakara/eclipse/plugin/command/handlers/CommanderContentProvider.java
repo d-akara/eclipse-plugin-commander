@@ -45,7 +45,7 @@ public class CommanderContentProvider {
 			
 			List<QuickAccessElement> uniqueHistoryItems = historyItems.stream().distinct().collect(Collectors.toList());
 			List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputCommand, uniqueHistoryItems);
-			if (inputCommand.getColumnFilter(0).length() == 0)
+			if ((inputCommand.getColumnFilter(0).length() == 0) && (historyItems.size() > 0))
 				return listRankAndFilter.moveItem(filteredList, historyItems.get(0), 0);
 			else return filteredList;
 		};

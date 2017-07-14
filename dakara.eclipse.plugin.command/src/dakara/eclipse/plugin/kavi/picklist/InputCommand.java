@@ -8,6 +8,7 @@ public class InputCommand {
 	public final String fastSelectIndex;
 	public final boolean fastSelect;
 	public final boolean multiSelect;
+	public final boolean selectRange;
 	public final boolean isColumnFiltering;
 	public final ListType listType;
 	public final String contentMode;
@@ -15,11 +16,12 @@ public class InputCommand {
 		CONTENT,
 		INTERNAL_COMMAND
 	};
-	public InputCommand(List<String> filter, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean isColumnFiltering, ListType listType, String contentMode) {
+	public InputCommand(List<String> filter, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean selectRange, boolean isColumnFiltering, ListType listType, String contentMode) {
 		this.filter = filter;
 		this.fastSelectIndex = fastSelectIndex;
 		this.fastSelect = fastSelect;
 		this.multiSelect = multiSelect;
+		this.selectRange = selectRange;
 		this.isColumnFiltering = isColumnFiltering;
 		this.listType = listType;
 		this.contentMode = contentMode;
@@ -60,6 +62,12 @@ public class InputCommand {
 		if (splitPart.length == 2) fastSelect = splitPart[1];
 		if (splitPart.length == 3) fastSelect = splitPart[2];  // multi select
 		
-		return new InputCommand(Arrays.asList(filters), fastSelect, fastSelectActive, multiSelectActive, isColumnFiltering, ListType.CONTENT, mode);
+		boolean selectRange = false;
+		if (fastSelect != null && fastSelect.startsWith("-")) {
+			selectRange = true;
+			fastSelect = fastSelect.substring(1);
+		}
+		
+		return new InputCommand(Arrays.asList(filters), fastSelect, fastSelectActive, multiSelectActive, selectRange, isColumnFiltering, ListType.CONTENT, mode);
 	}
 }

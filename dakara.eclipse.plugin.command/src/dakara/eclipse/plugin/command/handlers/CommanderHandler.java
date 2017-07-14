@@ -66,7 +66,7 @@ public class CommanderHandler extends AbstractHandler {
 //					.addCommand("set history", (selectedItems) -> historyStore.remove(selectedItems))
 //		            .addCommand("set normal", (selectedItems) -> historyStore.remove(selectedItems));
 		kaviPickList.setBounds(600, 400);
-		kaviPickList.setCurrentProvider(historyStore.getContentMode());
+		kaviPickList.setCurrentProvider("discovery");
 		kaviPickList.setResolvedAction(resolvedAction(display, historyStore));
 		kaviPickList.open();	
 	}

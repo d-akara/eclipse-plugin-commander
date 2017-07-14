@@ -22,14 +22,14 @@ import org.eclipse.swt.widgets.TableItem;
 
 import dakara.eclipse.plugin.stringscore.RankedItem;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public class KaviListColumns<T> {
 	private final List<ColumnOptions<T>> columnOptions = new ArrayList<>();
 	private final TableViewer tableViewer;
-	
-	public KaviListColumns(TableViewer tableViewer) {
+	private final Function<RankedItem<T>, Boolean> rowSelectedResolver;
+	public KaviListColumns(TableViewer tableViewer, Function<RankedItem<T>, Boolean> rowSelectedResolver) {
 		this.tableViewer = tableViewer;
+		this.rowSelectedResolver = rowSelectedResolver;
 	}
 	
 	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
@@ -98,11 +98,16 @@ public class KaviListColumns<T> {
 	
 	@SuppressWarnings("unchecked")
 	private RankedItem<T> applyCellDefaultStyles(final ColumnOptions<T> options, ViewerCell cell) {
+		final RankedItem<T> rankedItem = (RankedItem<T>) cell.getElement();
 		cell.setForeground(fromRegistry(options.getFontColor()));
-		cell.setBackground(fromRegistry(options.getBackgroundColor()));
+		// TODO show selected state
+		if (rowSelectedResolver.apply(rankedItem)) {
+			cell.setBackground(fromRegistry(new RGB(223,214,255)));
+		} else {
+			cell.setBackground(fromRegistry(options.getBackgroundColor()));
+		}
 		Font font = createColumnFont(options, cell);
 		cell.setFont(font);
-		final RankedItem<T> rankedItem = (RankedItem<T>) cell.getElement();
 		return rankedItem;
 	}
 

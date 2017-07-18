@@ -24,6 +24,7 @@ public class ColumnOptions<T> {
 	private int columnWidth = 100;
 	private int columnAlignment = SWT.LEFT;
 	private int columnWidthPercent = 0;
+	private boolean enableBackgroundSelection = true;
 	
 	public ColumnOptions(KaviListColumns<T> kaviListColumns, String columnId, BiFunction<T, Integer, String> columnContentFn, int columnIndex) {
 		this.columnContentFn = columnContentFn;
@@ -136,5 +137,13 @@ public class ColumnOptions<T> {
 	
 	public TableColumn getColumn() {
 		return column;
+	}
+	
+	public boolean isEnableBackgroundSelection() {
+		return enableBackgroundSelection;
+	}
+	
+	public void setEnableBackgroundSelection(boolean enableBackgroundSelection) {
+		this.enableBackgroundSelection = enableBackgroundSelection;
 	}
 }

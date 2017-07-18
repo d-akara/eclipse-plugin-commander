@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="ASCII"?>
-<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmi:id="_BxaXACerEeWxCPrV0pAZQQ">
-  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_QqSikIrOEeW7h_qdP9N9fw" featurename="commands" parentElementId="xpath:/">
-    <elements xsi:type="commands:Command" xmi:id="_UCYfwIrOEeW7h_qdP9N9fw" elementId="dakara.handler.commander" commandName="Commander"/>
-  </fragments>
-  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_fW12kIrOEeW7h_qdP9N9fw" featurename="handlers" parentElementId="xpath:/">
-    <elements xsi:type="commands:Handler" xmi:id="_Wdkx0DOGEeeg073Mh73sAQ" elementId="dakara.eclipse.commander.plugin.handler" contributionURI="bundleclass://dakara.eclipse.commander.plugin/dakara.eclipse.plugin.command.handlers.CommanderHandler" command="_UCYfwIrOEeW7h_qdP9N9fw"/>
-  </fragments>
-</fragment:ModelFragments>

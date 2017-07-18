@@ -100,9 +100,8 @@ public class KaviListColumns<T> {
 	private RankedItem<T> applyCellDefaultStyles(final ColumnOptions<T> options, ViewerCell cell) {
 		final RankedItem<T> rankedItem = (RankedItem<T>) cell.getElement();
 		cell.setForeground(fromRegistry(options.getFontColor()));
-		// TODO show selected state
-		if (rowSelectedResolver.apply(rankedItem)) {
-			cell.setBackground(fromRegistry(new RGB(223,214,255)));
+		if (rowSelectedResolver.apply(rankedItem) && options.isEnableBackgroundSelection()) {
+			cell.setBackground(fromRegistry(new RGB(225,226,206)));
 		} else {
 			cell.setBackground(fromRegistry(options.getBackgroundColor()));
 		}

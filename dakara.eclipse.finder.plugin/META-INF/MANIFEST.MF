@@ -2,20 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Finder
 Bundle-SymbolicName: dakara.eclipse.finder.plugin;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.0.1.qualifier
 Bundle-Vendor: Dakara
-Require-Bundle: javax.inject,
- org.eclipse.osgi,
- org.eclipse.jface,
- org.eclipse.core.expressions,
- org.eclipse.ui,
- org.eclipse.ui.workbench,
+Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.ide,
  org.eclipse.core.runtime,
  org.eclipse.debug.core,
- com.google.gson,
- com.google.guava,
- org.junit,
  dakara.eclipse.commander.plugin
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Import-Package: javax.annotation;version="1.2.0"

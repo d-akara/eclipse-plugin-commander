@@ -20,16 +20,17 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
+import dakara.eclipse.plugin.kavi.picklist.KaviList.InternalContentProviderProxy.RowState;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
 
 public class KaviListColumns<T> {
 	private final List<ColumnOptions<T>> columnOptions = new ArrayList<>();
 	private final TableViewer tableViewer;
-	private final Function<RankedItem<T>, Boolean> rowSelectedResolver;
-	public KaviListColumns(TableViewer tableViewer, Function<RankedItem<T>, Boolean> rowSelectedResolver) {
+	private final Function<RankedItem<T>, Integer> rowStateResolver;
+	public KaviListColumns(TableViewer tableViewer, Function<RankedItem<T>, Integer> rowStateResolver) {
 		this.tableViewer = tableViewer;
-		this.rowSelectedResolver = rowSelectedResolver;
+		this.rowStateResolver = rowStateResolver;
 	}
 	
 	public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
@@ -100,8 +101,13 @@ public class KaviListColumns<T> {
 	private RankedItem<T> applyCellDefaultStyles(final ColumnOptions<T> options, ViewerCell cell) {
 		final RankedItem<T> rankedItem = (RankedItem<T>) cell.getElement();
 		cell.setForeground(fromRegistry(options.getFontColor()));
-		if (rowSelectedResolver.apply(rankedItem) && options.isEnableBackgroundSelection()) {
+		int rowState = rowStateResolver.apply(rankedItem);
+	    if ((rowState & RowState.LAST_SELECT.value) != 0 && options.isEnableBackgroundSelection()) {
+	    		cell.setBackground(fromRegistry(new RGB(225,200,226)));
+	    } else if ((rowState & RowState.SELECTED.value) != 0 && options.isEnableBackgroundSelection()) {
 			cell.setBackground(fromRegistry(new RGB(225,226,206)));
+		} else if ((rowState & RowState.CURSOR.value) != 0 && options.isEnableBackgroundSelection()) {
+			cell.setBackground(fromRegistry(new RGB(225,226,226)));
 		} else {
 			cell.setBackground(fromRegistry(options.getBackgroundColor()));
 		}

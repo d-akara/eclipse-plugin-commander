@@ -52,7 +52,7 @@ public class FinderHandler extends AbstractHandler {
 		// TODO can not automatically set current provider since columns have not been added when content provider is set
 		finder.setCurrentProvider("discovery");
 		
-		finder.setResolvedAction(resourceItem -> openFile(workbenchPage, workspace, resourceItem));
+		finder.setMultiResolvedAction(resourceItems -> openFile(workbenchPage, workspace, resourceItems));
 		finder.setShowAllWhenNoFilter(false);
 		finder.setBounds(800, 400);
 		finder.open();	
@@ -87,9 +87,11 @@ public class FinderHandler extends AbstractHandler {
 		return files;
 	}
 	
-	public static void openFile(IWorkbenchPage workbenchPage, IWorkspaceRoot workspace, ResourceItem resourceItem) {
+	public static void openFile(IWorkbenchPage workbenchPage, IWorkspaceRoot workspace, List<ResourceItem> resourceItems) {
 		try {
-			IDE.openEditor(workbenchPage, workspace.getFile(Path.fromPortableString(resourceItem.project + "/" + resourceItem.path + "/" + resourceItem.name)));
+			for (ResourceItem resourceItem : resourceItems) {
+				IDE.openEditor(workbenchPage, workspace.getFile(Path.fromPortableString(resourceItem.project + "/" + resourceItem.path + "/" + resourceItem.name)));
+			}
 		} catch (PartInitException e) {
 			throw new RuntimeException(e);
 		}

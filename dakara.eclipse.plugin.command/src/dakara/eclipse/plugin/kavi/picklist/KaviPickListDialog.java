@@ -16,7 +16,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.internal.progress.ProgressManagerUtil;
 
-import dakara.eclipse.plugin.kavi.picklist.KaviList.KaviListContentProvider;
+import dakara.eclipse.plugin.kavi.picklist.KaviList.InternalContentProviderProxy;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 /*
  * TODO - add page numbers to bottom
@@ -99,7 +99,11 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		kaviList.setResolvedAction(handleSelectFn);
 	}
 	
-	public KaviListContentProvider<T> setListContentProvider(String name, Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
+	public void setMultiResolvedAction(Consumer<List<T>> handleSelectFn) {
+		kaviList.setMultiResolvedAction(handleSelectFn);
+	}
+	
+	public InternalContentProviderProxy<T> setListContentProvider(String name, Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
 		return kaviList.setListContentProvider(name, listContentProvider);
 	}
 	

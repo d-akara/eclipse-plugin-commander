@@ -19,6 +19,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.themes.ColorUtil;
 
 import dakara.eclipse.plugin.kavi.picklist.KaviList.InternalContentProviderProxy.RowState;
 import dakara.eclipse.plugin.stringscore.RankedItem;
@@ -102,15 +103,15 @@ public class KaviListColumns<T> {
 		final RankedItem<T> rankedItem = (RankedItem<T>) cell.getElement();
 		cell.setForeground(fromRegistry(options.getFontColor()));
 		int rowState = rowStateResolver.apply(rankedItem);
-	    if ((rowState & RowState.LAST_SELECT.value) != 0 && options.isEnableBackgroundSelection()) {
-	    		cell.setBackground(fromRegistry(new RGB(225,200,226)));
-	    } else if ((rowState & RowState.SELECTED.value) != 0 && options.isEnableBackgroundSelection()) {
+		
+	    if ((rowState & RowState.SELECTED.value) != 0 && options.isEnableBackgroundSelection()) {
 			cell.setBackground(fromRegistry(new RGB(225,226,206)));
-		} else if ((rowState & RowState.CURSOR.value) != 0 && options.isEnableBackgroundSelection()) {
-			cell.setBackground(fromRegistry(new RGB(225,226,226)));
 		} else {
 			cell.setBackground(fromRegistry(options.getBackgroundColor()));
 		}
+	    if ((rowState & RowState.CURSOR.value) != 0 && options.isEnableBackgroundSelection()) {
+			cell.setBackground(fromRegistry(ColorUtil.blend(cell.getBackground().getRGB(), new RGB(200,200,200))));
+	    }
 		Font font = createColumnFont(options, cell);
 		cell.setFont(font);
 		return rankedItem;

@@ -44,8 +44,8 @@ public class KaviList<T> {
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 	
 	private InputCommand previousInputCommand = null;
-	private Consumer<List<RankedItem<T>>> changedAction = null;
-	private BiConsumer<RankedItem<T>, InputCommand> fastSelectAction = null;
+	private BiConsumer<List<RankedItem<T>>, Set<RankedItem<T>>> changedAction = null;
+	private BiConsumer<Set<RankedItem<T>>, InputCommand> fastSelectAction = null;
 	private Map<String, InternalContentProviderProxy<T>> listContentProviders = new LinkedHashMap<>();
 	
 	private String currentContentProvider;
@@ -62,7 +62,7 @@ public class KaviList<T> {
 		this.rapidInputPickList = rapidInputPickList;
 	}
 
-	public void setListContentChangedAction(Consumer<List<RankedItem<T>>> changedAction) {
+	public void setListContentChangedAction(BiConsumer<List<RankedItem<T>>, Set<RankedItem<T>>> changedAction) {
 		this.changedAction = changedAction;
 	}
 	
@@ -88,7 +88,7 @@ public class KaviList<T> {
 		subjectFilter.onNext(filter);
 	}
 	
-	public void setFastSelectAction(BiConsumer<RankedItem<T>, InputCommand> fastSelectAction) {
+	public void setFastSelectAction(BiConsumer<Set<RankedItem<T>>, InputCommand> fastSelectAction) {
 		this.fastSelectAction = fastSelectAction;
 	}
 
@@ -125,7 +125,7 @@ public class KaviList<T> {
 	private void doTableRefresh(List<RankedItem<T>> tableEntries) {
 		if (tableEntries == null) return;
 		contentProvider().setTableEntries(tableEntries);
-		changedAction.accept(tableEntries);
+		changedAction.accept(tableEntries, contentProvider().getSelectedEntries());
 		table.removeAll();
 		table.setItemCount(tableEntries.size());	
 	}
@@ -154,17 +154,17 @@ public class KaviList<T> {
 				tableViewer.refresh();
 			} else if (inputCommand.multiSelect) {
 				contentProvider().toggleSelectedState((RankedItem<T>) table.getItem(rowIndex).getData());
-				tableViewer.replace(contentProvider().getTableEntries().get(rowIndex), rowIndex);
+				tableViewer.refresh();
 			} else {
 				contentProvider().toggleSelectedState((RankedItem<T>) table.getItem(rowIndex).getData());
 				table.getDisplay().asyncExec(this::handleSelection);
 			}
 			
-			if (fastSelectAction != null) fastSelectAction.accept((RankedItem<T>) table.getItem(rowIndex).getData(), inputCommand);
+			if (fastSelectAction != null) fastSelectAction.accept(contentProvider().getSelectedEntries(), inputCommand);
 		} else if (inputCommand.inverseSelection) {
 			contentProvider().inverseSelectedState();
 			tableViewer.refresh();
-			if (fastSelectAction != null) fastSelectAction.accept(null, inputCommand);
+			if (fastSelectAction != null) fastSelectAction.accept(contentProvider().getSelectedEntries(), inputCommand);
 		} else if (inputCommand.selectAll) {
 			contentProvider().toggleSelectedState();
 			tableViewer.refresh();
@@ -305,11 +305,15 @@ public class KaviList<T> {
 				}				
 				switch (e.keyCode) {
 				case SWT.ARROW_DOWN:
-					tableViewer.reveal(contentProvider().moveCursorDown().getCursorItem());
+					e.doit = false;
+//					tableViewer.reveal(contentProvider().moveCursorDown().getCursorItem());
+					contentProvider().moveCursorDown().getCursorItem();
 					tableViewer.refresh();
 					break;
 				case SWT.ARROW_UP:
-					tableViewer.reveal(contentProvider().moveCursorUp().getCursorItem());
+					e.doit = false;
+//					tableViewer.reveal(contentProvider().moveCursorUp().getCursorItem());
+					contentProvider().moveCursorUp().getCursorItem();
 					tableViewer.refresh();
 					break;
 				case SWT.CR:
@@ -384,8 +388,7 @@ public class KaviList<T> {
 	public static class InternalContentProviderProxy<T> {
 		public enum RowState {
 			SELECTED(1),
-			CURSOR(2),
-			LAST_SELECT(4);
+			CURSOR(2);
 			
 			public final int value;
 			RowState(int value) {this.value = value;}
@@ -393,7 +396,6 @@ public class KaviList<T> {
 		
 		private List<RankedItem<T>> tableEntries;
 		private final Set<RankedItem<T>> selectedEntries = new HashSet<>();
-		private RankedItem<T> lastSelectToggled;
 		private int rowCursorIndex = -1;
 		public final Function<InputCommand, List<RankedItem<T>>> listContentProvider; 
 		public final String name;
@@ -461,7 +463,13 @@ public class KaviList<T> {
 		private InternalContentProviderProxy<T> toggleSelectedState(RankedItem<T> item) {
 			if (selectedEntries.contains(item)) selectedEntries.remove(item);
 			else selectedEntries.add(item);
-			lastSelectToggled = item;
+			rowCursorIndex = tableEntries.indexOf(item);
+			return this;
+		}
+		
+		private InternalContentProviderProxy<T> setSelectedState(RankedItem<T> item, boolean selected) {
+			if (selected) selectedEntries.add(item);
+			else selectedEntries.remove(item);
 			return this;
 		}
 		
@@ -471,18 +479,24 @@ public class KaviList<T> {
 			} else {
 				selectedEntries.clear();
 			}
+			rowCursorIndex = -1;
+			
 			return this;
 		}
 		
 		private InternalContentProviderProxy<T> selectRange(RankedItem<T> item) {
-			final int lastSelectToggleIndex = tableEntries.indexOf(lastSelectToggled);
+			if (rowCursorIndex < 0) return this;
+			
+			final int rowAnchor = rowCursorIndex;
+			final boolean anchorSelected = selectedEntries.contains(tableEntries.get(rowAnchor));
 			final int currentItemIndex = tableEntries.indexOf(item);
-			toggleSelectedState(lastSelectToggled);
-			for (int rowIndex = Math.min(lastSelectToggleIndex, currentItemIndex); rowIndex < Math.abs(lastSelectToggleIndex - currentItemIndex) + 1; rowIndex++) {
-				toggleSelectedState(tableEntries.get(rowIndex));
+			final int rangeCount = Math.abs(rowAnchor - currentItemIndex) + 1;
+			final int rangeStart = Math.min(rowCursorIndex, currentItemIndex);
+			for (int rowIndex = rangeStart; rowIndex < rangeCount + rangeStart; rowIndex++) {
+				setSelectedState(tableEntries.get(rowIndex), anchorSelected);
 			}
 			
-			lastSelectToggled = tableEntries.get(currentItemIndex);
+			rowCursorIndex = currentItemIndex;
 			return this;
 		}
 		
@@ -500,7 +514,6 @@ public class KaviList<T> {
 		private int isSelected(RankedItem<T> item) {
 			int state = 0;
 			if (selectedEntries.contains(item)) state |= RowState.SELECTED.value;
-			if (item.equals(lastSelectToggled)) state |= RowState.LAST_SELECT.value;
 			if (rowCursorIndex > -1 && tableEntries.indexOf(item) == rowCursorIndex) state |= RowState.CURSOR.value;
 			
 			return state;

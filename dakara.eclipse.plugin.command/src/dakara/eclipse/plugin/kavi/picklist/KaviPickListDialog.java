@@ -1,6 +1,7 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -25,13 +26,19 @@ import dakara.eclipse.plugin.stringscore.RankedItem;
  */
 @SuppressWarnings("restriction")
 public class KaviPickListDialog<T> extends PopupDialog {
-	private KaviList<T> kaviList;
+	private final KaviList<T> kaviList;
 	private Text listFilterInputControl;
+	private final StatusDisplayInfo displayInfo = new StatusDisplayInfo();
 
 	public KaviPickListDialog() {
 		super(ProgressManagerUtil.getDefaultParent(), SWT.RESIZE | SWT.NO_BACKGROUND, true, true, false, true, true, null, "Central Command");
 		kaviList = new KaviList<T>(KaviPickListDialog.this);
-		kaviList.setListContentChangedAction(list -> setInfoText("mode: " + kaviList.currentContentMode() + " / items: " +list.size()));
+		kaviList.setListContentChangedAction((list, selections) -> {
+			displayInfo.filteredCount = list.size();
+			displayInfo.selectedCount = selections.size();
+			displayInfo.mode = kaviList.currentContentMode();
+			updateInfoDisplay();
+		});
 		create();
 	}
 
@@ -87,6 +94,10 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		// prevent sizing on creation when the column definition have not been added yet.
 	}
 	
+	private void updateInfoDisplay() {
+		setInfoText("mode: " + displayInfo.mode + " / items: " + displayInfo.filteredCount + " / selected: " + displayInfo.selectedCount);
+	}
+	
 	public void setBounds(int width, int height) {
 		Point size = new Point(width, height);
 		Point location = getInitialLocation(size);
@@ -115,10 +126,19 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		kaviList.setShowAllWhenNoFilter(showAll);
 	}
 	
-	private void handleFastSelect(RankedItem<T> rankedItem, InputCommand command) {
+	private void handleFastSelect(Set<RankedItem<T>> selectedItems, InputCommand command) {
 		String currentText = listFilterInputControl.getText();
 		String newText = currentText.substring(0, currentText.lastIndexOf('/') + 1);
 		listFilterInputControl.setText(newText);
 		listFilterInputControl.setSelection(newText.length());
+		displayInfo.selectedCount = selectedItems.size();
+		updateInfoDisplay();
+	}
+	
+	private class StatusDisplayInfo {
+		public String mode;
+		public int itemCount;
+		public int filteredCount;
+		public int selectedCount;
 	}
 }

@@ -123,6 +123,7 @@ public class KaviList<T> {
 	}
 	
 	private void doTableRefresh(List<RankedItem<T>> tableEntries) {
+		// TODO - review how many times we call refresh - performance
 		if (tableEntries == null) return;
 		contentProvider().setTableEntries(tableEntries);
 		changedAction.accept(tableEntries, contentProvider().getSelectedEntries());
@@ -245,11 +246,10 @@ public class KaviList<T> {
 		return listContentProviders.get(currentContentProvider);
 	}
 
-	@SuppressWarnings("unchecked")
 	private void handleSelection() {
 		RankedItem<T> selectedElement = null;
-		if (table.getSelectionCount() == 1) {
-			selectedElement = (RankedItem<T>) table.getSelection()[0].getData();
+		if (contentProvider().getSelectedEntries().size() <= 1) {
+			selectedElement = (RankedItem<T>) contentProvider().getCursorItem();
 		}
 		
 		InternalContentProviderProxy<T> listContentProvider = contentProvider();

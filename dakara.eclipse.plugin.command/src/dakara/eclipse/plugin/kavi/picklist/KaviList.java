@@ -169,7 +169,7 @@ public class KaviList<T> {
 		} else if (inputCommand.selectAll) {
 			contentProvider().toggleSelectedState();
 			tableViewer.refresh();
-			if (fastSelectAction != null) fastSelectAction.accept(null, inputCommand);
+			if (fastSelectAction != null) fastSelectAction.accept(contentProvider().getSelectedEntries(), inputCommand);
 		}
 	}
 
@@ -177,7 +177,7 @@ public class KaviList<T> {
 		final boolean isFastSelectShowing = columnOptions.get(0).width() > 0;
 		// show fast select index if we are typing a fast select expression
 		if ((inputCommand.fastSelect && !isFastSelectShowing)) {
-			int columnWidth = averageCharacterWidth(columnOptions.get(0).getFont()) * alphaColumnConverter.getNumberOfCharacters() + 5;
+			int columnWidth = averageCharacterWidth(columnOptions.get(0).getFont()) * alphaColumnConverter.getNumberOfCharacters() + getAdjustmentForFastSelectColumn();
 			columnOptions.get(0).width(columnWidth);
 			columnOptions.get(1).changeWidth(-columnWidth + 1);
 		} else if (!inputCommand.fastSelect && isFastSelectShowing) {
@@ -229,17 +229,27 @@ public class KaviList<T> {
 	private void autoAdjustColumnWidths(Composite composite) {
 		InternalContentProviderProxy<T> contentProvider = contentProvider();
 		if (contentProvider == null) return;
-		
-		int fixedTotalColumnWidth = contentProvider.kaviListColumns.totalFixedColumnWidth();
+		final int scrollBarWidth = composite.getShell().getSize().x - table.getClientArea().width;;
+		final int fixedTotalColumnWidth = contentProvider.kaviListColumns.totalFixedColumnWidth();
+		System.out.println(scrollBarWidth);
 		KaviListColumns<T> kaviListColumns = contentProvider.kaviListColumns;
 		if (kaviListColumns.getColumnOptions().size() > 1) {
-			int remainingWidth = composite.getShell().getSize().x - 25 - fixedTotalColumnWidth;
+			int remainingWidth = composite.getShell().getSize().x - getAdjustmentForTableWidth() - fixedTotalColumnWidth;
+//			int remainingWidth = table.getClientArea().width - fixedTotalColumnWidth;
 			for (ColumnOptions<T> options : kaviListColumns.getColumnOptions()) {
 				int percentWidth = options.widthPercent();
 				if (percentWidth > 0)
 					options.width((int) (remainingWidth * (percentWidth / 100f)));
 			}
 		}
+	}
+	
+	private int getAdjustmentForTableWidth() {
+		return SWT.getPlatform().equals("win32") ? 40 : 25;
+	}
+	
+	private int getAdjustmentForFastSelectColumn() {
+		return SWT.getPlatform().equals("win32") ? 9 : 4;
 	}
 	
 	public InternalContentProviderProxy<T> contentProvider() {

@@ -229,13 +229,10 @@ public class KaviList<T> {
 	private void autoAdjustColumnWidths(Composite composite) {
 		InternalContentProviderProxy<T> contentProvider = contentProvider();
 		if (contentProvider == null) return;
-		final int scrollBarWidth = composite.getShell().getSize().x - table.getClientArea().width;;
 		final int fixedTotalColumnWidth = contentProvider.kaviListColumns.totalFixedColumnWidth();
-		System.out.println(scrollBarWidth);
 		KaviListColumns<T> kaviListColumns = contentProvider.kaviListColumns;
 		if (kaviListColumns.getColumnOptions().size() > 1) {
 			int remainingWidth = composite.getShell().getSize().x - getAdjustmentForTableWidth() - fixedTotalColumnWidth;
-//			int remainingWidth = table.getClientArea().width - fixedTotalColumnWidth;
 			for (ColumnOptions<T> options : kaviListColumns.getColumnOptions()) {
 				int percentWidth = options.widthPercent();
 				if (percentWidth > 0)

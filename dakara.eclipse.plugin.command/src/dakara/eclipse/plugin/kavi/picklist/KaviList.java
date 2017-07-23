@@ -288,15 +288,18 @@ public class KaviList<T> {
 				
 				if (isKeys(SWT.CTRL, 'j', e)) {
 					e.doit = false; // prevent beeping
-					// TODO wrap around
 					int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
-					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()+itemsInViewPort);
+					int topIndex = tableViewer.getTable().getTopIndex() + itemsInViewPort;
+					if (topIndex == tableViewer.getTable().getItemCount() - 1) topIndex = 0;
+					tableViewer.getTable().setTopIndex(topIndex);
 				}
 				if (isKeys(SWT.CTRL, 'k', e)) {
 					e.doit = false;
 					int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
-					// TODO wrap around
-					tableViewer.getTable().setTopIndex(tableViewer.getTable().getTopIndex()-itemsInViewPort);
+					int topIndex = tableViewer.getTable().getTopIndex();
+					if (topIndex == 0) topIndex = tableViewer.getTable().getItemCount() - itemsInViewPort;
+					else topIndex -= itemsInViewPort;
+					tableViewer.getTable().setTopIndex(topIndex);
 				}
 				if (isKeys(SWT.CTRL, 'h', e)) {
 					e.doit = false;
@@ -313,13 +316,11 @@ public class KaviList<T> {
 				switch (e.keyCode) {
 				case SWT.ARROW_DOWN:
 					e.doit = false;
-//					tableViewer.reveal(contentProvider().moveCursorDown().getCursorItem());
 					contentProvider().moveCursorDown().getCursorItem();
 					tableViewer.refresh();
 					break;
 				case SWT.ARROW_UP:
 					e.doit = false;
-//					tableViewer.reveal(contentProvider().moveCursorUp().getCursorItem());
 					contentProvider().moveCursorUp().getCursorItem();
 					tableViewer.refresh();
 					break;

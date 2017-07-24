@@ -1,5 +1,6 @@
 package dakara.eclipse.plugin.command.handlers;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -16,6 +17,7 @@ import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.His
 import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
+import dakara.eclipse.plugin.stringscore.RankedItem;
 
 
 @SuppressWarnings("restriction")
@@ -59,7 +61,12 @@ public class CommanderHandler extends AbstractHandler {
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);		
 		
-		//kaviPickList.setListContentProvider("internal", listContentProvider)
+		// TODO types need to be against the content provider
+		// the resolved action will need to be with the content provider.
+//		kaviPickList.setListContentProvider("internal", input -> {
+//			RankedItem<String> item = new RankedItem<>("history: remove");
+//			return Arrays.asList(item);
+//		});
 		
 //		kaviPickList.addCommand("history: remove", (selectedItems) -> historyStore.remove(selectedItems));
 //		kaviPickList.addChoice("commander initial mode:")

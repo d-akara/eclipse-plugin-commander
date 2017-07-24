@@ -315,11 +315,13 @@ public class KaviList<T> {
 				case SWT.ARROW_DOWN:
 					e.doit = false;
 					contentProvider().moveCursorDown().getCursorItem();
+					tableViewer.getTable().setTopIndex(contentProvider().getCursorIndex());
 					tableViewer.refresh();
 					break;
 				case SWT.ARROW_UP:
 					e.doit = false;
 					contentProvider().moveCursorUp().getCursorItem();
+					tableViewer.getTable().setTopIndex(contentProvider().getCursorIndex());
 					tableViewer.refresh();
 					break;
 				case SWT.CR:
@@ -471,6 +473,10 @@ public class KaviList<T> {
 		private RankedItem<T> getCursorItem() {
 			if (rowCursorIndex < 0) return null;
 			return tableEntries.get(rowCursorIndex);
+		}
+		
+		private int getCursorIndex() {
+			return rowCursorIndex;
 		}
 		
 		private Set<RankedItem<T>> getSelectedEntries() {

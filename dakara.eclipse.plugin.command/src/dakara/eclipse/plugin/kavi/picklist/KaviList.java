@@ -34,10 +34,13 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 
 import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
+import dakara.eclipse.plugin.log.EclipsePluginLogger;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 import io.reactivex.subjects.PublishSubject;
 
 public class KaviList<T> {
+	private EclipsePluginLogger logger = new EclipsePluginLogger("dakara.eclipse.commander.plugin");
+	
 	private final KaviPickListDialog<T> rapidInputPickList;
 	private Consumer<T> setResolvedAction;
 	private Consumer<List<T>> setMultiResolvedAction;
@@ -117,8 +120,7 @@ public class KaviList<T> {
 			
 			display.asyncExec(() -> fastSelectItem(inputCommand));
 		} catch (Throwable e) {
-			// TODO how can we report error?
-			e.printStackTrace();
+			logger.info("Problem occurred refreshing content with filter '" +filter+ "'", e);
 		}
 	}
 	
@@ -249,6 +251,10 @@ public class KaviList<T> {
 		return SWT.getPlatform().equals("win32") ? 9 : 4;
 	}
 	
+	private int getAdjustmentForRowCountVisible() {
+		return SWT.getPlatform().equals("win32") ? 0 : 1;
+	}
+	
 	public InternalContentProviderProxy<T> contentProvider() {
 		return listContentProviders.get(currentContentProvider);
 	}
@@ -285,21 +291,13 @@ public class KaviList<T> {
 		filterText.addKeyListener(new KeyListener() {
 			@Override
 			public void keyPressed(KeyEvent e) {
-				
 				if (isKeys(SWT.CTRL, 'j', e)) {
 					e.doit = false; // prevent beeping
-					int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
-					int topIndex = tableViewer.getTable().getTopIndex() + itemsInViewPort;
-					if (topIndex == tableViewer.getTable().getItemCount() - 1) topIndex = 0;
-					tableViewer.getTable().setTopIndex(topIndex);
+					scrollPageDown();
 				}
 				if (isKeys(SWT.CTRL, 'k', e)) {
 					e.doit = false;
-					int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
-					int topIndex = tableViewer.getTable().getTopIndex();
-					if (topIndex == 0) topIndex = tableViewer.getTable().getItemCount() - itemsInViewPort;
-					else topIndex -= itemsInViewPort;
-					tableViewer.getTable().setTopIndex(topIndex);
+					scrollPageUp();
 				}
 				if (isKeys(SWT.CTRL, 'h', e)) {
 					e.doit = false;
@@ -393,6 +391,21 @@ public class KaviList<T> {
 		}
 	}
 	
+	private void scrollPageDown() {
+		int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
+		int topIndex = tableViewer.getTable().getTopIndex() + itemsInViewPort;
+		if (topIndex == tableViewer.getTable().getItemCount() - getAdjustmentForRowCountVisible()) topIndex = 0;
+		tableViewer.getTable().setTopIndex(topIndex);
+	}
+
+	private void scrollPageUp() {
+		int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
+		int topIndex = tableViewer.getTable().getTopIndex();
+		if (topIndex == 0) topIndex = tableViewer.getTable().getItemCount() - itemsInViewPort;
+		else topIndex -= itemsInViewPort;
+		tableViewer.getTable().setTopIndex(topIndex);
+	}
+
 	public static class InternalContentProviderProxy<T> {
 		public enum RowState {
 			SELECTED(1),

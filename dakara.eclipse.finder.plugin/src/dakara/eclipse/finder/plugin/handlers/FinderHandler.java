@@ -45,6 +45,7 @@ public class FinderHandler extends AbstractHandler {
 		
 		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
 		finder.setListContentProvider("discovery", listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), files))
+			  .setMultiResolvedAction(resourceItems -> openFile(workbenchPage, workspace, resourceItems))
 			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30)
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
@@ -52,7 +53,6 @@ public class FinderHandler extends AbstractHandler {
 		// TODO can not automatically set current provider since columns have not been added when content provider is set
 		finder.setCurrentProvider("discovery");
 		
-		finder.setMultiResolvedAction(resourceItems -> openFile(workbenchPage, workspace, resourceItems));
 		finder.setShowAllWhenNoFilter(false);
 		finder.setBounds(800, 400);
 		finder.open();	

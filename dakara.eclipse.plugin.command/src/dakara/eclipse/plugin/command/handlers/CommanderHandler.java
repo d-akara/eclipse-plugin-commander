@@ -54,19 +54,19 @@ public class CommanderHandler extends AbstractHandler {
 		
 		kaviPickList = new KaviPickListDialog<>();
 		kaviPickList.setListContentProvider("discovery", CommanderContentProvider.listContentDiscoveryProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
+					.setResolvedAction(resolvedAction(display, historyStore))
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
 		kaviPickList.setListContentProvider("recall",    CommanderContentProvider.listContentRecallProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
+					.setResolvedAction(resolvedAction(display, historyStore))
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
-					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);		
+					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		// TODO types need to be against the content provider
-		// the resolved action will need to be with the content provider.
 //		kaviPickList.setListContentProvider("internal", input -> {
 //			RankedItem<String> item = new RankedItem<>("history: remove");
 //			return Arrays.asList(item);
-//		});
+//		}).addColumn("name", item -> item).widthPercent(100);
 		
 //		kaviPickList.addCommand("history: remove", (selectedItems) -> historyStore.remove(selectedItems));
 //		kaviPickList.addChoice("commander initial mode:")
@@ -74,7 +74,6 @@ public class CommanderHandler extends AbstractHandler {
 //		            .addCommand("set normal", (selectedItems) -> historyStore.remove(selectedItems));
 		kaviPickList.setBounds(600, 400);
 		kaviPickList.setCurrentProvider("recall");
-		kaviPickList.setResolvedAction(resolvedAction(display, historyStore));
 		kaviPickList.open();	
 	}
 

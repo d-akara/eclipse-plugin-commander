@@ -2,7 +2,6 @@ package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.eclipse.jface.dialogs.PopupDialog;
@@ -105,16 +104,8 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		// TODO figure out how to set size precisely
 		getShell().setBounds(getConstrainedShellBounds(new Rectangle(location.x, location.y, size.x + 25, size.y)));
 	}
-
-	public void setResolvedAction(Consumer<T> handleSelectFn) {
-		kaviList.setResolvedAction(handleSelectFn);
-	}
 	
-	public void setMultiResolvedAction(Consumer<List<T>> handleSelectFn) {
-		kaviList.setMultiResolvedAction(handleSelectFn);
-	}
-	
-	public InternalContentProviderProxy<T> setListContentProvider(String name, Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
+	public <U> InternalContentProviderProxy<U> setListContentProvider(String name, Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
 		return kaviList.setListContentProvider(name, listContentProvider);
 	}
 	

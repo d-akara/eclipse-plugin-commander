@@ -42,14 +42,13 @@ public class KaviList<T> {
 	private EclipsePluginLogger logger = new EclipsePluginLogger("dakara.eclipse.commander.plugin");
 	
 	private final KaviPickListDialog<T> rapidInputPickList;
-	private Consumer<T> setResolvedAction;
-	private Consumer<List<T>> setMultiResolvedAction;
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 	
 	private InputCommand previousInputCommand = null;
 	private BiConsumer<List<RankedItem<T>>, Set<RankedItem<T>>> changedAction = null;
 	private BiConsumer<Set<RankedItem<T>>, InputCommand> fastSelectAction = null;
-	private Map<String, InternalContentProviderProxy<T>> listContentProviders = new LinkedHashMap<>();
+	@SuppressWarnings("rawtypes")
+	private Map<String, InternalContentProviderProxy> listContentProviders = new LinkedHashMap<>();
 	
 	private String currentContentProvider;
 	private boolean showAllWhenNoFilter = true;
@@ -69,18 +68,10 @@ public class KaviList<T> {
 		this.changedAction = changedAction;
 	}
 	
-	public InternalContentProviderProxy<T> setListContentProvider(String name, Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
-		InternalContentProviderProxy<T> contentProvider = new InternalContentProviderProxy<>(this, name, listContentProvider);
+	public <U> InternalContentProviderProxy<U> setListContentProvider(String name, Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
+		InternalContentProviderProxy<U> contentProvider = new InternalContentProviderProxy<U>(this, name, listContentProvider);
 		this.listContentProviders.put(name, contentProvider);
 		return contentProvider;
-	}
-	
-	public void setResolvedAction(Consumer<T> setResolvedAction) {
-		this.setResolvedAction = setResolvedAction;
-	}
-	
-	public void setMultiResolvedAction(Consumer<List<T>> setResolvedAction) {
-		this.setMultiResolvedAction = setResolvedAction;
 	}
 	
 	public void setShowAllWhenNoFilter(boolean showAllWhenNoFilter) {
@@ -270,17 +261,17 @@ public class KaviList<T> {
 		List<RankedItem<T>> tableEntries = listContentProvider.getTableEntries();
 		if (tableEntries.isEmpty()) return;
 		
-		if (setMultiResolvedAction != null)  {
+		if (listContentProvider.setMultiResolvedAction != null)  {
 			if (listContentProvider.selectedEntries.size() == 0) listContentProvider.toggleSelectedState(listContentProvider.tableEntries.get(0));
 			close();
-			setMultiResolvedAction.accept(listContentProvider.selectedEntries.stream().map(rankedItem -> rankedItem.dataItem).collect(Collectors.toList()));
+			listContentProvider.setMultiResolvedAction.accept(listContentProvider.selectedEntries.stream().map(rankedItem -> rankedItem.dataItem).collect(Collectors.toList()));
 		}
 		// TODO temp work around until we decide how to auto select
 		// get first item in the list
 		if ((selectedElement == null) && (tableEntries.size() > 0)) selectedElement = tableEntries.get(0);
-		if (selectedElement != null && setResolvedAction != null) {
+		if (selectedElement != null && listContentProvider.resolvedActionProvider != null) {
 			close();
-			setResolvedAction.accept(selectedElement.dataItem);
+			listContentProvider.resolvedActionProvider.accept(selectedElement.dataItem);
 		}
 	}
 
@@ -408,7 +399,7 @@ public class KaviList<T> {
 		tableViewer.getTable().setTopIndex(topIndex);
 	}
 
-	public static class InternalContentProviderProxy<T> {
+	public static class InternalContentProviderProxy<U> {
 		public enum RowState {
 			SELECTED(1),
 			CURSOR(2);
@@ -417,39 +408,51 @@ public class KaviList<T> {
 			RowState(int value) {this.value = value;}
 		};
 		
-		private List<RankedItem<T>> tableEntries;
-		private final Set<RankedItem<T>> selectedEntries = new HashSet<>();
+		private Consumer<U> resolvedActionProvider;
+		private Consumer<List<U>> setMultiResolvedAction;
+		private List<RankedItem<U>> tableEntries;
+		private final Set<RankedItem<U>> selectedEntries = new HashSet<>();
 		private int rowCursorIndex = -1;
-		public final Function<InputCommand, List<RankedItem<T>>> listContentProvider; 
+		public final Function<InputCommand, List<RankedItem<U>>> listContentProvider; 
 		public final String name;
-		private KaviListColumns<T> kaviListColumns;
-		public InternalContentProviderProxy(KaviList<T> kaviList, String name, Function<InputCommand, List<RankedItem<T>>> listContentProvider) {
+		private KaviListColumns<U> kaviListColumns;
+		public InternalContentProviderProxy(@SuppressWarnings("rawtypes") KaviList kaviList, String name, Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
 			this.name = name;
 			this.listContentProvider = listContentProvider;
 			
-			KaviListColumns<T> kaviListColumns = new KaviListColumns<T>(kaviList.tableViewer, this::isSelected);
+			KaviListColumns<U> kaviListColumns = new KaviListColumns<U>(kaviList.tableViewer, this::isSelected);
 			kaviListColumns.addColumn("fastSelect", (item, rowIndex) -> kaviList.alphaColumnConverter.toAlpha(rowIndex + 1)).width(0).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT)).setEnableBackgroundSelection(false);;
 			this.kaviListColumns = kaviListColumns;
 		}
 		
-		public ColumnOptions<T> addColumn(String columnId, Function<T, String> columnContentFn) {
+		public ColumnOptions<U> addColumn(String columnId, Function<U, String> columnContentFn) {
 			return kaviListColumns.addColumn(columnId, (item, rowIndex) -> columnContentFn.apply(item));
 		}	
+		
+		public InternalContentProviderProxy<U> setResolvedAction(Consumer<U> actionResolver) {
+			this.resolvedActionProvider = actionResolver;
+			return this;
+		}
+		
+		public InternalContentProviderProxy<U> setMultiResolvedAction(Consumer<List<U>> setResolvedAction) {
+			this.setMultiResolvedAction = setResolvedAction;
+			return this;
+		}		
 		
 		private void installProvider() {
 			kaviListColumns.reset().installColumnsIntoTable();
 		}
 		
-		private InternalContentProviderProxy<T> setTableEntries(List<RankedItem<T>> tableEntries) {
+		private InternalContentProviderProxy<U> setTableEntries(List<RankedItem<U>> tableEntries) {
 			this.tableEntries = tableEntries;
 			return this;
 		}
 		
-		private List<RankedItem<T>> getTableEntries() {
+		private List<RankedItem<U>> getTableEntries() {
 			return this.tableEntries;
 		}
 		
-		private InternalContentProviderProxy<T> moveCursorDown() {
+		private InternalContentProviderProxy<U> moveCursorDown() {
 			if (rowCursorIndex == tableEntries.size() - 1) {
 				rowCursorIndex = -1;
 			}
@@ -460,7 +463,7 @@ public class KaviList<T> {
 			return this;
 		}
 		
-		private InternalContentProviderProxy<T> moveCursorUp() {
+		private InternalContentProviderProxy<U> moveCursorUp() {
 			if (rowCursorIndex >= 0) {
 				rowCursorIndex--;
 			} else {
@@ -470,7 +473,7 @@ public class KaviList<T> {
 			return this;
 		}
 		
-		private RankedItem<T> getCursorItem() {
+		private RankedItem<U> getCursorItem() {
 			if (rowCursorIndex < 0) return null;
 			return tableEntries.get(rowCursorIndex);
 		}
@@ -479,28 +482,28 @@ public class KaviList<T> {
 			return rowCursorIndex;
 		}
 		
-		private Set<RankedItem<T>> getSelectedEntries() {
+		private Set<RankedItem<U>> getSelectedEntries() {
 			return selectedEntries;
 		}
 		
-		private int getRowIndex(RankedItem<T> rankedItem) {
+		private int getRowIndex(RankedItem<U> rankedItem) {
 			return tableEntries.indexOf(rankedItem);
 		}
 		
-		private InternalContentProviderProxy<T> toggleSelectedState(RankedItem<T> item) {
+		private InternalContentProviderProxy<U> toggleSelectedState(RankedItem<U> item) {
 			if (selectedEntries.contains(item)) selectedEntries.remove(item);
 			else selectedEntries.add(item);
 			rowCursorIndex = tableEntries.indexOf(item);
 			return this;
 		}
 		
-		private InternalContentProviderProxy<T> setSelectedState(RankedItem<T> item, boolean selected) {
+		private InternalContentProviderProxy<U> setSelectedState(RankedItem<U> item, boolean selected) {
 			if (selected) selectedEntries.add(item);
 			else selectedEntries.remove(item);
 			return this;
 		}
 		
-		private InternalContentProviderProxy<T> toggleSelectedState() {
+		private InternalContentProviderProxy<U> toggleSelectedState() {
 			if (selectedEntries.size() == 0) {
 				selectedEntries.addAll(tableEntries);
 			} else {
@@ -511,7 +514,7 @@ public class KaviList<T> {
 			return this;
 		}
 		
-		private InternalContentProviderProxy<T> selectRange(RankedItem<T> item) {
+		private InternalContentProviderProxy<U> selectRange(RankedItem<U> item) {
 			if (rowCursorIndex < 0) return this;
 			
 			final int rowAnchor = rowCursorIndex;
@@ -527,8 +530,8 @@ public class KaviList<T> {
 			return this;
 		}
 		
-		private InternalContentProviderProxy<T> inverseSelectedState() {
-			for (RankedItem<T> rankedItem : tableEntries) {
+		private InternalContentProviderProxy<U> inverseSelectedState() {
+			for (RankedItem<U> rankedItem : tableEntries) {
 				if (selectedEntries.contains(rankedItem)) {
 					selectedEntries.remove(rankedItem);
 				} else {
@@ -538,7 +541,7 @@ public class KaviList<T> {
 			return this;
 		}
 		
-		private int isSelected(RankedItem<T> item) {
+		private int isSelected(RankedItem<U> item) {
 			int state = 0;
 			if (selectedEntries.contains(item)) state |= RowState.SELECTED.value;
 			if (rowCursorIndex > -1 && tableEntries.indexOf(item) == rowCursorIndex) state |= RowState.CURSOR.value;

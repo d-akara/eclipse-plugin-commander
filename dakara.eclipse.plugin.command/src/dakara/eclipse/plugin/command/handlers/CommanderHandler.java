@@ -67,8 +67,8 @@ public class CommanderHandler extends AbstractHandler {
 //			RankedItem<String> item = new RankedItem<>("history: remove");
 //			return Arrays.asList(item);
 //		}).addColumn("name", item -> item).widthPercent(100);
-		
-//		kaviPickList.addCommand("history: remove", (selectedItems) -> historyStore.remove(selectedItems));
+		// add commands to provider context or global or dependent on item context
+//		kaviPickList.addCommand("recall", "history: remove", (selectedItems) -> historyStore.remove(selectedItems));
 //		kaviPickList.addChoice("commander initial mode:")
 //					.addCommand("set history", (selectedItems) -> historyStore.remove(selectedItems))
 //		            .addCommand("set normal", (selectedItems) -> historyStore.remove(selectedItems));

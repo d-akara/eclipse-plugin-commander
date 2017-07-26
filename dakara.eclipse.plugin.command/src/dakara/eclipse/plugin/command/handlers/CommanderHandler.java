@@ -63,10 +63,10 @@ public class CommanderHandler extends AbstractHandler {
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-//		kaviPickList.setListContentProvider("internal", input -> {
-//			RankedItem<String> item = new RankedItem<>("history: remove");
-//			return Arrays.asList(item);
-//		}).addColumn("name", item -> item).widthPercent(100);
+		kaviPickList.setListContentProvider("_internal", input -> {
+			RankedItem<String> item = new RankedItem<>("history: remove");
+			return Arrays.asList(item);
+		}).addColumn("name", item -> item).widthPercent(100);
 		// add commands to provider context or global or dependent on item context
 //		kaviPickList.addCommand("recall", "history: remove", (selectedItems) -> historyStore.remove(selectedItems));
 //		kaviPickList.addChoice("commander initial mode:")

@@ -13,12 +13,11 @@ public class InputCommand {
 	public final boolean inverseSelection;
 	public final boolean selectAll;
 	public final ListType listType;
-	public final String contentMode;
 	public enum ListType {
 		CONTENT,
 		INTERNAL_COMMAND
 	};
-	public InputCommand(List<String> filter, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean selectRange, boolean inverseSelection, boolean selectAll, boolean isColumnFiltering, ListType listType, String contentMode) {
+	public InputCommand(List<String> filter, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean selectRange, boolean inverseSelection, boolean selectAll, boolean isColumnFiltering, ListType listType) {
 		this.filter = filter;
 		this.fastSelectIndex = fastSelectIndex;
 		this.fastSelect = fastSelect;
@@ -28,7 +27,6 @@ public class InputCommand {
 		this.selectAll = selectAll;
 		this.isColumnFiltering = isColumnFiltering;
 		this.listType = listType;
-		this.contentMode = contentMode;
 	}
 	
 	public String getColumnFilter(final int column) {
@@ -40,19 +38,15 @@ public class InputCommand {
 		return filter.get(column);
 	}
 	
-	public static InputCommand parse(String inputText, String mode) {
-		return InputCommand.makeInputCommand(inputText, mode);
-	}
-	
 	public static InputCommand parse(String inputText) {
-		return parse(inputText, "");
+		return InputCommand.makeInputCommand(inputText);
 	}
 	
 	public boolean isFilterEqual(InputCommand otherInput) {
 		return filter.equals(otherInput.filter) && isColumnFiltering == otherInput.isColumnFiltering;
 	}
 
-	private static InputCommand makeInputCommand(String commandPart, String mode) {
+	private static InputCommand makeInputCommand(String commandPart) {
 		boolean fastSelectActive = commandPart.contains("/");
 		boolean multiSelectActive = commandPart.contains("//");
 		boolean isColumnFiltering = commandPart.contains("|");
@@ -81,6 +75,6 @@ public class InputCommand {
 				selectAll = true;
 			} 
 		}
-		return new InputCommand(Arrays.asList(filters), fastSelect, fastSelectActive, multiSelectActive, selectRange, inverseSelection, selectAll, isColumnFiltering, ListType.CONTENT, mode);
+		return new InputCommand(Arrays.asList(filters), fastSelect, fastSelectActive, multiSelectActive, selectRange, inverseSelection, selectAll, isColumnFiltering, ListType.CONTENT);
 	}
 }

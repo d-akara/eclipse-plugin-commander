@@ -36,8 +36,6 @@ public class CommanderContentProvider {
 	public static Function<InputCommand, List<RankedItem<QuickAccessElement>>> listContentRecallProvider(ListRankAndFilter<QuickAccessElement> listRankAndFilter, CommandDialogPersistedSettings<QuickAccessElement> historyStore, EclipseCommandProvider eclipseCommandProvider) {
 
 		return (inputCommand) -> {
-			historyStore.setContentMode(inputCommand.contentMode);
-			
 			List<QuickAccessElement> historyItems = new ArrayList<>();
 			for (HistoryEntry entry : historyStore.getHistory()) {
 				historyItems.add((QuickAccessElement) entry.getHistoryItem());

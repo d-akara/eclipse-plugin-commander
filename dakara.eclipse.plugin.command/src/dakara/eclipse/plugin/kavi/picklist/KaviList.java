@@ -44,7 +44,8 @@ public class KaviList<T> {
 	private final KaviPickListDialog<T> rapidInputPickList;
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 	
-	private InputCommand previousInputCommand = null;
+	private InternalContentProviderProxy previousProvider = null;
+	private InternalContentProviderProxy lastRefreshWithProvider = null;
 	private BiConsumer<List<RankedItem<T>>, Set<RankedItem<T>>> changedAction = null;
 	private BiConsumer<Set<RankedItem<T>>, InputCommand> fastSelectAction = null;
 	@SuppressWarnings("rawtypes")
@@ -96,13 +97,13 @@ public class KaviList<T> {
 			if (table == null) return;
 			
 			if (!showAllWhenNoFilter && filter.length() == 0) {
-				previousInputCommand = null;
+				contentProvider().previousInputCommand = null;
 				display.asyncExec(() -> doTableRefresh(new ArrayList<>()));
 				return;
 			}
 			
-			final InputCommand inputCommand = InputCommand.parse(filter, currentContentMode());
-			if (filterChanged(inputCommand)) {
+			final InputCommand inputCommand = InputCommand.parse(filter);
+			if (filterChanged(inputCommand) | providerChanged()) {
 				InternalContentProviderProxy<T> contentProvider = listContentProviders.get(currentContentProvider);
 				List<RankedItem<T>> tableEntries = contentProvider.listContentProvider.apply(inputCommand);
 				alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
@@ -125,14 +126,21 @@ public class KaviList<T> {
 	}
 	
 	private boolean filterChanged(InputCommand inputCommand)	{
-		if (previousInputCommand == null) {
-			previousInputCommand = inputCommand;
+		if (contentProvider().previousInputCommand == null) {
+			contentProvider().previousInputCommand = inputCommand;
 			return true;
 		}
-		boolean filterChanged = !inputCommand.isFilterEqual(previousInputCommand);
-		filterChanged |= !inputCommand.contentMode.equals(previousInputCommand.contentMode);
-		previousInputCommand = inputCommand;
+		boolean filterChanged = !inputCommand.isFilterEqual(contentProvider().previousInputCommand);
+		contentProvider().previousInputCommand = inputCommand;
 		return filterChanged;
+	}
+	
+	private boolean providerChanged() {
+		boolean providerChanged = true;
+		if (lastRefreshWithProvider == contentProvider()) providerChanged = false;
+		
+		lastRefreshWithProvider = contentProvider();
+		return providerChanged;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -246,7 +254,7 @@ public class KaviList<T> {
 		return SWT.getPlatform().equals("win32") ? 0 : 1;
 	}
 	
-	public InternalContentProviderProxy<T> contentProvider() {
+	public InternalContentProviderProxy contentProvider() {
 		return listContentProviders.get(currentContentProvider);
 	}
 
@@ -327,6 +335,13 @@ public class KaviList<T> {
 					handleRefresh(( (Text) e.widget).getText());
 					display.asyncExec(() -> table.getParent().getShell().setRedraw(true));
 					break;
+				case ';':
+					e.doit = false;
+					toggleInternalCommands();
+					table.getParent().getShell().setRedraw(false);
+					handleRefresh(( (Text) e.widget).getText());
+					display.asyncExec(() -> table.getParent().getShell().setRedraw(true));					
+					break;
 				}
 			}
 			@Override
@@ -345,11 +360,16 @@ public class KaviList<T> {
 	
 	private void nextContentMode() {
 		String[] keys = listContentProviders.keySet().toArray(new String[] {});
-		for (int keyIndex = 0; keyIndex < keys.length; keyIndex++) {
-			String key = keys[keyIndex];
+		if (keys.length == 0) return;
+		
+		int keyIndex = 0;
+		while (keyIndex <= keys.length) {
+			String key = keys[keyIndex++ % keys.length];
 			if (key.equals(currentContentProvider)) {
-				if (keyIndex < keys.length - 1) setCurrentProvider(keys[keyIndex + 1]);
-				else setCurrentProvider(keys[0]);
+				String providerName = keys[keyIndex % keys.length];
+				
+				if (providerName.equals("_internal")) providerName = keys[(keyIndex + 1) % keys.length]; // skip to next item
+				setCurrentProvider(providerName);
 				break;
 			}
 		}
@@ -357,6 +377,18 @@ public class KaviList<T> {
 	
 	public String currentContentMode() {
 		return currentContentProvider;
+	}
+	
+	public void toggleInternalCommands() {
+		final InternalContentProviderProxy previousProvider = this.previousProvider;
+		this.previousProvider = contentProvider();
+		
+		if (currentContentProvider.equals("_internal")) {
+			setCurrentProvider(previousProvider.name);
+		} else {
+			setCurrentProvider("_internal");
+		}
+		
 	}
 	
 	public void setCurrentProvider(String mode) {
@@ -416,6 +448,7 @@ public class KaviList<T> {
 		public final Function<InputCommand, List<RankedItem<U>>> listContentProvider; 
 		public final String name;
 		private KaviListColumns<U> kaviListColumns;
+		private InputCommand previousInputCommand = null;
 		public InternalContentProviderProxy(@SuppressWarnings("rawtypes") KaviList kaviList, String name, Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
 			this.name = name;
 			this.listContentProvider = listContentProvider;

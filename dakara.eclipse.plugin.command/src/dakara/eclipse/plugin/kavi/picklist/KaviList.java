@@ -449,13 +449,16 @@ public class KaviList<T> {
 		public final String name;
 		private KaviListColumns<U> kaviListColumns;
 		private InputCommand previousInputCommand = null;
+		private KaviList kaviList;
+		private boolean restoreFilterOnChange = false;
+		
 		public InternalContentProviderProxy(@SuppressWarnings("rawtypes") KaviList kaviList, String name, Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
 			this.name = name;
 			this.listContentProvider = listContentProvider;
-			
 			KaviListColumns<U> kaviListColumns = new KaviListColumns<U>(kaviList.tableViewer, this::isSelected);
 			kaviListColumns.addColumn("fastSelect", (item, rowIndex) -> kaviList.alphaColumnConverter.toAlpha(rowIndex + 1)).width(0).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT)).setEnableBackgroundSelection(false);;
 			this.kaviListColumns = kaviListColumns;
+			this.kaviList = kaviList;
 		}
 		
 		public ColumnOptions<U> addColumn(String columnId, Function<U, String> columnContentFn) {
@@ -470,10 +473,21 @@ public class KaviList<T> {
 		public InternalContentProviderProxy<U> setMultiResolvedAction(Consumer<List<U>> setResolvedAction) {
 			this.setMultiResolvedAction = setResolvedAction;
 			return this;
-		}		
+		}
+		
+		public InternalContentProviderProxy<U> setRestoreFilterTextOnProviderChange(boolean restoreOnChange) {
+			restoreFilterOnChange = restoreOnChange;
+			return this;
+		}
 		
 		private void installProvider() {
 			kaviListColumns.reset().installColumnsIntoTable();
+			if (!restoreFilterOnChange && (kaviList.previousProvider == null || !kaviList.previousProvider.restoreFilterOnChange)) return;
+			
+			if (previousInputCommand != null)
+				kaviList.rapidInputPickList.setFilterInputText(previousInputCommand.filterText);
+			else 
+				kaviList.rapidInputPickList.setFilterInputText("");
 		}
 		
 		private InternalContentProviderProxy<U> setTableEntries(List<RankedItem<U>> tableEntries) {

@@ -4,7 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class InputCommand {
-	private final List<String> filter;
+	public final String filterText;
+	private final List<String> columnFilters;
 	public final String fastSelectIndex;
 	public final boolean fastSelect;
 	public final boolean multiSelect;
@@ -17,8 +18,9 @@ public class InputCommand {
 		CONTENT,
 		INTERNAL_COMMAND
 	};
-	public InputCommand(List<String> filter, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean selectRange, boolean inverseSelection, boolean selectAll, boolean isColumnFiltering, ListType listType) {
-		this.filter = filter;
+	public InputCommand(String filterText, List<String> columnFilters, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean selectRange, boolean inverseSelection, boolean selectAll, boolean isColumnFiltering, ListType listType) {
+		this.filterText = filterText;
+		this.columnFilters = columnFilters;
 		this.fastSelectIndex = fastSelectIndex;
 		this.fastSelect = fastSelect;
 		this.multiSelect = multiSelect;
@@ -31,11 +33,11 @@ public class InputCommand {
 	
 	public String getColumnFilter(final int column) {
 		// When we only have 1 filter it should be applied to all columns
-		if (!isColumnFiltering) return filter.get(0);
+		if (!isColumnFiltering) return columnFilters.get(0);
 		
-		if (column >= filter.size()) return "";
+		if (column >= columnFilters.size()) return "";
 		
-		return filter.get(column);
+		return columnFilters.get(column);
 	}
 	
 	public static InputCommand parse(String inputText) {
@@ -43,7 +45,7 @@ public class InputCommand {
 	}
 	
 	public boolean isFilterEqual(InputCommand otherInput) {
-		return filter.equals(otherInput.filter) && isColumnFiltering == otherInput.isColumnFiltering;
+		return columnFilters.equals(otherInput.columnFilters) && isColumnFiltering == otherInput.isColumnFiltering;
 	}
 
 	private static InputCommand makeInputCommand(String commandPart) {
@@ -52,9 +54,9 @@ public class InputCommand {
 		boolean isColumnFiltering = commandPart.contains("|");
 		
 		String[] splitPart = commandPart.split("/");
-		String[] filters;
-		if (splitPart.length == 0) filters = new String[]{""};
-		else filters = splitPart[0].split("\\|");
+		String[] columnFilters;
+		if (splitPart.length == 0) columnFilters = new String[]{""};
+		else columnFilters = splitPart[0].split("\\|");
 				
 		String fastSelect = null;
 		if (splitPart.length == 2) fastSelect = splitPart[1];
@@ -75,6 +77,6 @@ public class InputCommand {
 				selectAll = true;
 			} 
 		}
-		return new InputCommand(Arrays.asList(filters), fastSelect, fastSelectActive, multiSelectActive, selectRange, inverseSelection, selectAll, isColumnFiltering, ListType.CONTENT);
+		return new InputCommand(commandPart, Arrays.asList(columnFilters), fastSelect, fastSelectActive, multiSelectActive, selectRange, inverseSelection, selectAll, isColumnFiltering, ListType.CONTENT);
 	}
 }

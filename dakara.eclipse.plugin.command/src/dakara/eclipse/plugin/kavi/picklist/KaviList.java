@@ -381,7 +381,6 @@ public class KaviList<T> {
 	
 	public void toggleInternalCommands() {
 		final InternalContentProviderProxy previousProvider = this.previousProvider;
-		this.previousProvider = contentProvider();
 		
 		if (currentContentProvider.equals("_internal")) {
 			setCurrentProvider(previousProvider.name);
@@ -393,8 +392,7 @@ public class KaviList<T> {
 	
 	public void setCurrentProvider(String mode) {
 		if (currentContentProvider != null && currentContentProvider.equals(mode)) return;
-//		if (currentContentProvider != null)
-//			getCurrentContentProvider().storeCurrentTableState(this);
+		previousProvider = contentProvider();
 		currentContentProvider = mode;
 		Composite composite = table.getParent();
 		composite.getShell().setRedraw(false);
@@ -441,6 +439,7 @@ public class KaviList<T> {
 		};
 		
 		private Consumer<U> resolvedActionProvider;
+		private BiConsumer<U, List> resolvedContextActionProvider;
 		private Consumer<List<U>> setMultiResolvedAction;
 		private List<RankedItem<U>> tableEntries;
 		private final Set<RankedItem<U>> selectedEntries = new HashSet<>();
@@ -467,6 +466,11 @@ public class KaviList<T> {
 		
 		public InternalContentProviderProxy<U> setResolvedAction(Consumer<U> actionResolver) {
 			this.resolvedActionProvider = actionResolver;
+			return this;
+		}
+		
+		public InternalContentProviderProxy<U> setResolvedContextAction(BiConsumer<U, List> actionResolver) {
+			this.resolvedContextActionProvider = actionResolver;
 			return this;
 		}
 		

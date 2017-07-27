@@ -16,7 +16,7 @@ import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 
 @SuppressWarnings("restriction")
-public class CommanderContentProvider {
+public class CommanderContentProviders {
 	
 	public static Function<InputCommand, List<RankedItem<QuickAccessElement>>> listContentDiscoveryProvider(ListRankAndFilter<QuickAccessElement> listRankAndFilter, CommandDialogPersistedSettings<QuickAccessElement> historyStore, EclipseCommandProvider eclipseCommandProvider) {
 		

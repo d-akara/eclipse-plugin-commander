@@ -14,6 +14,7 @@ import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 import dakara.eclipse.plugin.command.eclipse.internal.EclipseCommandProvider;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.HistoryKey;
+import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider;
 import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
@@ -47,27 +48,30 @@ public class CommanderHandler extends AbstractHandler {
 	public void initialize(Display display) throws ExecutionException {
 		FieldResolver<QuickAccessElement> providerField = new FieldResolver<>("provider",  item -> item.getProvider().getName());
 		FieldResolver<QuickAccessElement> labelField = new FieldResolver<>("label",  item -> item.getLabel());
-		ListRankAndFilter<QuickAccessElement> listRankAndFilter = CommanderContentProvider.listRankAndFilter(labelField, providerField);
+		ListRankAndFilter<QuickAccessElement> listRankAndFilter = CommanderContentProviders.listRankAndFilter(labelField, providerField);
 		
 		eclipseCommandProvider = new EclipseCommandProvider();
 		CommandDialogPersistedSettings<QuickAccessElement> historyStore = createSettingsStore(display, eclipseCommandProvider);
 		
 		kaviPickList = new KaviPickListDialog<>();
-		kaviPickList.setListContentProvider("discovery", CommanderContentProvider.listContentDiscoveryProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
+		kaviPickList.setListContentProvider("discovery", CommanderContentProviders.listContentDiscoveryProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
 					.setResolvedAction(resolvedAction(display, historyStore))
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		kaviPickList.setListContentProvider("recall",    CommanderContentProvider.listContentRecallProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
+		kaviPickList.setListContentProvider("recall",    CommanderContentProviders.listContentRecallProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
 					.setResolvedAction(resolvedAction(display, historyStore))
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		kaviPickList.setListContentProvider("_internal", input -> {
-			RankedItem<String> item = new RankedItem<>("history: remove");
-			return Arrays.asList(item);
-		}).setRestoreFilterTextOnProviderChange(true)
-		  .addColumn("name", item -> item).widthPercent(100);
+		
+		InternalCommandContextProvider contextProvider = new InternalCommandContextProvider();
+		contextProvider.addCommand("discovery", "show me", selections -> selections.get(0));
+		
+		kaviPickList.setListContentProvider("_internal", contextProvider.makeProviderFunction()).setRestoreFilterTextOnProviderChange(true)
+		  .setResolvedContextAction((command, selections) -> command.handleSelections.accept(selections)) // get previous provider selections
+		  .addColumn("name", item -> item.name).widthPercent(100);
+		
 		// add commands to provider context or global or dependent on item context
 //		kaviPickList.addCommand("recall", "history: remove", (selectedItems) -> historyStore.remove(selectedItems));
 //		kaviPickList.addChoice("commander initial mode:")

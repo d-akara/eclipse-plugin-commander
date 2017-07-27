@@ -120,10 +120,14 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	private void handleFastSelect(Set<RankedItem<T>> selectedItems, InputCommand command) {
 		String currentText = listFilterInputControl.getText();
 		String newText = currentText.substring(0, currentText.lastIndexOf('/') + 1);
-		listFilterInputControl.setText(newText);
-		listFilterInputControl.setSelection(newText.length());
+		setFilterInputText(newText);
 		displayInfo.selectedCount = selectedItems.size();
 		updateInfoDisplay();
+	}
+	
+	public void setFilterInputText(String newText) {
+		listFilterInputControl.setText(newText);
+		listFilterInputControl.setSelection(newText.length());
 	}
 	
 	private class StatusDisplayInfo {

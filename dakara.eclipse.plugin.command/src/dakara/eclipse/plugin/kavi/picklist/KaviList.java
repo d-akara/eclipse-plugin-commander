@@ -281,6 +281,12 @@ public class KaviList<T> {
 			close();
 			listContentProvider.resolvedActionProvider.accept(selectedElement.dataItem);
 		}
+		
+		if (listContentProvider.resolvedContextActionProvider != null) {
+			listContentProvider.resolvedContextActionProvider.accept(selectedElement.dataItem, previousProvider);
+			contentProvider().previousInputCommand = null; // clear out when we execute command
+			setCurrentProvider(previousProvider.name);
+		}		
 	}
 
 	public void bindInputField(Text filterText) {
@@ -439,11 +445,13 @@ public class KaviList<T> {
 		};
 		
 		private Consumer<U> resolvedActionProvider;
-		private BiConsumer<U, List> resolvedContextActionProvider;
+		private BiConsumer<U, InternalContentProviderProxy> resolvedContextActionProvider;
 		private Consumer<List<U>> setMultiResolvedAction;
 		private List<RankedItem<U>> tableEntries;
 		private final Set<RankedItem<U>> selectedEntries = new HashSet<>();
 		private int rowCursorIndex = -1;
+		// TODO do not expose function. wrap function so that we can control the table entries content
+		// so we can support showing only selected entries
 		public final Function<InputCommand, List<RankedItem<U>>> listContentProvider; 
 		public final String name;
 		private KaviListColumns<U> kaviListColumns;
@@ -469,7 +477,7 @@ public class KaviList<T> {
 			return this;
 		}
 		
-		public InternalContentProviderProxy<U> setResolvedContextAction(BiConsumer<U, List> actionResolver) {
+		public InternalContentProviderProxy<U> setResolvedContextAction(BiConsumer<U, InternalContentProviderProxy> actionResolver) {
 			this.resolvedContextActionProvider = actionResolver;
 			return this;
 		}
@@ -598,6 +606,17 @@ public class KaviList<T> {
 			if (rowCursorIndex > -1 && tableEntries.indexOf(item) == rowCursorIndex) state |= RowState.CURSOR.value;
 			
 			return state;
+		}
+		
+		public InternalContentProviderProxy<U> setEntriesAllSelected() {
+			tableEntries.clear();
+			tableEntries.addAll(selectedEntries);
+			return this;
+		}
+		
+		public InternalContentProviderProxy<U> clearSelections() {
+			selectedEntries.clear();
+			return this;
 		}
 	}
 }

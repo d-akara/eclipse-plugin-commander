@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import dakara.eclipse.plugin.kavi.picklist.KaviList.InternalContentProviderProxy;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
 import dakara.eclipse.plugin.stringscore.RankedItem;
@@ -26,22 +27,22 @@ public class InternalCommandContextProvider {
 		return listRankAndFilter;
 	}
 	
-	public InternalCommandContextProvider addCommand(String mode, String name, Consumer<List> handleSelections) {
-		commands.add(new ContextCommand<>(name, mode, handleSelections));
+	public <T> InternalCommandContextProvider addCommand(String mode, String name, Consumer<InternalContentProviderProxy<T>> handleSelections) {
+		commands.add(new ContextCommand(name, mode, handleSelections));
 		return this;
 	}
 	
-	public InternalCommandContextProvider addChoice(String parentName, String name, Consumer<List> handleSelections) {
+	public <T> InternalCommandContextProvider addChoice(String parentName, String name, Consumer<List<T>> handleSelections) {
 		// TODO find parent, add choice as child
 		//commands.add(new ContextCommand<>(name, mode, handleSelections));
 		return this;
 	}
 	
-	public static class ContextCommand<T> {
+	public static class ContextCommand {
 		public final String mode;
 		public final String name;
-		public final Consumer<List> handleSelections;
-		public ContextCommand(String name, String mode, Consumer<List> handleSelections) {
+		public final Consumer handleSelections;
+		public ContextCommand(String name, String mode, Consumer handleSelections) {
 			this.name = name;
 			this.mode = mode;
 			this.handleSelections = handleSelections;

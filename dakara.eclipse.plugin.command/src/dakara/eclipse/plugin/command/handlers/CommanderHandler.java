@@ -1,6 +1,7 @@
 package dakara.eclipse.plugin.command.handlers;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -15,6 +16,7 @@ import dakara.eclipse.plugin.command.eclipse.internal.EclipseCommandProvider;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.HistoryKey;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider;
+import dakara.eclipse.plugin.kavi.picklist.KaviList.InternalContentProviderProxy;
 import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
@@ -66,10 +68,10 @@ public class CommanderHandler extends AbstractHandler {
 		
 		
 		InternalCommandContextProvider contextProvider = new InternalCommandContextProvider();
-		contextProvider.addCommand("discovery", "show me", selections -> selections.get(0));
+		contextProvider.addCommand("discovery", "selections: show all", (InternalContentProviderProxy<QuickAccessElement> provider) -> provider.setEntriesAllSelected());
 		
 		kaviPickList.setListContentProvider("_internal", contextProvider.makeProviderFunction()).setRestoreFilterTextOnProviderChange(true)
-		  .setResolvedContextAction((command, selections) -> command.handleSelections.accept(selections)) // get previous provider selections
+		  .setResolvedContextAction((command, provider) -> command.handleSelections.accept(provider)) // get previous provider selections
 		  .addColumn("name", item -> item.name).widthPercent(100);
 		
 		// add commands to provider context or global or dependent on item context

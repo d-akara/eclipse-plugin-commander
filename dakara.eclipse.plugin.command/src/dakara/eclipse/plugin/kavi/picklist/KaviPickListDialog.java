@@ -16,7 +16,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.internal.progress.ProgressManagerUtil;
 
-import dakara.eclipse.plugin.kavi.picklist.KaviList.InternalContentProviderProxy;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 /*
  * TODO - add page numbers to bottom

@@ -21,7 +21,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.themes.ColorUtil;
 
-import dakara.eclipse.plugin.kavi.picklist.KaviList.InternalContentProviderProxy.RowState;
+import dakara.eclipse.plugin.kavi.picklist.InternalContentProviderProxy.RowState;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
 

@@ -1,16 +1,13 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.LocalResourceManager;
@@ -44,8 +41,8 @@ public class KaviList<T> {
 	private final KaviPickListDialog<T> rapidInputPickList;
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 	
-	private InternalContentProviderProxy previousProvider = null;
-	private InternalContentProviderProxy lastRefreshWithProvider = null;
+	private InternalContentProviderProxy<T> previousProvider = null;
+	private InternalContentProviderProxy<T> lastRefreshWithProvider = null;
 	private BiConsumer<List<RankedItem<T>>, Set<RankedItem<T>>> changedAction = null;
 	private BiConsumer<Set<RankedItem<T>>, InputCommand> fastSelectAction = null;
 	@SuppressWarnings("rawtypes")
@@ -71,6 +68,11 @@ public class KaviList<T> {
 	
 	public <U> InternalContentProviderProxy<U> setListContentProvider(String name, Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
 		InternalContentProviderProxy<U> contentProvider = new InternalContentProviderProxy<U>(this, name, listContentProvider);
+		KaviListColumns<U> kaviListColumns = new KaviListColumns<U>(tableViewer, contentProvider::isSelected);
+		kaviListColumns.addColumn("fastSelect", (item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).width(0).searchable(false)
+					   .backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT)).setEnableBackgroundSelection(false);	
+		contentProvider.setKaviListColumns(kaviListColumns);
+		
 		this.listContentProviders.put(name, contentProvider);
 		return contentProvider;
 	}
@@ -97,13 +99,13 @@ public class KaviList<T> {
 			if (table == null) return;
 			
 			if (!showAllWhenNoFilter && filter.length() == 0) {
-				contentProvider().previousInputCommand = null;
+				contentProvider().clearPreviousInputCommand();
 				display.asyncExec(() -> doTableRefresh(new ArrayList<>()));
 				return;
 			}
 			
 			final InputCommand inputCommand = InputCommand.parse(filter);
-			if (filterChanged(inputCommand) | providerChanged()) {
+			if (contentProvider().filterChanged(inputCommand) | providerChanged()) {
 				InternalContentProviderProxy<T> contentProvider = listContentProviders.get(currentContentProvider);
 				List<RankedItem<T>> tableEntries = contentProvider.listContentProvider.apply(inputCommand);
 				alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
@@ -125,16 +127,6 @@ public class KaviList<T> {
 		table.setItemCount(tableEntries.size());	
 	}
 	
-	private boolean filterChanged(InputCommand inputCommand)	{
-		if (contentProvider().previousInputCommand == null) {
-			contentProvider().previousInputCommand = inputCommand;
-			return true;
-		}
-		boolean filterChanged = !inputCommand.isFilterEqual(contentProvider().previousInputCommand);
-		contentProvider().previousInputCommand = inputCommand;
-		return filterChanged;
-	}
-	
 	private boolean providerChanged() {
 		boolean providerChanged = true;
 		if (lastRefreshWithProvider == contentProvider()) providerChanged = false;
@@ -145,7 +137,7 @@ public class KaviList<T> {
 
 	@SuppressWarnings("unchecked")
 	private void fastSelectItem(final InputCommand inputCommand) {
-		List<ColumnOptions<T>> columnOptions = contentProvider().kaviListColumns.getColumnOptions();
+		List<ColumnOptions<T>> columnOptions = contentProvider().getKaviListColumns().getColumnOptions();
 		showOrHideFastSelectColumn(inputCommand, columnOptions);
 		
 		if ((inputCommand.fastSelectIndex != null) && (inputCommand.fastSelectIndex.length() == alphaColumnConverter.getNumberOfCharacters())){
@@ -230,8 +222,8 @@ public class KaviList<T> {
 	private void autoAdjustColumnWidths(Composite composite) {
 		InternalContentProviderProxy<T> contentProvider = contentProvider();
 		if (contentProvider == null) return;
-		final int fixedTotalColumnWidth = contentProvider.kaviListColumns.totalFixedColumnWidth();
-		KaviListColumns<T> kaviListColumns = contentProvider.kaviListColumns;
+		final int fixedTotalColumnWidth = contentProvider.getKaviListColumns().totalFixedColumnWidth();
+		KaviListColumns<T> kaviListColumns = contentProvider.getKaviListColumns();
 		if (kaviListColumns.getColumnOptions().size() > 1) {
 			int remainingWidth = composite.getShell().getSize().x - getAdjustmentForTableWidth() - fixedTotalColumnWidth;
 			for (ColumnOptions<T> options : kaviListColumns.getColumnOptions()) {
@@ -242,51 +234,17 @@ public class KaviList<T> {
 		}
 	}
 	
-	private int getAdjustmentForTableWidth() {
-		return SWT.getPlatform().equals("win32") ? 40 : 25;
-	}
+	private int getAdjustmentForTableWidth() 		{return SWT.getPlatform().equals("win32") ? 40 : 25;}
+	private int getAdjustmentForFastSelectColumn() 	{return SWT.getPlatform().equals("win32") ? 9  : 4;}
+	private int getAdjustmentForRowCountVisible() 	{return SWT.getPlatform().equals("win32") ? 0  : 1;}
 	
-	private int getAdjustmentForFastSelectColumn() {
-		return SWT.getPlatform().equals("win32") ? 9 : 4;
-	}
-	
-	private int getAdjustmentForRowCountVisible() {
-		return SWT.getPlatform().equals("win32") ? 0 : 1;
-	}
-	
-	public InternalContentProviderProxy contentProvider() {
+	public InternalContentProviderProxy<T> contentProvider() {
 		return listContentProviders.get(currentContentProvider);
 	}
 
 	private void handleSelection() {
-		RankedItem<T> selectedElement = null;
-		if (contentProvider().getSelectedEntries().size() <= 1) {
-			selectedElement = (RankedItem<T>) contentProvider().getCursorItem();
-		}
-		
-		InternalContentProviderProxy<T> listContentProvider = contentProvider();
-		
-		List<RankedItem<T>> tableEntries = listContentProvider.getTableEntries();
-		if (tableEntries.isEmpty()) return;
-		
-		if (listContentProvider.setMultiResolvedAction != null)  {
-			if (listContentProvider.selectedEntries.size() == 0) listContentProvider.toggleSelectedState(listContentProvider.tableEntries.get(0));
-			close();
-			listContentProvider.setMultiResolvedAction.accept(listContentProvider.selectedEntries.stream().map(rankedItem -> rankedItem.dataItem).collect(Collectors.toList()));
-		}
-		// TODO temp work around until we decide how to auto select
-		// get first item in the list
-		if ((selectedElement == null) && (tableEntries.size() > 0)) selectedElement = tableEntries.get(0);
-		if (selectedElement != null && listContentProvider.resolvedActionProvider != null) {
-			close();
-			listContentProvider.resolvedActionProvider.accept(selectedElement.dataItem);
-		}
-		
-		if (listContentProvider.resolvedContextActionProvider != null) {
-			listContentProvider.resolvedContextActionProvider.accept(selectedElement.dataItem, previousProvider);
-			contentProvider().previousInputCommand = null; // clear out when we execute command
-			setCurrentProvider(previousProvider.name);
-		}		
+		if (contentProvider().handleSelectionAction()) close();
+		if (contentProvider().handleContextSelectionAction(previousProvider)) setCurrentProvider(previousProvider.name);
 	}
 
 	public void bindInputField(Text filterText) {
@@ -402,7 +360,12 @@ public class KaviList<T> {
 		currentContentProvider = mode;
 		Composite composite = table.getParent();
 		composite.getShell().setRedraw(false);
-		contentProvider().installProvider();
+		if (contentProvider().installProvider(previousProvider)) {
+			if (contentProvider().previousInputCommand() != null)
+				rapidInputPickList.setFilterInputText(contentProvider().previousInputCommand().filterText);
+			else
+				rapidInputPickList.setFilterInputText("");
+		}
 		autoAdjustColumnWidths(composite);
 		
 		// do this async to prevent timing related flicker
@@ -435,188 +398,5 @@ public class KaviList<T> {
 		tableViewer.getTable().setTopIndex(topIndex);
 	}
 
-	public static class InternalContentProviderProxy<U> {
-		public enum RowState {
-			SELECTED(1),
-			CURSOR(2);
-			
-			public final int value;
-			RowState(int value) {this.value = value;}
-		};
-		
-		private Consumer<U> resolvedActionProvider;
-		private BiConsumer<U, InternalContentProviderProxy> resolvedContextActionProvider;
-		private Consumer<List<U>> setMultiResolvedAction;
-		private List<RankedItem<U>> tableEntries;
-		private final Set<RankedItem<U>> selectedEntries = new HashSet<>();
-		private int rowCursorIndex = -1;
-		// TODO do not expose function. wrap function so that we can control the table entries content
-		// so we can support showing only selected entries
-		public final Function<InputCommand, List<RankedItem<U>>> listContentProvider; 
-		public final String name;
-		private KaviListColumns<U> kaviListColumns;
-		private InputCommand previousInputCommand = null;
-		private KaviList kaviList;
-		private boolean restoreFilterOnChange = false;
-		
-		public InternalContentProviderProxy(@SuppressWarnings("rawtypes") KaviList kaviList, String name, Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
-			this.name = name;
-			this.listContentProvider = listContentProvider;
-			KaviListColumns<U> kaviListColumns = new KaviListColumns<U>(kaviList.tableViewer, this::isSelected);
-			kaviListColumns.addColumn("fastSelect", (item, rowIndex) -> kaviList.alphaColumnConverter.toAlpha(rowIndex + 1)).width(0).searchable(false).backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT)).setEnableBackgroundSelection(false);;
-			this.kaviListColumns = kaviListColumns;
-			this.kaviList = kaviList;
-		}
-		
-		public ColumnOptions<U> addColumn(String columnId, Function<U, String> columnContentFn) {
-			return kaviListColumns.addColumn(columnId, (item, rowIndex) -> columnContentFn.apply(item));
-		}	
-		
-		public InternalContentProviderProxy<U> setResolvedAction(Consumer<U> actionResolver) {
-			this.resolvedActionProvider = actionResolver;
-			return this;
-		}
-		
-		public InternalContentProviderProxy<U> setResolvedContextAction(BiConsumer<U, InternalContentProviderProxy> actionResolver) {
-			this.resolvedContextActionProvider = actionResolver;
-			return this;
-		}
-		
-		public InternalContentProviderProxy<U> setMultiResolvedAction(Consumer<List<U>> setResolvedAction) {
-			this.setMultiResolvedAction = setResolvedAction;
-			return this;
-		}
-		
-		public InternalContentProviderProxy<U> setRestoreFilterTextOnProviderChange(boolean restoreOnChange) {
-			restoreFilterOnChange = restoreOnChange;
-			return this;
-		}
-		
-		private void installProvider() {
-			kaviListColumns.reset().installColumnsIntoTable();
-			if (!restoreFilterOnChange && (kaviList.previousProvider == null || !kaviList.previousProvider.restoreFilterOnChange)) return;
-			
-			if (previousInputCommand != null)
-				kaviList.rapidInputPickList.setFilterInputText(previousInputCommand.filterText);
-			else 
-				kaviList.rapidInputPickList.setFilterInputText("");
-		}
-		
-		private InternalContentProviderProxy<U> setTableEntries(List<RankedItem<U>> tableEntries) {
-			this.tableEntries = tableEntries;
-			return this;
-		}
-		
-		private List<RankedItem<U>> getTableEntries() {
-			return this.tableEntries;
-		}
-		
-		private InternalContentProviderProxy<U> moveCursorDown() {
-			if (rowCursorIndex == tableEntries.size() - 1) {
-				rowCursorIndex = -1;
-			}
-			else if (tableEntries.size() > rowCursorIndex + 1) {
-				rowCursorIndex++;
-			}
-			
-			return this;
-		}
-		
-		private InternalContentProviderProxy<U> moveCursorUp() {
-			if (rowCursorIndex >= 0) {
-				rowCursorIndex--;
-			} else {
-				rowCursorIndex = tableEntries.size() - 1;
-			}
-			
-			return this;
-		}
-		
-		private RankedItem<U> getCursorItem() {
-			if (rowCursorIndex < 0) return null;
-			return tableEntries.get(rowCursorIndex);
-		}
-		
-		private int getCursorIndex() {
-			return rowCursorIndex;
-		}
-		
-		private Set<RankedItem<U>> getSelectedEntries() {
-			return selectedEntries;
-		}
-		
-		private int getRowIndex(RankedItem<U> rankedItem) {
-			return tableEntries.indexOf(rankedItem);
-		}
-		
-		private InternalContentProviderProxy<U> toggleSelectedState(RankedItem<U> item) {
-			if (selectedEntries.contains(item)) selectedEntries.remove(item);
-			else selectedEntries.add(item);
-			rowCursorIndex = tableEntries.indexOf(item);
-			return this;
-		}
-		
-		private InternalContentProviderProxy<U> setSelectedState(RankedItem<U> item, boolean selected) {
-			if (selected) selectedEntries.add(item);
-			else selectedEntries.remove(item);
-			return this;
-		}
-		
-		private InternalContentProviderProxy<U> toggleSelectedState() {
-			if (selectedEntries.size() == 0) {
-				selectedEntries.addAll(tableEntries);
-			} else {
-				selectedEntries.clear();
-			}
-			rowCursorIndex = -1;
-			
-			return this;
-		}
-		
-		private InternalContentProviderProxy<U> selectRange(RankedItem<U> item) {
-			if (rowCursorIndex < 0) return this;
-			
-			final int rowAnchor = rowCursorIndex;
-			final boolean anchorSelected = selectedEntries.contains(tableEntries.get(rowAnchor));
-			final int currentItemIndex = tableEntries.indexOf(item);
-			final int rangeCount = Math.abs(rowAnchor - currentItemIndex) + 1;
-			final int rangeStart = Math.min(rowCursorIndex, currentItemIndex);
-			for (int rowIndex = rangeStart; rowIndex < rangeCount + rangeStart; rowIndex++) {
-				setSelectedState(tableEntries.get(rowIndex), anchorSelected);
-			}
-			
-			rowCursorIndex = currentItemIndex;
-			return this;
-		}
-		
-		private InternalContentProviderProxy<U> inverseSelectedState() {
-			for (RankedItem<U> rankedItem : tableEntries) {
-				if (selectedEntries.contains(rankedItem)) {
-					selectedEntries.remove(rankedItem);
-				} else {
-					selectedEntries.add(rankedItem);
-				}
-			}
-			return this;
-		}
-		
-		private int isSelected(RankedItem<U> item) {
-			int state = 0;
-			if (selectedEntries.contains(item)) state |= RowState.SELECTED.value;
-			if (rowCursorIndex > -1 && tableEntries.indexOf(item) == rowCursorIndex) state |= RowState.CURSOR.value;
-			
-			return state;
-		}
-		
-		public InternalContentProviderProxy<U> setEntriesAllSelected() {
-			tableEntries.clear();
-			tableEntries.addAll(selectedEntries);
-			return this;
-		}
-		
-		public InternalContentProviderProxy<U> clearSelections() {
-			selectedEntries.clear();
-			return this;
-		}
-	}
+
 }

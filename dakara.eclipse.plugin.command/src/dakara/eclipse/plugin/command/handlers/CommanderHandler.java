@@ -65,7 +65,8 @@ public class CommanderHandler extends AbstractHandler {
 		
 		
 		InternalCommandContextProvider contextProvider = new InternalCommandContextProvider();
-		contextProvider.addCommand("discovery", "selections: show all", (InternalContentProviderProxy<QuickAccessElement> provider) -> provider.setEntriesAllSelected());
+		contextProvider.addCommand("discovery", "list: only selected", (InternalContentProviderProxy<QuickAccessElement> provider) -> provider.setEntriesAllSelected(true));
+		contextProvider.addCommand("discovery", "list: all",           (InternalContentProviderProxy<QuickAccessElement> provider) -> provider.setEntriesAllSelected(false));
 		
 		kaviPickList.setListContentProvider("_internal", contextProvider.makeProviderFunction()).setRestoreFilterTextOnProviderChange(true)
 		            .setResolvedContextAction((command, provider) -> command.handleSelections.accept(provider)) // get previous provider selections

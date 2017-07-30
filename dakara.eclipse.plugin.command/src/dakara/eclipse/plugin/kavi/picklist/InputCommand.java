@@ -51,12 +51,12 @@ public class InputCommand {
 	private static InputCommand makeInputCommand(String commandPart) {
 		boolean fastSelectActive = commandPart.contains("/");
 		boolean multiSelectActive = commandPart.contains("//");
-		boolean isColumnFiltering = commandPart.contains("|");
+		boolean isColumnFiltering = commandPart.contains(",");
 		
 		String[] splitPart = commandPart.split("/");
 		String[] columnFilters;
 		if (splitPart.length == 0) columnFilters = new String[]{""};
-		else columnFilters = splitPart[0].split("\\|");
+		else columnFilters = splitPart[0].split(",");
 				
 		String fastSelect = null;
 		if (splitPart.length == 2) fastSelect = splitPart[1];

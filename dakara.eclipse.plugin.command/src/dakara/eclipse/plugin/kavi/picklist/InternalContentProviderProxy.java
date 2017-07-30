@@ -35,6 +35,7 @@ public class InternalContentProviderProxy<U> {
 	private KaviListColumns<U> kaviListColumns;
 	private InputCommand previousInputCommand = null;
 	private boolean restoreFilterOnChange = false;
+	private boolean filterOnlySelectedEntries = false;
 
 	public InternalContentProviderProxy(@SuppressWarnings("rawtypes") KaviList kaviList, String name,	Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
 		this.name = name;
@@ -80,7 +81,14 @@ public class InternalContentProviderProxy<U> {
 	}
 	
 	public InternalContentProviderProxy<U> setTableEntries(List<RankedItem<U>> tableEntries) {
-		this.tableEntries = tableEntries;
+		if (filterOnlySelectedEntries) {
+			this.tableEntries.clear();
+			for (RankedItem<U> rankedItem : tableEntries) {
+				if (selectedEntries.contains(rankedItem)) this.tableEntries.add(rankedItem);
+			}
+		} else {
+			this.tableEntries = tableEntries;
+		}
 		return this;
 	}
 
@@ -135,6 +143,13 @@ public class InternalContentProviderProxy<U> {
 		return this;
 	}
 
+	public InternalContentProviderProxy<U> setSelectedState(List<RankedItem<U>> items, boolean selected) {
+		for (RankedItem<U> item : tableEntries) {
+			setSelectedState(item, selected);
+		}
+		return this;
+	}
+	
 	public InternalContentProviderProxy<U> setSelectedState(RankedItem<U> item, boolean selected) {
 		if (selected)
 			selectedEntries.add(item);
@@ -143,15 +158,25 @@ public class InternalContentProviderProxy<U> {
 		return this;
 	}
 
-	public InternalContentProviderProxy<U> toggleSelectedState() {
-		if (selectedEntries.size() == 0) {
-			selectedEntries.addAll(tableEntries);
+	public InternalContentProviderProxy<U> toggleSelectedStateOfVisible() {
+
+		if (isAnyVisibleItemSelected()) {
+			setSelectedState(tableEntries, false);
 		} else {
-			selectedEntries.clear();
+			selectedEntries.addAll(tableEntries);
 		}
 		rowCursorIndex = -1;
 
 		return this;
+	}
+	
+	private boolean isAnyVisibleItemSelected() {
+		for (RankedItem<U> rankedItem : tableEntries) {
+			if (selectedEntries.contains(rankedItem)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public InternalContentProviderProxy<U> selectRange(RankedItem<U> item) {
@@ -192,9 +217,8 @@ public class InternalContentProviderProxy<U> {
 		return state;
 	}
 
-	public InternalContentProviderProxy<U> setEntriesAllSelected() {
-		tableEntries.clear();
-		tableEntries.addAll(selectedEntries);
+	public InternalContentProviderProxy<U> setEntriesAllSelected(boolean selectedOnly) {
+		filterOnlySelectedEntries = selectedOnly;
 		return this;
 	}
 

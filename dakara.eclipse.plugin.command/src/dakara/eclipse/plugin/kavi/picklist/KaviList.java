@@ -122,9 +122,9 @@ public class KaviList<T> {
 		// TODO - review how many times we call refresh - performance
 		if (tableEntries == null) return;
 		contentProvider().setTableEntries(tableEntries);
-		changedAction.accept(tableEntries, contentProvider().getSelectedEntries());
+		changedAction.accept(contentProvider().getTableEntries(), contentProvider().getSelectedEntries());
 		table.removeAll();
-		table.setItemCount(tableEntries.size());	
+		table.setItemCount(contentProvider().getTableEntries().size());	
 	}
 	
 	private boolean providerChanged() {
@@ -144,13 +144,13 @@ public class KaviList<T> {
 			int rowIndex = alphaColumnConverter.toNumeric(inputCommand.fastSelectIndex) - 1;
 			
 			if (inputCommand.multiSelect && inputCommand.selectRange) {
-				contentProvider().selectRange((RankedItem<T>) table.getItem(rowIndex).getData());
+				contentProvider().selectRange(contentProvider().getTableEntries().get(rowIndex));
 				tableViewer.refresh();
 			} else if (inputCommand.multiSelect) {
-				contentProvider().toggleSelectedState((RankedItem<T>) table.getItem(rowIndex).getData());
+				contentProvider().toggleSelectedState(contentProvider().getTableEntries().get(rowIndex));
 				tableViewer.refresh();
 			} else {
-				contentProvider().toggleSelectedState((RankedItem<T>) table.getItem(rowIndex).getData());
+				contentProvider().toggleSelectedState(contentProvider().getTableEntries().get(rowIndex));
 				table.getDisplay().asyncExec(this::handleSelection);
 			}
 			
@@ -160,7 +160,7 @@ public class KaviList<T> {
 			tableViewer.refresh();
 			if (fastSelectAction != null) fastSelectAction.accept(contentProvider().getSelectedEntries(), inputCommand);
 		} else if (inputCommand.selectAll) {
-			contentProvider().toggleSelectedState();
+			contentProvider().toggleSelectedStateOfVisible();
 			tableViewer.refresh();
 			if (fastSelectAction != null) fastSelectAction.accept(contentProvider().getSelectedEntries(), inputCommand);
 		}

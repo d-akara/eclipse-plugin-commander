@@ -356,7 +356,8 @@ public class KaviList<T> {
 	
 	public void setCurrentProvider(String mode) {
 		if (currentContentProvider != null && currentContentProvider.equals(mode)) return;
-		previousProvider = contentProvider();
+		if (!providerExists(mode)) return;
+		
 		currentContentProvider = mode;
 		Composite composite = table.getParent();
 		composite.getShell().setRedraw(false);
@@ -370,6 +371,14 @@ public class KaviList<T> {
 		
 		// do this async to prevent timing related flicker
 		display.asyncExec(() -> composite.getShell().setRedraw(true));
+	}
+	
+	private boolean providerExists(String mode) {
+		if (listContentProviders.containsKey(mode)) return true;
+		else {
+			logger.info("Attempt to set provider `" + mode + "` does not exist");
+			return false;
+		}
 	}
 	
 	protected void close() {

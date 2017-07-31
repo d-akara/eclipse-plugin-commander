@@ -217,8 +217,8 @@ public class InternalContentProviderProxy<U> {
 		return state;
 	}
 
-	public InternalContentProviderProxy<U> setEntriesAllSelected(boolean selectedOnly) {
-		filterOnlySelectedEntries = selectedOnly;
+	public InternalContentProviderProxy<U> toggleViewOnlySelected() {
+		filterOnlySelectedEntries = !filterOnlySelectedEntries;
 		return this;
 	}
 

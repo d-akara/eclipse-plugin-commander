@@ -344,20 +344,18 @@ public class KaviList<T> {
 	}
 	
 	public void toggleInternalCommands() {
-		final InternalContentProviderProxy previousProvider = this.previousProvider;
-		
 		if (currentContentProvider.equals("_internal")) {
 			setCurrentProvider(previousProvider.name);
 		} else {
 			setCurrentProvider("_internal");
 		}
-		
 	}
 	
 	public void setCurrentProvider(String mode) {
 		if (currentContentProvider != null && currentContentProvider.equals(mode)) return;
 		if (!providerExists(mode)) return;
 		
+		previousProvider = contentProvider();
 		currentContentProvider = mode;
 		Composite composite = table.getParent();
 		composite.getShell().setRedraw(false);

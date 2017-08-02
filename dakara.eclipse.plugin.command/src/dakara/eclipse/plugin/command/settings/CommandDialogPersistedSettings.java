@@ -1,6 +1,7 @@
 package dakara.eclipse.plugin.command.settings;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
@@ -91,6 +92,7 @@ public class CommandDialogPersistedSettings<T> {
 	public CommandDialogPersistedSettings<T> addToHistory(T historyItem) {
 		historyChangedSinceCheck = true;
 		HistoryEntry newHistoryEntry = new HistoryEntry(historyItemIdResolver.apply(historyItem));
+		commanderSettings.entries.remove(newHistoryEntry);
 		commanderSettings.entries.add(0, newHistoryEntry);
 		if (commanderSettings.entries.size() > historyLimit) {
 			commanderSettings.entries.remove(commanderSettings.entries.size() - 1);
@@ -116,9 +118,21 @@ public class CommandDialogPersistedSettings<T> {
 	}
 	
 	public static class HistoryKey {
-		public final String[] keys;
+		public final List<String> keys;
 		public HistoryKey(String ... keys) {
-			this.keys = keys;
+			this.keys = Arrays.asList(keys);
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) return true;
+			if (obj == null) return false;
+			return keys.equals(obj);
+		}
+		
+		@Override
+		public int hashCode() {
+			return keys.hashCode();
 		}
 	}
 	
@@ -137,6 +151,18 @@ public class CommandDialogPersistedSettings<T> {
 		@Override
 		public String toString() {
 			return entryId.toString();
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) return true;
+			if (obj == null) return false;
+			return entryId.equals(obj);
+		}
+		
+		@Override
+		public int hashCode() {
+			return entryId.hashCode();
 		}
 	}
 }

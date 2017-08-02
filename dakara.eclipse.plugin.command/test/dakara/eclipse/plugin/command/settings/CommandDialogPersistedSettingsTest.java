@@ -10,7 +10,7 @@ public class CommandDialogPersistedSettingsTest {
 	
 	@Test
 	public void verifyHistory() {
-		CommandDialogPersistedSettings<TestItem> settings = new CommandDialogPersistedSettings<>(10, item -> new HistoryKey(item.field1), historyKey -> new TestItem(historyKey.keys[0], null, null) );
+		CommandDialogPersistedSettings<TestItem> settings = new CommandDialogPersistedSettings<>(10, item -> new HistoryKey(item.field1), historyKey -> new TestItem(historyKey.keys.get(0), null, null) );
 		settings.addToHistory(new TestItem("one", null, null));
 		Assert.assertEquals("one", settings.getHistory().get(0).getHistoryItem().field1);
 	}

@@ -76,12 +76,12 @@ public class CommandDialogPersistedSettings<T> {
 		
 		for (HistoryEntry entry : commanderSettings.entries) {
 			try {
-				entry.historyItem = historyItemResolver.apply(entry.commandId);
+				entry.historyItem = historyItemResolver.apply(entry.entryId);
 				if (entry.historyItem != null)
 					currentEntries.add(entry);
 			} catch (Exception e) {
 				// TODO - how to report errors to eclipse error log
-				System.err.println("unable to restore " + entry.commandId + " due to " + e.getMessage());
+				System.err.println("unable to restore " + entry.entryId + " due to " + e.getMessage());
 				e.printStackTrace();
 			}
 		}
@@ -90,7 +90,7 @@ public class CommandDialogPersistedSettings<T> {
 	
 	public CommandDialogPersistedSettings<T> addToHistory(T historyItem) {
 		historyChangedSinceCheck = true;
-		HistoryEntry newHistoryEntry = new HistoryEntry(historyItemIdResolver.apply(historyItem), System.currentTimeMillis());
+		HistoryEntry newHistoryEntry = new HistoryEntry(historyItemIdResolver.apply(historyItem));
 		commanderSettings.entries.add(0, newHistoryEntry);
 		if (commanderSettings.entries.size() > historyLimit) {
 			commanderSettings.entries.remove(commanderSettings.entries.size() - 1);
@@ -123,12 +123,11 @@ public class CommandDialogPersistedSettings<T> {
 	}
 	
 	public class HistoryEntry {
-		public final HistoryKey commandId;
-		public final long time;
+		public final HistoryKey entryId;
+		public boolean keepForever = false;
 		private transient T historyItem;
-		public HistoryEntry(HistoryKey commandId, long time) {
-			this.commandId = commandId;
-			this.time = time;
+		public HistoryEntry(HistoryKey entryId) {
+			this.entryId = entryId;
 		}
 		
 		public T getHistoryItem() {
@@ -137,7 +136,7 @@ public class CommandDialogPersistedSettings<T> {
 		
 		@Override
 		public String toString() {
-			return new Date(time) + " : " + commandId;
+			return entryId.toString();
 		}
 	}
 }

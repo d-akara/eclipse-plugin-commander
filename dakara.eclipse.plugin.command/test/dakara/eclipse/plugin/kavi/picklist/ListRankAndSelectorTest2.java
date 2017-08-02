@@ -32,7 +32,7 @@ public class ListRankAndSelectorTest2 {
 	
 	@Test
 	public void verifyColumn1Selection() {
-		InputCommand inputCommand = InputCommand.parse("|wizard|");
+		InputCommand inputCommand = InputCommand.parse(",wizard,");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("1",  listItems.get(0).dataItem.field1);
 		Assert.assertEquals("2", listItems.get(1).dataItem.field1);

@@ -52,14 +52,14 @@ public class ListRankAndSelectorTest {
 	
 	@Test
 	public void verifyColumn2OnlySelection() {
-		InputCommand inputCommand = InputCommand.parse("|two");
+		InputCommand inputCommand = InputCommand.parse(",two");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("2", listItems.get(0).dataItem.field1);
 	}
 	
 	@Test
 	public void verifyColumnSelection3() {
-		InputCommand inputCommand = InputCommand.parse("||3");
+		InputCommand inputCommand = InputCommand.parse(",,3");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("2", listItems.get(0).dataItem.field1);
 	}

@@ -2,7 +2,6 @@ package dakara.eclipse.plugin.command.settings;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
 
@@ -12,7 +11,10 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.gson.Gson;
 
+import dakara.eclipse.plugin.log.EclipsePluginLogger;
+
 public class CommandDialogPersistedSettings<T> {
+	private EclipsePluginLogger logger = new EclipsePluginLogger("dakara.eclipse.commander.plugin");
 	private final String ID = "dakara.eclipse.plugin.command";
 	private final int historyLimit;
 	private List<HistoryEntry> currentEntries = new ArrayList<>();
@@ -23,16 +25,7 @@ public class CommandDialogPersistedSettings<T> {
 	private CommanderSettings commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
 	static final String HISTORY_KEY = "HISTORY";
 	// TODO separate history and settings store
-	// TODO keep a recent history of last 100
 	// TODO keep long term history of all items
-	// show 1 most recent always at top
-	// show next 10-20 most frequent
-	// remaining list of long term history
-	// show only history when input field empty
-	//   add all items when no hits in history
-	// alter history item rank so will always be top
-	// remove duplicates from main item list and history
-	// set mode, only history first or combined.  possibly use tab as toggle
 	
 	public CommandDialogPersistedSettings(int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
 		this.historyLimit = historyLimit;
@@ -58,7 +51,12 @@ public class CommandDialogPersistedSettings<T> {
 		Gson gson = new Gson();
 		String keyValue = preferences.get(HISTORY_KEY, null);
 		if (keyValue != null) {
-			commanderSettings = gson.fromJson(keyValue, CommanderSettings.class );
+			try {
+				commanderSettings = gson.fromJson(keyValue, CommanderSettings.class );
+			} catch (Throwable e) {
+				logger.info("Unable to restore settings and history", e);
+				commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
+			}
 		}
 		return this;
 	}
@@ -81,9 +79,7 @@ public class CommandDialogPersistedSettings<T> {
 				if (entry.historyItem != null)
 					currentEntries.add(entry);
 			} catch (Exception e) {
-				// TODO - how to report errors to eclipse error log
-				System.err.println("unable to restore " + entry.entryId + " due to " + e.getMessage());
-				e.printStackTrace();
+				logger.info("unable to restore history entry " + entry.entryId,  e);
 			}
 		}
 		return currentEntries;

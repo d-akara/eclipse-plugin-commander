@@ -15,7 +15,7 @@ import dakara.eclipse.plugin.log.EclipsePluginLogger;
 
 public class CommandDialogPersistedSettings<T> {
 	private EclipsePluginLogger logger = new EclipsePluginLogger("dakara.eclipse.commander.plugin");
-	private final String ID = "dakara.eclipse.plugin.command";
+	private final String ID;
 	private final int historyLimit;
 	private List<HistoryEntry> currentEntries = new ArrayList<>();
 	private boolean historyChangedSinceCheck = false;
@@ -27,7 +27,8 @@ public class CommandDialogPersistedSettings<T> {
 	// TODO separate history and settings store
 	// TODO keep long term history of all items
 	
-	public CommandDialogPersistedSettings(int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
+	public CommandDialogPersistedSettings(String id, int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
+		this.ID = id;
 		this.historyLimit = historyLimit;
 		this.historyItemIdResolver = historyItemIdResolver;
 		this.historyItemResolver = historyItemResolver;

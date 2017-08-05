@@ -83,7 +83,7 @@ public class CommanderHandler extends AbstractHandler {
 
 	private CommandDialogPersistedSettings<QuickAccessElement> createSettingsStore(Display display, EclipseCommandProvider eclipseCommandProvider) {
 		Function<HistoryKey, QuickAccessElement> historyItemResolver = historyKey -> eclipseCommandProvider.getCommand(historyKey.keys.get(0), historyKey.keys.get(1));
-		CommandDialogPersistedSettings<QuickAccessElement> historyStore = new CommandDialogPersistedSettings<>(100, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
+		CommandDialogPersistedSettings<QuickAccessElement> historyStore = new CommandDialogPersistedSettings<>("dakara.eclipse.plugin.command", 100, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
 		historyStore.loadSettings();
 		
 		return historyStore;

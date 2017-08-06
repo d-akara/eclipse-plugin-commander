@@ -64,11 +64,11 @@ public class CommanderHandler extends AbstractHandler {
 		InternalCommandContextProvider contextProvider = new InternalCommandContextProvider();
 		contextProvider.addCommand("discovery", "list: toggle view selected", (InternalContentProviderProxy<QuickAccessElement> provider) -> provider.toggleViewOnlySelected());
 		contextProvider.addCommand("discovery", "history: remove", (InternalContentProviderProxy<QuickAccessElement> provider) -> {
-			provider.getSelectedEntries().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
+			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
 			historyStore.saveSettings();
 		});
 		contextProvider.addCommand("discovery", "history: keep", (InternalContentProviderProxy<QuickAccessElement> provider) -> {
-			provider.getSelectedEntries().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
+			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
 			historyStore.saveSettings();
 		});
 		

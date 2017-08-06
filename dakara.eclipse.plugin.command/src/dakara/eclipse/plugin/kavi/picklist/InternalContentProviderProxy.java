@@ -129,7 +129,19 @@ public class InternalContentProviderProxy<U> {
 	public Set<RankedItem<U>> getSelectedEntries() {
 		return selectedEntries;
 	}
-
+	
+	public Set<RankedItem<U>> getSelectedEntriesImplied() {
+		if (selectedEntries.size() > 0) return selectedEntries;
+		final Set<RankedItem<U>> implied = new HashSet<>();
+		if (rowCursorIndex != -1) {
+			implied.add(getCursorItem());
+			return implied;
+		} else {
+			implied.addAll(tableEntries);
+		}
+		return implied;
+	}
+	
 	public int getRowIndex(RankedItem<U> rankedItem) {
 		return tableEntries.indexOf(rankedItem);
 	}
@@ -291,5 +303,4 @@ public class InternalContentProviderProxy<U> {
 	public void setKaviListColumns(KaviListColumns<U> kaviListColumns) {
 		this.kaviListColumns = kaviListColumns;
 	}
-	
 }

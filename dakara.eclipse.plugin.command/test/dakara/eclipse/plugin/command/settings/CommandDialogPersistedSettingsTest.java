@@ -3,6 +3,7 @@ package dakara.eclipse.plugin.command.settings;
 import org.junit.Assert;
 import org.junit.Test;
 
+import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.HistoryKey;
 
 public class CommandDialogPersistedSettingsTest {
@@ -10,7 +11,7 @@ public class CommandDialogPersistedSettingsTest {
 	
 	@Test
 	public void verifyHistory() {
-		CommandDialogPersistedSettings<TestItem> settings = new CommandDialogPersistedSettings<>(10, item -> new HistoryKey(item.field1), historyKey -> new TestItem(historyKey.keys.get(0), null, null) );
+		CommandDialogPersistedSettings<TestItem> settings = new CommandDialogPersistedSettings<>(Constants.BUNDLE_ID, 10, item -> new HistoryKey(item.field1), historyKey -> new TestItem(historyKey.keys.get(0), null, null) );
 		settings.addToHistory(new TestItem("one", null, null));
 		Assert.assertEquals("one", settings.getHistory().get(0).getHistoryItem().field1);
 	}

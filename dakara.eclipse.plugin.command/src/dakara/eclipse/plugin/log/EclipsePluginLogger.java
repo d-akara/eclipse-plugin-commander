@@ -19,7 +19,11 @@ public class EclipsePluginLogger {
 		logger.log(new Status(IStatus.INFO, bundleId, message));
 	}
 	
-	public void info(String message, Throwable error) {
+	public void warn(String message) {
+		logger.log(new Status(IStatus.WARNING, bundleId, message));
+	}
+	
+	public void error(String message, Throwable error) {
 		logger.log(new Status(IStatus.ERROR, bundleId, message, error));
 	}
 	

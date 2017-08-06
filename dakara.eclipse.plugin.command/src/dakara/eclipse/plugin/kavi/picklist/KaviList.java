@@ -31,12 +31,13 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 
 import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
+import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.log.EclipsePluginLogger;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 import io.reactivex.subjects.PublishSubject;
 
 public class KaviList<T> {
-	private EclipsePluginLogger logger = new EclipsePluginLogger("dakara.eclipse.commander.plugin");
+	private EclipsePluginLogger logger = new EclipsePluginLogger(Constants.BUNDLE_ID);
 	
 	private final KaviPickListDialog<T> rapidInputPickList;
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
@@ -114,7 +115,7 @@ public class KaviList<T> {
 			
 			display.asyncExec(() -> fastSelectItem(inputCommand));
 		} catch (Throwable e) {
-			logger.info("Problem occurred refreshing content with filter '" +filter+ "'", e);
+			logger.error("Problem occurred refreshing content with filter '" +filter+ "'", e);
 		}
 	}
 	

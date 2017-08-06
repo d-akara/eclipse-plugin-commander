@@ -5,17 +5,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-import org.eclipse.core.runtime.preferences.ConfigurationScope;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.osgi.service.prefs.BackingStoreException;
-
-import com.google.gson.Gson;
-
+import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.log.EclipsePluginLogger;
 
 public class CommandDialogPersistedSettings<T> {
-	private EclipsePluginLogger logger = new EclipsePluginLogger("dakara.eclipse.commander.plugin");
-	private final String ID;
+	private EclipsePluginLogger logger = new EclipsePluginLogger(Constants.BUNDLE_ID);
 	private final int historyLimit;
 	private List<HistoryEntry> currentEntries = new ArrayList<>();
 	private boolean historyChangedSinceCheck = false;
@@ -23,42 +17,34 @@ public class CommandDialogPersistedSettings<T> {
 	public final Function<T, HistoryKey> historyItemIdResolver;
 	public final Function<HistoryKey, T> historyItemResolver;
 	private CommanderSettings commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
+	private EclipsePreferencesSerializer<CommanderSettings> eclipsePreferencesSerializer;
 	static final String HISTORY_KEY = "HISTORY";
 	// TODO separate history and settings store
 	// TODO keep long term history of all items
 	
 	public CommandDialogPersistedSettings(String id, int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
-		this.ID = id;
 		this.historyLimit = historyLimit;
 		this.historyItemIdResolver = historyItemIdResolver;
 		this.historyItemResolver = historyItemResolver;
+		this.eclipsePreferencesSerializer = new EclipsePreferencesSerializer<>(id, HISTORY_KEY);
 	}
 
 	public CommandDialogPersistedSettings<T> saveSettings() {
-		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(ID);
-		Gson gson = new Gson();
-		preferences.put(HISTORY_KEY, gson.toJson(commanderSettings));
 		try {
-			preferences.flush();
-		} catch (BackingStoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			eclipsePreferencesSerializer.saveSettings(commanderSettings);
+		} catch (Throwable e) {
+			logger.error("Unable to save settings", e);
 		}
 		return this;
 	}
 
 	public CommandDialogPersistedSettings<T> loadSettings() {
-		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(ID);
-		Gson gson = new Gson();
-		String keyValue = preferences.get(HISTORY_KEY, null);
-		if (keyValue != null) {
-			try {
-				commanderSettings = gson.fromJson(keyValue, CommanderSettings.class );
-			} catch (Throwable e) {
-				logger.info("Unable to restore settings and history", e);
-				commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
-			}
+		try {
+			commanderSettings = eclipsePreferencesSerializer.loadSettings(CommanderSettings.class);
+		} catch (Throwable e) {
+			logger.error("Unable to restore settings and history", e);
 		}
+		if (commanderSettings == null) commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
 		return this;
 	}
 
@@ -80,7 +66,7 @@ public class CommandDialogPersistedSettings<T> {
 				if (entry.historyItem != null)
 					currentEntries.add(entry);
 			} catch (Exception e) {
-				logger.info("unable to restore history entry " + entry.entryId,  e);
+				logger.error("unable to restore history entry " + entry.entryId,  e);
 			}
 		}
 		return currentEntries;
@@ -88,7 +74,7 @@ public class CommandDialogPersistedSettings<T> {
 	
 	public CommandDialogPersistedSettings<T> addToHistory(T historyItem) {
 		historyChangedSinceCheck = true;
-		HistoryEntry newHistoryEntry = new HistoryEntry(historyItemIdResolver.apply(historyItem));
+		HistoryEntry newHistoryEntry = makeEntry(historyItem);
 		commanderSettings.entries.remove(newHistoryEntry);
 		commanderSettings.entries.add(0, newHistoryEntry);
 		if (commanderSettings.entries.size() > historyLimit) {
@@ -106,12 +92,36 @@ public class CommandDialogPersistedSettings<T> {
 		return commanderSettings.contentMode;
 	}
 	
+	public CommandDialogPersistedSettings<T> setHistoryPermanent(T historyItem, boolean permanent) {
+		historyChangedSinceCheck = true;
+		HistoryEntry entry = makeEntry(historyItem);
+		int index = commanderSettings.entries.indexOf(entry);
+		if (index == -1) {
+			entry.keepForever = true;
+			commanderSettings.entries.add(entry);
+			return this;
+		}
+		entry = commanderSettings.entries.get(index);
+		entry.keepForever = permanent;
+		return this;
+	}
+	
+	public CommandDialogPersistedSettings<T> removeHistory(T historyItem) {
+		historyChangedSinceCheck = true;
+		commanderSettings.entries.remove(makeEntry(historyItem));
+		return this;
+	}
+	
 	public class CommanderSettings {
 		private final List<HistoryEntry> entries;
 		private String contentMode;
 		public CommanderSettings(List<HistoryEntry> entries) {
 			this.entries = entries;
 		}
+	}
+	
+	private HistoryEntry makeEntry(T item) {
+		return new HistoryEntry(historyItemIdResolver.apply(item));
 	}
 	
 	public static class HistoryKey {
@@ -124,7 +134,7 @@ public class CommandDialogPersistedSettings<T> {
 		public boolean equals(Object obj) {
 			if (obj == this) return true;
 			if (obj == null) return false;
-			return keys.equals(obj);
+			return keys.equals(((HistoryKey)obj).keys);
 		}
 		
 		@Override
@@ -154,7 +164,8 @@ public class CommandDialogPersistedSettings<T> {
 		public boolean equals(Object obj) {
 			if (obj == this) return true;
 			if (obj == null) return false;
-			return entryId.equals(obj);
+			if (!(obj instanceof CommandDialogPersistedSettings.HistoryEntry)) return false;
+			return entryId.equals(((HistoryEntry)obj).entryId);
 		}
 		
 		@Override

@@ -73,6 +73,7 @@ public class CommanderHandler extends AbstractHandler {
 		kaviPickList.setListContentProvider("context", contextProvider.makeProviderFunction()).setRestoreFilterTextOnProviderChange(true)
 		            .setResolvedContextAction((command, provider) -> {
 		            	command.commandAction.accept(provider);
+		            	// TODO we need to not clear on selection view toggle
 		            	provider.clearSelections();
 		            	provider.clearCursor();
 		            })

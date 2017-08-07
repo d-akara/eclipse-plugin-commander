@@ -13,12 +13,8 @@ public class InputCommand {
 	public final boolean isColumnFiltering;
 	public final boolean inverseSelection;
 	public final boolean selectAll;
-	public final ListType listType;
-	public enum ListType {
-		CONTENT,
-		INTERNAL_COMMAND
-	};
-	public InputCommand(String filterText, List<String> columnFilters, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean selectRange, boolean inverseSelection, boolean selectAll, boolean isColumnFiltering, ListType listType) {
+
+	public InputCommand(String filterText, List<String> columnFilters, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean selectRange, boolean inverseSelection, boolean selectAll, boolean isColumnFiltering) {
 		this.filterText = filterText;
 		this.columnFilters = columnFilters;
 		this.fastSelectIndex = fastSelectIndex;
@@ -28,7 +24,6 @@ public class InputCommand {
 		this.inverseSelection = inverseSelection;
 		this.selectAll = selectAll;
 		this.isColumnFiltering = isColumnFiltering;
-		this.listType = listType;
 	}
 	
 	public String getColumnFilter(final int column) {
@@ -77,6 +72,6 @@ public class InputCommand {
 				selectAll = true;
 			} 
 		}
-		return new InputCommand(commandPart, Arrays.asList(columnFilters), fastSelect, fastSelectActive, multiSelectActive, selectRange, inverseSelection, selectAll, isColumnFiltering, ListType.CONTENT);
+		return new InputCommand(commandPart, Arrays.asList(columnFilters), fastSelect, fastSelectActive, multiSelectActive, selectRange, inverseSelection, selectAll, isColumnFiltering);
 	}
 }

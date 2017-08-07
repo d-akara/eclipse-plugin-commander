@@ -30,14 +30,14 @@ public class InternalContentProviderProxy<U> {
 	// TODO do not expose function. wrap function so that we can control the
 	// table entries content
 	// so we can support showing only selected entries
-	public final Function<InputCommand, List<RankedItem<U>>> listContentProvider;
+	private final Function<InputState, List<RankedItem<U>>> listContentProvider;
 	public final String name;
 	private KaviListColumns<U> kaviListColumns;
 	private InputCommand previousInputCommand = null;
 	private boolean restoreFilterOnChange = false;
 	private boolean filterOnlySelectedEntries = false;
 
-	public InternalContentProviderProxy(@SuppressWarnings("rawtypes") KaviList kaviList, String name,	Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
+	public InternalContentProviderProxy(@SuppressWarnings("rawtypes") KaviList kaviList, String name,	Function<InputState, List<RankedItem<U>>> listContentProvider) {
 		this.name = name;
 		this.listContentProvider = listContentProvider;
 	}
@@ -78,6 +78,11 @@ public class InternalContentProviderProxy<U> {
 
 	public InputCommand previousInputCommand() {
 		return previousInputCommand;
+	}
+	
+	public InternalContentProviderProxy<U> updateTableEntries(InputState inputState) {
+		setTableEntries(listContentProvider.apply(inputState));
+		return this;
 	}
 	
 	public InternalContentProviderProxy<U> setTableEntries(List<RankedItem<U>> tableEntries) {
@@ -302,5 +307,9 @@ public class InternalContentProviderProxy<U> {
 	
 	public void setKaviListColumns(KaviListColumns<U> kaviListColumns) {
 		this.kaviListColumns = kaviListColumns;
+	}
+
+	public void clearCursor() {
+		rowCursorIndex = -1;
 	}
 }

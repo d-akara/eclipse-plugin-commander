@@ -21,7 +21,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.IDE;
 
-import dakara.eclipse.plugin.kavi.picklist.InputCommand;
+import dakara.eclipse.plugin.kavi.picklist.InputState;
 import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
@@ -97,10 +97,10 @@ public class FinderHandler extends AbstractHandler {
 		}
 	}
 	
-	public static Function<InputCommand, List<RankedItem<ResourceItem>>> listContentProvider(ListRankAndFilter<ResourceItem> listRankAndFilter, List<ResourceItem> resources) {
+	public static Function<InputState, List<RankedItem<ResourceItem>>> listContentProvider(ListRankAndFilter<ResourceItem> listRankAndFilter, List<ResourceItem> resources) {
 		
-		return (inputCommand) -> {
-			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilter(inputCommand, resources );
+		return (inputState) -> {
+			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilter(inputState.inputCommand, resources );
 			return filteredList;
 		};
 	}

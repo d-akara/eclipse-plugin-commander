@@ -3,8 +3,6 @@ package dakara.eclipse.plugin.command.handlers;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import javax.lang.model.element.Element;
-
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -55,29 +53,33 @@ public class CommanderHandler extends AbstractHandler {
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		kaviPickList.setListContentProvider("recall",    CommanderContentProviders.listContentRecallProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
+		kaviPickList.setListContentProvider("working",    CommanderContentProviders.listContentRecallProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
 					.setResolvedAction(resolvedAction(display, historyStore))
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
 		
 		InternalCommandContextProvider contextProvider = new InternalCommandContextProvider();
-		contextProvider.addCommand("discovery", "list: toggle view selected", (InternalContentProviderProxy<QuickAccessElement> provider) -> provider.toggleViewOnlySelected());
-		contextProvider.addCommand("discovery", "history: remove", (InternalContentProviderProxy<QuickAccessElement> provider) -> {
+		contextProvider.addCommand("list: toggle view selected", (InternalContentProviderProxy<QuickAccessElement> provider) -> provider.toggleViewOnlySelected());
+		contextProvider.addCommand("working", "working: remove", (InternalContentProviderProxy<QuickAccessElement> provider) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
 			historyStore.saveSettings();
 		});
-		contextProvider.addCommand("discovery", "history: keep", (InternalContentProviderProxy<QuickAccessElement> provider) -> {
+		contextProvider.addCommand("working: set favorite", (InternalContentProviderProxy<QuickAccessElement> provider) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
 			historyStore.saveSettings();
 		});
 		
-		kaviPickList.setListContentProvider("_internal", contextProvider.makeProviderFunction()).setRestoreFilterTextOnProviderChange(true)
-		            .setResolvedContextAction((command, provider) -> command.handleSelections.accept(provider)) // get previous provider selections
+		kaviPickList.setListContentProvider("context", contextProvider.makeProviderFunction()).setRestoreFilterTextOnProviderChange(true)
+		            .setResolvedContextAction((command, provider) -> {
+		            	command.commandAction.accept(provider);
+		            	provider.clearSelections();
+		            	provider.clearCursor();
+		            })
 		            .addColumn("name", item -> item.name).widthPercent(100);
 		
 		kaviPickList.setBounds(600, 400);
-		kaviPickList.setCurrentProvider("recall");
+		kaviPickList.setCurrentProvider("working");
 		kaviPickList.open();	
 	}
 

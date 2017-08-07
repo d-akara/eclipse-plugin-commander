@@ -67,7 +67,7 @@ public class KaviList<T> {
 		this.changedAction = changedAction;
 	}
 	
-	public <U> InternalContentProviderProxy<U> setListContentProvider(String name, Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
+	public <U> InternalContentProviderProxy<U> setListContentProvider(String name, Function<InputState, List<RankedItem<U>>> listContentProvider) {
 		InternalContentProviderProxy<U> contentProvider = new InternalContentProviderProxy<U>(this, name, listContentProvider);
 		KaviListColumns<U> kaviListColumns = new KaviListColumns<U>(tableViewer, contentProvider::isSelected);
 		kaviListColumns.addColumn("fastSelect", (item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).width(0).searchable(false)
@@ -108,7 +108,8 @@ public class KaviList<T> {
 			final InputCommand inputCommand = InputCommand.parse(filter);
 			if (contentProvider().filterChanged(inputCommand) | providerChanged()) {
 				InternalContentProviderProxy<T> contentProvider = listContentProviders.get(currentContentProvider);
-				List<RankedItem<T>> tableEntries = contentProvider.listContentProvider.apply(inputCommand);
+				InputState inputState = new InputState(inputCommand, contentProvider(), previousProvider);
+				List<RankedItem<T>> tableEntries = contentProvider.updateTableEntries(inputState).getTableEntries();
 				alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 				display.asyncExec(() -> doTableRefresh(tableEntries));
 			}
@@ -122,7 +123,7 @@ public class KaviList<T> {
 	private void doTableRefresh(List<RankedItem<T>> tableEntries) {
 		// TODO - review how many times we call refresh - performance
 		if (tableEntries == null) return;
-		contentProvider().setTableEntries(tableEntries);
+		//contentProvider().setTableEntries(tableEntries);
 		changedAction.accept(contentProvider().getTableEntries(), contentProvider().getSelectedEntries());
 		table.removeAll();
 		table.setItemCount(contentProvider().getTableEntries().size());	
@@ -333,7 +334,7 @@ public class KaviList<T> {
 			if (key.equals(currentContentProvider)) {
 				String providerName = keys[keyIndex % keys.length];
 				
-				if (providerName.equals("_internal")) providerName = keys[(keyIndex + 1) % keys.length]; // skip to next item
+				if (providerName.equals("context")) providerName = keys[(keyIndex + 1) % keys.length]; // skip to next item
 				setCurrentProvider(providerName);
 				break;
 			}
@@ -345,10 +346,10 @@ public class KaviList<T> {
 	}
 	
 	public void toggleInternalCommands() {
-		if (currentContentProvider.equals("_internal")) {
+		if (currentContentProvider.equals("context")) {
 			setCurrentProvider(previousProvider.name);
 		} else {
-			setCurrentProvider("_internal");
+			setCurrentProvider("context");
 		}
 	}
 	
@@ -375,7 +376,7 @@ public class KaviList<T> {
 	private boolean providerExists(String mode) {
 		if (listContentProviders.containsKey(mode)) return true;
 		else {
-			logger.info("Attempt to set provider `" + mode + "` does not exist");
+			logger.warn("Attempt to set provider `" + mode + "` does not exist");
 			return false;
 		}
 	}

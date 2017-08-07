@@ -104,7 +104,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		getShell().setBounds(getConstrainedShellBounds(new Rectangle(location.x, location.y, size.x + 25, size.y)));
 	}
 	
-	public <U> InternalContentProviderProxy<U> setListContentProvider(String name, Function<InputCommand, List<RankedItem<U>>> listContentProvider) {
+	public <U> InternalContentProviderProxy<U> setListContentProvider(String name, Function<InputState, List<RankedItem<U>>> listContentProvider) {
 		return kaviList.setListContentProvider(name, listContentProvider);
 	}
 	

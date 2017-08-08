@@ -63,19 +63,21 @@ public class CommanderHandler extends AbstractHandler {
 		contextProvider.addCommand("list: toggle view selected", (InternalContentProviderProxy<QuickAccessElement> provider) -> provider.toggleViewOnlySelected());
 		contextProvider.addCommand("working", "working: remove", (InternalContentProviderProxy<QuickAccessElement> provider) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
+			provider.clearSelections();
+			provider.clearCursor();
 			historyStore.saveSettings();
 		});
 		contextProvider.addCommand("working: set favorite", (InternalContentProviderProxy<QuickAccessElement> provider) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
+			provider.clearSelections();
+			provider.clearCursor();
+			kaviPickList.setCurrentProvider("working");
 			historyStore.saveSettings();
 		});
 		
 		kaviPickList.setListContentProvider("context", contextProvider.makeProviderFunction()).setRestoreFilterTextOnProviderChange(true)
 		            .setResolvedContextAction((command, provider) -> {
 		            	command.commandAction.accept(provider);
-		            	// TODO we need to not clear on selection view toggle
-		            	provider.clearSelections();
-		            	provider.clearCursor();
 		            })
 		            .addColumn("name", item -> item.name).widthPercent(100);
 		

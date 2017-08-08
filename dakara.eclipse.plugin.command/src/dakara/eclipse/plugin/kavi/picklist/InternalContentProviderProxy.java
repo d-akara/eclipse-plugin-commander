@@ -27,9 +27,6 @@ public class InternalContentProviderProxy<U> {
 	private List<RankedItem<U>> tableEntries;
 	private final Set<RankedItem<U>> selectedEntries = new HashSet<>();
 	private int rowCursorIndex = -1;
-	// TODO do not expose function. wrap function so that we can control the
-	// table entries content
-	// so we can support showing only selected entries
 	private final Function<InputState, List<RankedItem<U>>> listContentProvider;
 	public final String name;
 	private KaviListColumns<U> kaviListColumns;

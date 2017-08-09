@@ -1,5 +1,6 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +25,7 @@ public class InternalContentProviderProxy<U> {
 	private Consumer<U> resolvedActionProvider;
 	private BiConsumer<U, InternalContentProviderProxy> resolvedContextActionProvider;
 	private Consumer<List<U>> setMultiResolvedAction;
-	private List<RankedItem<U>> tableEntries;
+	private List<RankedItem<U>> tableEntries = new ArrayList<>();
 	private final Set<RankedItem<U>> selectedEntries = new HashSet<>();
 	private int rowCursorIndex = -1;
 	private final Function<InputState, List<RankedItem<U>>> listContentProvider;

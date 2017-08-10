@@ -101,6 +101,7 @@ public class KaviList<T> {
 			
 			if (!showAllWhenNoFilter && filter.length() == 0) {
 				contentProvider().clearPreviousInputCommand();
+				contentProvider().setTableEntries(new ArrayList<>());
 				display.asyncExec(() -> doTableRefresh(new ArrayList<>()));
 				return;
 			}
@@ -123,7 +124,6 @@ public class KaviList<T> {
 	private void doTableRefresh(List<RankedItem<T>> tableEntries) {
 		// TODO - review how many times we call refresh - performance
 		if (tableEntries == null) return;
-		//contentProvider().setTableEntries(tableEntries);
 		changedAction.accept(contentProvider().getTableEntries(), contentProvider().getSelectedEntries());
 		table.removeAll();
 		table.setItemCount(contentProvider().getTableEntries().size());	
@@ -246,7 +246,8 @@ public class KaviList<T> {
 
 	private void handleSelection() {
 		if (contentProvider().handleSelectionAction()) close();
-		if (contentProvider().handleContextSelectionAction(previousProvider)) setCurrentProvider(previousProvider.name);
+		
+		contentProvider().handleContextSelectionAction(previousProvider);
 	}
 
 	public void bindInputField(Text filterText) {

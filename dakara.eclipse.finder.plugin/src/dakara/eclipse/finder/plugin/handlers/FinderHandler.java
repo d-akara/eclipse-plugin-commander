@@ -22,6 +22,8 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.IDE;
 
 import dakara.eclipse.plugin.kavi.picklist.InputState;
+import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider;
+import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProviderFactory;
 import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
@@ -50,9 +52,11 @@ public class FinderHandler extends AbstractHandler {
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 
-		// TODO can not automatically set current provider since columns have not been added when content provider is set
-		finder.setCurrentProvider("discovery");
+		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(finder);
+		//InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, finder, historyStore);
+		InternalCommandContextProviderFactory.installProvider(contextProvider, finder);
 		
+		finder.setCurrentProvider("discovery");
 		finder.setShowAllWhenNoFilter(false);
 		finder.setBounds(800, 400);
 		finder.open();	

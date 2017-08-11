@@ -1,6 +1,5 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +49,6 @@ public class KaviList<T> {
 	private Map<String, InternalContentProviderProxy> listContentProviders = new LinkedHashMap<>();
 	
 	private String currentContentProvider;
-	private boolean showAllWhenNoFilter = true;
 
 	private TableViewer tableViewer;
 	private Table table;
@@ -77,10 +75,6 @@ public class KaviList<T> {
 		this.listContentProviders.put(name, contentProvider);
 		return contentProvider;
 	}
-	
-	public void setShowAllWhenNoFilter(boolean showAllWhenNoFilter) {
-		this.showAllWhenNoFilter = showAllWhenNoFilter;
-	}
 
 	public void requestRefresh(String filter) {
 		subjectFilter.onNext(filter);
@@ -98,13 +92,6 @@ public class KaviList<T> {
 	private void handleRefresh(String filter) {
 		try {
 			if (table == null) return;
-			
-			if (!showAllWhenNoFilter && filter.length() == 0) {
-				contentProvider().clearPreviousInputCommand();
-				contentProvider().setTableEntries(new ArrayList<>());
-				display.asyncExec(() -> doTableRefresh(new ArrayList<>()));
-				return;
-			}
 			
 			final InputCommand inputCommand = InputCommand.parse(filter);
 			if (contentProvider().filterChanged(inputCommand) | providerChanged()) {
@@ -137,7 +124,6 @@ public class KaviList<T> {
 		return providerChanged;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void fastSelectItem(final InputCommand inputCommand) {
 		List<ColumnOptions<T>> columnOptions = contentProvider().getKaviListColumns().getColumnOptions();
 		showOrHideFastSelectColumn(inputCommand, columnOptions);

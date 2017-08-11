@@ -34,6 +34,7 @@ public class InternalContentProviderProxy<U> {
 	private InputCommand previousInputCommand = null;
 	private boolean restoreFilterOnChange = false;
 	private boolean filterOnlySelectedEntries = false;
+	private boolean showAllWhenNoFilter = true;
 
 	public InternalContentProviderProxy(@SuppressWarnings("rawtypes") KaviList kaviList, String name,	Function<InputState, List<RankedItem<U>>> listContentProvider) {
 		this.name = name;
@@ -79,7 +80,8 @@ public class InternalContentProviderProxy<U> {
 	}
 	
 	public InternalContentProviderProxy<U> updateTableEntries(InputState inputState) {
-		setTableEntries(listContentProvider.apply(inputState));
+		if (!showAllWhenNoFilter && inputState.inputCommand.filterText.length() == 0) setTableEntries(new ArrayList<>());
+		else setTableEntries(listContentProvider.apply(inputState));
 		return this;
 	}
 	
@@ -303,11 +305,18 @@ public class InternalContentProviderProxy<U> {
 		return kaviListColumns;
 	}
 	
-	public void setKaviListColumns(KaviListColumns<U> kaviListColumns) {
+	public InternalContentProviderProxy<U> setKaviListColumns(KaviListColumns<U> kaviListColumns) {
 		this.kaviListColumns = kaviListColumns;
+		return this;
 	}
 
-	public void clearCursor() {
+	public InternalContentProviderProxy<U> clearCursor() {
 		rowCursorIndex = -1;
+		return this;
+	}
+	
+	public InternalContentProviderProxy<U> setShowAllWhenNoFilter(boolean showAllWhenNoFilter) {
+		this.showAllWhenNoFilter = showAllWhenNoFilter;
+		return this;
 	}
 }

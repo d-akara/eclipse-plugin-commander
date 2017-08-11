@@ -112,11 +112,6 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		kaviList.setCurrentProvider(mode);
 	}
 	
-	// TODO - this needs to be moved to per provider
-	public void setShowAllWhenNoFilter(boolean showAll) {
-		kaviList.setShowAllWhenNoFilter(showAll);
-	}
-	
 	private void handleFastSelect(Set<RankedItem<T>> selectedItems, InputCommand command) {
 		String currentText = listFilterInputControl.getText();
 		String newText = currentText.substring(0, currentText.lastIndexOf('/') + 1);

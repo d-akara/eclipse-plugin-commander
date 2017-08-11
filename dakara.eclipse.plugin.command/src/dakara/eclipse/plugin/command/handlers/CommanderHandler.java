@@ -15,7 +15,7 @@ import dakara.eclipse.plugin.command.eclipse.internal.EclipseCommandProvider;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
 import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.HistoryKey;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider;
-import dakara.eclipse.plugin.kavi.picklist.InternalContentProviderProxy;
+import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProviderFactory;
 import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
@@ -58,28 +58,9 @@ public class CommanderHandler extends AbstractHandler {
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		
-		InternalCommandContextProvider contextProvider = new InternalCommandContextProvider();
-		contextProvider.addCommand("list: toggle view selected", (InternalContentProviderProxy<QuickAccessElement> provider) -> provider.toggleViewOnlySelected());
-		contextProvider.addCommand("working", "working: remove", (InternalContentProviderProxy<QuickAccessElement> provider) -> {
-			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
-			provider.clearSelections();
-			provider.clearCursor();
-			historyStore.saveSettings();
-		});
-		contextProvider.addCommand("working: set favorite", (InternalContentProviderProxy<QuickAccessElement> provider) -> {
-			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
-			provider.clearSelections();
-			provider.clearCursor();
-			kaviPickList.setCurrentProvider("working");
-			historyStore.saveSettings();
-		});
-		
-		kaviPickList.setListContentProvider("context", contextProvider.makeProviderFunction()).setRestoreFilterTextOnProviderChange(true)
-		            .setResolvedContextAction((command, provider) -> {
-		            	command.commandAction.accept(provider);
-		            })
-		            .addColumn("name", item -> item.name).widthPercent(100);
+		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(kaviPickList);
+		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, kaviPickList, historyStore);
+		InternalCommandContextProviderFactory.installProvider(contextProvider, kaviPickList);
 		
 		kaviPickList.setBounds(600, 400);
 		kaviPickList.setCurrentProvider("working");

@@ -346,6 +346,10 @@ public class KaviList<T> {
 		return currentContentProvider;
 	}
 	
+	public void togglePreviousProvider() {
+		if (previousProvider != null) setCurrentProvider(previousProvider.name);
+	}
+	
 	public void toggleInternalCommands() {
 		if (currentContentProvider.equals("context")) {
 			setCurrentProvider(previousProvider.name);

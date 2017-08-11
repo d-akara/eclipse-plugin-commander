@@ -112,6 +112,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		kaviList.setCurrentProvider(mode);
 	}
 	
+	// TODO - this needs to be moved to per provider
 	public void setShowAllWhenNoFilter(boolean showAll) {
 		kaviList.setShowAllWhenNoFilter(showAll);
 	}
@@ -127,6 +128,10 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	public void setFilterInputText(String newText) {
 		listFilterInputControl.setText(newText);
 		listFilterInputControl.setSelection(newText.length());
+	}
+	
+	public void togglePreviousProvider() {
+		kaviList.togglePreviousProvider();
 	}
 	
 	private class StatusDisplayInfo {

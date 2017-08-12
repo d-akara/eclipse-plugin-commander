@@ -44,7 +44,6 @@ public class FinderHandler extends AbstractHandler {
 		IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
 		List<ResourceItem> files = collectAllWorkspaceFiles(workspace);	
 		PersistedWorkingSet<ResourceItem> historyStore = createSettingsStore();
-		List<ResourceItem> workingFiles = historyStore.getHistory().stream().map(historyItem -> historyItem.getHistoryItem()).collect(Collectors.toList());
 		
 		FieldResolver<ResourceItem> nameResolver    = new FieldResolver<>("name",    resource -> resource.name);
 		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> resource.path);
@@ -52,14 +51,14 @@ public class FinderHandler extends AbstractHandler {
 		
 		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
 		finder.setListContentProvider("discovery", listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), files))
-			  .setMultiResolvedAction(resourceItems -> openFile(workbenchPage, workspace, resourceItems))
+			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(historyStore, workbenchPage, workspace, resourceItems))
 			  .setShowAllWhenNoFilter(false)
 			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30)
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		finder.setListContentProvider("working", listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), workingFiles))
-			  .setMultiResolvedAction(resourceItems -> openFile(workbenchPage, workspace, resourceItems))
+		finder.setListContentProvider("working", listContentProviderWorkingSet(listRankAndFilter(nameResolver, pathResolver, projectResolver), historyStore, files))
+			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(historyStore, workbenchPage, workspace, resourceItems))
 			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30)
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
@@ -69,7 +68,7 @@ public class FinderHandler extends AbstractHandler {
 		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, finder, historyStore);
 		InternalCommandContextProviderFactory.installProvider(contextProvider, finder);
 		
-		finder.setCurrentProvider("discovery");
+		finder.setCurrentProvider("working");
 		finder.setBounds(800, 400);
 		finder.open();	
 		return null;
@@ -104,11 +103,19 @@ public class FinderHandler extends AbstractHandler {
 	}
 	
 	private PersistedWorkingSet<ResourceItem> createSettingsStore() {
-		Function<HistoryKey, ResourceItem> historyItemResolver = historyKey -> new ResourceItem(historyKey.keys.get(0), historyKey.keys.get(2), historyKey.keys.get(3));
+		Function<HistoryKey, ResourceItem> historyItemResolver = historyKey -> new ResourceItem(historyKey.keys.get(0), historyKey.keys.get(2), historyKey.keys.get(1));
 		PersistedWorkingSet<ResourceItem> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, 100, item -> new HistoryKey(item.name, item.project, item.path), historyItemResolver);
 		historyStore.load();
 		
 		return historyStore;
+	}
+	
+	public static void handleSelectionAction(PersistedWorkingSet<ResourceItem> historyStore, IWorkbenchPage workbenchPage, IWorkspaceRoot workspace, List<ResourceItem> resourceItems) {
+		for(ResourceItem resourceItem : resourceItems) {
+			historyStore.addToHistory(resourceItem);
+		}
+		historyStore.save();
+		openFile(workbenchPage, workspace, resourceItems);
 	}
 	
 	public static void openFile(IWorkbenchPage workbenchPage, IWorkspaceRoot workspace, List<ResourceItem> resourceItems) {
@@ -125,6 +132,18 @@ public class FinderHandler extends AbstractHandler {
 		
 		return (inputState) -> {
 			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilter(inputState.inputCommand, resources );
+			return filteredList;
+		};
+	}
+	
+	public static Function<InputState, List<RankedItem<ResourceItem>>> listContentProviderWorkingSet(ListRankAndFilter<ResourceItem> listRankAndFilter, PersistedWorkingSet<ResourceItem> historyStore, List<ResourceItem> workspaceResources) {
+		// TODO the working set recent order should be updated each time focus is changed on an open file
+		return (inputState) -> {
+			List<ResourceItem> workingFiles = historyStore.getHistory().stream()
+														 .map(historyItem -> historyItem.getHistoryItem())
+														 .filter(resourceItem -> workspaceResources.contains(resourceItem))
+														 .collect(Collectors.toList());
+			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilter(inputState.inputCommand, workingFiles);
 			return filteredList;
 		};
 	}
@@ -149,6 +168,21 @@ public class FinderHandler extends AbstractHandler {
 			this.name = name;
 			this.path = path;
 			this.project = project;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == null) return false;
+			if (!(obj instanceof ResourceItem)) return false;
+			ResourceItem other = (ResourceItem) obj;
+			
+			if (name.equals(other.name) && path.equals(other.path) && project.equals(other.project)) return true;
+			return false;
+		}
+		
+		@Override
+		public int hashCode() {
+			return name.hashCode() ^ path.hashCode() ^ project.hashCode();
 		}
 	}
 	

@@ -42,7 +42,7 @@ public class KaviList<T> {
 	private Base26AlphaBijectiveConverter alphaColumnConverter = new Base26AlphaBijectiveConverter();
 	
 	private InternalContentProviderProxy<T> previousProvider = null;
-	private InternalContentProviderProxy<T> lastRefreshWithProvider = null;
+	private List<RankedItem<T>> currentContent = null;
 	private BiConsumer<List<RankedItem<T>>, Set<RankedItem<T>>> changedAction = null;
 	private BiConsumer<Set<RankedItem<T>>, InputCommand> fastSelectAction = null;
 	@SuppressWarnings("rawtypes")
@@ -94,10 +94,9 @@ public class KaviList<T> {
 			if (table == null) return;
 			
 			final InputCommand inputCommand = InputCommand.parse(filter);
-			if (contentProvider().filterChanged(inputCommand) | providerChanged()) {
-				InternalContentProviderProxy<T> contentProvider = listContentProviders.get(currentContentProvider);
-				InputState inputState = new InputState(inputCommand, contentProvider(), previousProvider);
-				List<RankedItem<T>> tableEntries = contentProvider.updateTableEntries(inputState).getTableEntries();
+			InputState inputState = new InputState(inputCommand, contentProvider(), previousProvider);
+			List<RankedItem<T>> tableEntries = contentProvider().updateTableEntries(inputState).getTableEntries();
+			if (contentChanged(tableEntries)) {
 				alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 				display.asyncExec(() -> doTableRefresh(tableEntries));
 			}
@@ -116,12 +115,12 @@ public class KaviList<T> {
 		table.setItemCount(contentProvider().getTableEntries().size());	
 	}
 	
-	private boolean providerChanged() {
-		boolean providerChanged = true;
-		if (lastRefreshWithProvider == contentProvider()) providerChanged = false;
+	private boolean contentChanged(List<RankedItem<T>> newContent) {
+		boolean contentChanged = true;
+		if (currentContent == newContent) contentChanged = false;
 		
-		lastRefreshWithProvider = contentProvider();
-		return providerChanged;
+		currentContent = newContent;
+		return contentChanged;
 	}
 
 	private void fastSelectItem(final InputCommand inputCommand) {

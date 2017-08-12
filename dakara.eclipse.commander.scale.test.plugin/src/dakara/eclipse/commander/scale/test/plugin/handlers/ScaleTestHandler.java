@@ -27,13 +27,13 @@ public class ScaleTestHandler extends AbstractHandler {
 		
 		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
 		finder.setListContentProvider("discovery", listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), files))
+			  .setShowAllWhenNoFilter(false)
 			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30)
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 
 		finder.setCurrentProvider("discovery");
 		
-		finder.setShowAllWhenNoFilter(false);
 		finder.setBounds(800, 400);
 		finder.open();	
 		return null;

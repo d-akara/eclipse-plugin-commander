@@ -12,8 +12,8 @@ import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 
 import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.command.eclipse.internal.EclipseCommandProvider;
-import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
-import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.HistoryKey;
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryKey;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProviderFactory;
 import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
@@ -45,7 +45,7 @@ public class CommanderHandler extends AbstractHandler {
 		ListRankAndFilter<QuickAccessElement> listRankAndFilter = CommanderContentProviders.listRankAndFilter(labelField, providerField);
 		
 		eclipseCommandProvider = new EclipseCommandProvider();
-		CommandDialogPersistedSettings<QuickAccessElement> historyStore = createSettingsStore(display, eclipseCommandProvider);
+		PersistedWorkingSet<QuickAccessElement> historyStore = createSettingsStore(eclipseCommandProvider);
 		
 		kaviPickList = new KaviPickListDialog<>();
 		kaviPickList.setListContentProvider("discovery", CommanderContentProviders.listContentDiscoveryProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
@@ -67,19 +67,19 @@ public class CommanderHandler extends AbstractHandler {
 		kaviPickList.open();	
 	}
 
-	private CommandDialogPersistedSettings<QuickAccessElement> createSettingsStore(Display display, EclipseCommandProvider eclipseCommandProvider) {
+	private PersistedWorkingSet<QuickAccessElement> createSettingsStore(EclipseCommandProvider eclipseCommandProvider) {
 		Function<HistoryKey, QuickAccessElement> historyItemResolver = historyKey -> eclipseCommandProvider.getCommand(historyKey.keys.get(0), historyKey.keys.get(1));
-		CommandDialogPersistedSettings<QuickAccessElement> historyStore = new CommandDialogPersistedSettings<>(Constants.BUNDLE_ID, 100, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
-		historyStore.loadSettings();
+		PersistedWorkingSet<QuickAccessElement> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, 100, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
+		historyStore.load();
 		
 		return historyStore;
 	}
 
-	private Consumer<QuickAccessElement> resolvedAction(Display display, CommandDialogPersistedSettings<QuickAccessElement> historyStore) {
+	private Consumer<QuickAccessElement> resolvedAction(Display display, PersistedWorkingSet<QuickAccessElement> historyStore) {
 		return (item) -> {
 			display.asyncExec(item::execute);
 			historyStore.addToHistory(item);
-			historyStore.saveSettings();
+			historyStore.save();
 		};
 	}	
 }

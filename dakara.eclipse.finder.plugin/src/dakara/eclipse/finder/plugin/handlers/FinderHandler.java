@@ -3,6 +3,7 @@ package dakara.eclipse.finder.plugin.handlers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -21,6 +22,8 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.IDE;
 
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryKey;
 import dakara.eclipse.plugin.kavi.picklist.InputState;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProviderFactory;
@@ -40,6 +43,8 @@ public class FinderHandler extends AbstractHandler {
 		IWorkbenchPage workbenchPage = HandlerUtil.getActiveWorkbenchWindowChecked(event).getActivePage();
 		IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
 		List<ResourceItem> files = collectAllWorkspaceFiles(workspace);	
+		PersistedWorkingSet<ResourceItem> historyStore = createSettingsStore();
+		List<ResourceItem> workingFiles = historyStore.getHistory().stream().map(historyItem -> historyItem.getHistoryItem()).collect(Collectors.toList());
 		
 		FieldResolver<ResourceItem> nameResolver    = new FieldResolver<>("name",    resource -> resource.name);
 		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> resource.path);
@@ -52,9 +57,16 @@ public class FinderHandler extends AbstractHandler {
 			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30)
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
+		
+		finder.setListContentProvider("working", listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), workingFiles))
+			  .setMultiResolvedAction(resourceItems -> openFile(workbenchPage, workspace, resourceItems))
+			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30)
+			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
+			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 
+		
 		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(finder);
-		//InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, finder, historyStore);
+		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, finder, historyStore);
 		InternalCommandContextProviderFactory.installProvider(contextProvider, finder);
 		
 		finder.setCurrentProvider("discovery");
@@ -89,6 +101,14 @@ public class FinderHandler extends AbstractHandler {
 			throw new RuntimeException(e);
 		}
 		return files;
+	}
+	
+	private PersistedWorkingSet<ResourceItem> createSettingsStore() {
+		Function<HistoryKey, ResourceItem> historyItemResolver = historyKey -> new ResourceItem(historyKey.keys.get(0), historyKey.keys.get(2), historyKey.keys.get(3));
+		PersistedWorkingSet<ResourceItem> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, 100, item -> new HistoryKey(item.name, item.project, item.path), historyItemResolver);
+		historyStore.load();
+		
+		return historyStore;
 	}
 	
 	public static void openFile(IWorkbenchPage workbenchPage, IWorkspaceRoot workspace, List<ResourceItem> resourceItems) {

@@ -80,7 +80,10 @@ public class InternalContentProviderProxy<U> {
 	}
 	
 	public InternalContentProviderProxy<U> updateTableEntries(InputState inputState) {
-		if (!showAllWhenNoFilter && inputState.inputCommand.filterText.length() == 0) setTableEntries(new ArrayList<>());
+		final boolean filterChanged = filterChanged(inputState.inputCommand);
+		
+		if (!showAllWhenNoFilter && inputState.inputCommand.filterText.length() == 0 && !inputState.inputCommand.fastSelect) setTableEntries(new ArrayList<>());
+		else if (!filterChanged && showAllWhenNoFilter) return this;
 		else setTableEntries(listContentProvider.apply(inputState));
 		return this;
 	}

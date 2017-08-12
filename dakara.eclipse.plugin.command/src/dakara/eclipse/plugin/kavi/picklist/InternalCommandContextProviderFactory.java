@@ -1,5 +1,5 @@
 package dakara.eclipse.plugin.kavi.picklist;
-import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider.ContextCommand;
 
 public class InternalCommandContextProviderFactory {
@@ -16,20 +16,20 @@ public class InternalCommandContextProviderFactory {
 		});
 	}
 	
-	public static void addWorkingSetCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, CommandDialogPersistedSettings historyStore) {
+	public static void addWorkingSetCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore) {
 		contextProvider.addCommand("working", "working: remove", (InternalContentProviderProxy<Object> provider) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
 			provider.clearSelections();
 			provider.clearCursor();
 			kaviPickList.togglePreviousProvider();
-			historyStore.saveSettings();
+			historyStore.save();
 		});
 		contextProvider.addCommand("working: set favorite", (InternalContentProviderProxy<Object> provider) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
 			provider.clearSelections();
 			provider.clearCursor();
 			kaviPickList.setCurrentProvider("working");
-			historyStore.saveSettings();
+			historyStore.save();
 		});
 	}
 	

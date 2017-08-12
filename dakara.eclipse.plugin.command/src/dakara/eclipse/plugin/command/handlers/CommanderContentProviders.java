@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 
 import dakara.eclipse.plugin.command.eclipse.internal.EclipseCommandProvider;
-import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings;
-import dakara.eclipse.plugin.command.settings.CommandDialogPersistedSettings.HistoryEntry;
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryEntry;
 import dakara.eclipse.plugin.kavi.picklist.InputState;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
@@ -18,7 +18,7 @@ import dakara.eclipse.plugin.stringscore.RankedItem;
 @SuppressWarnings("restriction")
 public class CommanderContentProviders {
 	
-	public static Function<InputState, List<RankedItem<QuickAccessElement>>> listContentDiscoveryProvider(ListRankAndFilter<QuickAccessElement> listRankAndFilter, CommandDialogPersistedSettings<QuickAccessElement> historyStore, EclipseCommandProvider eclipseCommandProvider) {
+	public static Function<InputState, List<RankedItem<QuickAccessElement>>> listContentDiscoveryProvider(ListRankAndFilter<QuickAccessElement> listRankAndFilter, PersistedWorkingSet<QuickAccessElement> historyStore, EclipseCommandProvider eclipseCommandProvider) {
 		
 		return (inputState) -> {
 			List<QuickAccessElement> historyItems = new ArrayList<>();
@@ -33,7 +33,7 @@ public class CommanderContentProviders {
 		};
 	}
 	
-	public static Function<InputState, List<RankedItem<QuickAccessElement>>> listContentRecallProvider(ListRankAndFilter<QuickAccessElement> listRankAndFilter, CommandDialogPersistedSettings<QuickAccessElement> historyStore, EclipseCommandProvider eclipseCommandProvider) {
+	public static Function<InputState, List<RankedItem<QuickAccessElement>>> listContentRecallProvider(ListRankAndFilter<QuickAccessElement> listRankAndFilter, PersistedWorkingSet<QuickAccessElement> historyStore, EclipseCommandProvider eclipseCommandProvider) {
 
 		return (inputState) -> {
 			List<QuickAccessElement> historyItems = new ArrayList<>();

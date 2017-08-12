@@ -8,7 +8,7 @@ import java.util.function.Function;
 import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.log.EclipsePluginLogger;
 
-public class CommandDialogPersistedSettings<T> {
+public class PersistedWorkingSet<T> {
 	private EclipsePluginLogger logger = new EclipsePluginLogger(Constants.BUNDLE_ID);
 	private final int historyLimit;
 	private List<HistoryEntry> currentEntries = new ArrayList<>();
@@ -22,14 +22,14 @@ public class CommandDialogPersistedSettings<T> {
 	// TODO separate history and settings store
 	// TODO keep long term history of all items
 	
-	public CommandDialogPersistedSettings(String id, int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
+	public PersistedWorkingSet(String id, int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
 		this.historyLimit = historyLimit;
 		this.historyItemIdResolver = historyItemIdResolver;
 		this.historyItemResolver = historyItemResolver;
 		this.eclipsePreferencesSerializer = new EclipsePreferencesSerializer<>(id, HISTORY_KEY);
 	}
 
-	public CommandDialogPersistedSettings<T> saveSettings() {
+	public PersistedWorkingSet<T> save() {
 		try {
 			eclipsePreferencesSerializer.saveSettings(commanderSettings);
 		} catch (Throwable e) {
@@ -38,7 +38,7 @@ public class CommandDialogPersistedSettings<T> {
 		return this;
 	}
 
-	public CommandDialogPersistedSettings<T> loadSettings() {
+	public PersistedWorkingSet<T> load() {
 		try {
 			commanderSettings = eclipsePreferencesSerializer.loadSettings(CommanderSettings.class);
 		} catch (Throwable e) {
@@ -72,7 +72,7 @@ public class CommandDialogPersistedSettings<T> {
 		return currentEntries;
 	}
 	
-	public CommandDialogPersistedSettings<T> addToHistory(T historyItem) {
+	public PersistedWorkingSet<T> addToHistory(T historyItem) {
 		historyChangedSinceCheck = true;
 		HistoryEntry newHistoryEntry = makeEntry(historyItem);
 		commanderSettings.entries.remove(newHistoryEntry);
@@ -83,7 +83,7 @@ public class CommandDialogPersistedSettings<T> {
 		return this;
 	}
 	
-	public CommandDialogPersistedSettings<T> setContentMode(String mode) {
+	public PersistedWorkingSet<T> setContentMode(String mode) {
 		commanderSettings.contentMode = mode;
 		return this;
 	}
@@ -92,7 +92,7 @@ public class CommandDialogPersistedSettings<T> {
 		return commanderSettings.contentMode;
 	}
 	
-	public CommandDialogPersistedSettings<T> setHistoryPermanent(T historyItem, boolean permanent) {
+	public PersistedWorkingSet<T> setHistoryPermanent(T historyItem, boolean permanent) {
 		historyChangedSinceCheck = true;
 		HistoryEntry entry = makeEntry(historyItem);
 		int index = commanderSettings.entries.indexOf(entry);
@@ -106,7 +106,7 @@ public class CommandDialogPersistedSettings<T> {
 		return this;
 	}
 	
-	public CommandDialogPersistedSettings<T> removeHistory(T historyItem) {
+	public PersistedWorkingSet<T> removeHistory(T historyItem) {
 		historyChangedSinceCheck = true;
 		commanderSettings.entries.remove(makeEntry(historyItem));
 		return this;
@@ -164,7 +164,7 @@ public class CommandDialogPersistedSettings<T> {
 		public boolean equals(Object obj) {
 			if (obj == this) return true;
 			if (obj == null) return false;
-			if (!(obj instanceof CommandDialogPersistedSettings.HistoryEntry)) return false;
+			if (!(obj instanceof PersistedWorkingSet.HistoryEntry)) return false;
 			return entryId.equals(((HistoryEntry)obj).entryId);
 		}
 		

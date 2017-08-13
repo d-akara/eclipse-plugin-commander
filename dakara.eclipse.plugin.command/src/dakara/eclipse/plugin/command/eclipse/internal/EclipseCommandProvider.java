@@ -11,7 +11,6 @@ import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.WorkbenchWindow;
 import org.eclipse.ui.internal.quickaccess.ActionProvider;
-import org.eclipse.ui.internal.quickaccess.EditorProvider;
 import org.eclipse.ui.internal.quickaccess.PerspectiveProvider;
 import org.eclipse.ui.internal.quickaccess.PreferenceProvider;
 import org.eclipse.ui.internal.quickaccess.PropertiesProvider;
@@ -37,7 +36,7 @@ public class EclipseCommandProvider {
 		final org.eclipse.e4.ui.model.application.ui.basic.MWindow model = workbenchWindow.getModel();
 
 		providers = new ArrayList<>();
-		providers.add(new EditorProvider());
+		//providers.add(new EditorProvider());
 		providers.add(new ViewProvider(model.getContext().get(MApplication.class), model));
 		providers.add(new PerspectiveProvider());
 		providers.add(new CommandProvider(new ExpressionContext(model.getContext().getActiveLeaf())));

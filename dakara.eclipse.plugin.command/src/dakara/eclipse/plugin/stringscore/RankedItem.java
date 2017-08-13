@@ -9,8 +9,13 @@ public final class RankedItem<T> {
 	public final T dataItem;
 	private Map<String, Score> scores = new HashMap<>();
 	private boolean scorePerColumn = false;
+	public int order = 0;
 	public RankedItem(T dataItem) {
 		this.dataItem = dataItem;
+	}
+	public RankedItem(T dataItem, int order) {
+		this.dataItem = dataItem;
+		this.order = order;
 	}
 	public T getDataItem() {
 		return dataItem;
@@ -55,5 +60,12 @@ public final class RankedItem<T> {
 	@Override
 	public int hashCode() {
 		return dataItem.hashCode();
+	}
+	
+	public static final class RankedItemFactory<T> {
+		private static int order = 0;
+		public RankedItem<T> make(T dataItem) {
+			return new RankedItem<T>(dataItem, order++);
+		}
 	}
 }

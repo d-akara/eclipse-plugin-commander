@@ -119,7 +119,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 														 .map(historyItem -> historyItem.getHistoryItem())
 														 .filter(resourceItem -> workspaceResources.contains(resourceItem))
 														 .collect(Collectors.toList());
-			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilter(inputState.inputCommand, workingFiles);
+			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilterOrdered(inputState.inputCommand, workingFiles);
 			return filteredList;
 		};
 	}

@@ -108,7 +108,6 @@ public class KaviList<T> {
 	}
 	
 	private void doTableRefresh(List<RankedItem<T>> tableEntries) {
-		// TODO - review how many times we call refresh - performance
 		if (tableEntries == null) return;
 		changedAction.accept(contentProvider().getTableEntries(), contentProvider().getSelectedEntries());
 		table.removeAll();

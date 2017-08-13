@@ -8,6 +8,7 @@ Require-Bundle: org.eclipse.core.expressions,
  org.eclipse.e4.core.commands,
  org.eclipse.e4.ui.model.workbench,
  org.eclipse.ui,
+ org.eclipse.ui.ide,
  org.eclipse.core.runtime,
  org.eclipse.debug.core,
  com.google.gson,
@@ -17,7 +18,8 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Import-Package: org.eclipse.e4.core.contexts
 Export-Package: dakara.eclipse.plugin.kavi.picklist,
  dakara.eclipse.plugin.stringscore,
- dakara.eclipse.plugin.command.settings
+ dakara.eclipse.plugin.command.settings,
+ dakara.eclipse.plugin.platform
 Bundle-ClassPath: .,
  lib/fastutil-8.1.0.jar,
  lib/reactive-streams-1.0.0.jar,

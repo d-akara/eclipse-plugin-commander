@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-
-   <extension
-         point="org.eclipse.ui.commands">
-      <category
-            name="Dakara"
-            id="dakara.eclipse.plugin.category">
-      </category>
+   <extension point="org.eclipse.ui.startup">
+      <startup class="dakara.eclipse.finder.plugin.handlers.FinderHandler"/>
+   </extension>
+   <extension point="org.eclipse.ui.commands">
+      <category name="Dakara" id="dakara.eclipse.plugin.category"></category>
       <command
             name="Finder"
             categoryId="dakara.eclipse.plugin.category"
             id="dakara.eclipse.finder.plugin.commands.finderCommand">
       </command>
    </extension>
-   <extension
-         point="org.eclipse.ui.handlers">
+   <extension point="org.eclipse.ui.handlers">
       <handler
             commandId="dakara.eclipse.finder.plugin.commands.finderCommand"
             class="dakara.eclipse.finder.plugin.handlers.FinderHandler">

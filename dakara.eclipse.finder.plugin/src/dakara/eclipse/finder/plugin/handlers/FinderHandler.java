@@ -39,7 +39,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 	@Override
 	public void earlyStartup() {
 		historyStore = createSettingsStore();
-		IWorkbenchPage workbenchPage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+		IWorkbenchPage workbenchPage = PlatformUI.getWorkbench().getWorkbenchWindows()[0].getActivePage();
 		EclipseWorkbench.createListenerForEditorFocusChanges(workbenchPage, resourceItem -> historyStore.addToHistory(resourceItem).save());
 	}
 	
@@ -48,7 +48,6 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		IWorkbenchPage workbenchPage = HandlerUtil.getActiveWorkbenchWindowChecked(event).getActivePage();
 		IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
 		List<ResourceItem> files = EclipseWorkbench.collectAllWorkspaceFiles(workspace);	
-		//EclipseWorkbench.createListenerForEditorFocusChanges(workbenchPage, resourceItem -> historyStore.addToHistory(resourceItem).save());
 		
 		FieldResolver<ResourceItem> nameResolver    = new FieldResolver<>("name",    resource -> resource.name);
 		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> resource.path);

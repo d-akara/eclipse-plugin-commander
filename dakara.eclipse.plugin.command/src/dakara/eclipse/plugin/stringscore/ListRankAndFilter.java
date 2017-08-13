@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import dakara.eclipse.plugin.kavi.picklist.InputCommand;
+import dakara.eclipse.plugin.stringscore.RankedItem.RankedItemFactory;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -35,12 +36,26 @@ public class ListRankAndFilter<T> {
 	
 	public List<RankedItem<T>> rankAndFilter(final InputCommand inputCommand, List<T> items) {
 		if (!inputCommand.isColumnFiltering && inputCommand.getColumnFilter(0).length() == 0) return makeRankedList(items);
-		
+
 		return items.parallelStream().
 				       map(item -> new RankedItem<>(item)).
 				       map(item -> setItemRank(item, inputCommand)).
 				       filter(item -> item.totalScore() > 0).
 				       sorted(Comparator.comparing((RankedItem item) -> item.totalScore()).reversed().thenComparing(item -> sortFieldResolver.apply((T) item.dataItem))).
+					   collect(Collectors.toList());
+	}
+	
+	public List<RankedItem<T>> rankAndFilterOrdered(final InputCommand inputCommand, List<T> items) {
+		RankedItemFactory<T> rankedItemFactory = new RankedItemFactory<>();
+		List<RankedItem<T>> rankedItems = new ArrayList<>();
+		for (T item : items) {
+			rankedItems.add(rankedItemFactory.make(item));
+		}
+		if (!inputCommand.isColumnFiltering && inputCommand.getColumnFilter(0).length() == 0) return makeRankedListOrdered(rankedItems);
+		return rankedItems.parallelStream().
+				       map(item -> setItemRank(item, inputCommand)).
+				       filter(item -> item.totalScore() > 0).
+				       sorted(Comparator.comparing((RankedItem item) -> item.totalScore()).reversed().thenComparing(item -> item.order)).
 					   collect(Collectors.toList());
 	}
 	
@@ -50,10 +65,16 @@ public class ListRankAndFilter<T> {
 		return filteredList;
 	}
 	
+	private List<RankedItem<T>> makeRankedListOrdered(List<RankedItem<T>> items) {
+		return items.parallelStream().
+	       sorted(Comparator.comparing((RankedItem item) -> item.order)).
+		   collect(Collectors.toList());
+	}
+	
 	private List<RankedItem<T>> makeRankedList(List<T> items) {
 		return items.parallelStream().
 	       map(item -> new RankedItem<>(item)).
-	       sorted(Comparator.comparing((RankedItem item) -> item.totalScore()).reversed().thenComparing(item -> sortFieldResolver.apply((T) item.dataItem))).
+	       sorted(Comparator.comparing(item -> sortFieldResolver.apply((T) item.dataItem))).
 		   collect(Collectors.toList());
 	}
 	

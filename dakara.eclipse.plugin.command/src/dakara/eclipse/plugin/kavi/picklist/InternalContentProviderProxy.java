@@ -1,13 +1,17 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.eclipse.swt.widgets.Item;
 
 import dakara.eclipse.plugin.stringscore.RankedItem;
 
@@ -326,6 +330,12 @@ public class InternalContentProviderProxy<U> {
 	
 	public InternalContentProviderProxy<U> setShowAllWhenNoFilter(boolean showAllWhenNoFilter) {
 		this.showAllWhenNoFilter = showAllWhenNoFilter;
+		return this;
+	}
+	
+	public InternalContentProviderProxy<U> sortDefault() {
+		BiFunction<U, Integer, String> contentFn = getKaviListColumns().getColumnOptions().get(1).getColumnContentFn();
+		tableEntries = tableEntries.stream().sorted(Comparator.comparing(item -> contentFn.apply(item.dataItem, 0))).collect(Collectors.toList());
 		return this;
 	}
 }

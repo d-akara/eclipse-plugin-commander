@@ -1,6 +1,5 @@
 package dakara.eclipse.plugin.kavi.picklist;
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
-import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider.ContextCommand;
 
 public class InternalCommandContextProviderFactory {
 	public static InternalCommandContextProvider makeProvider(KaviPickListDialog kaviPickList) {
@@ -14,6 +13,10 @@ public class InternalCommandContextProviderFactory {
 			currentProvider.toggleViewOnlySelected();
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 		});
+		
+		provider.addCommand("list: sort default", (InternalContentProviderProxy<Object> currentProvider) -> {
+			kaviPickList.togglePreviousProvider().sortDefault().refreshFromContentProvider();
+		});		
 	}
 	
 	public static void addWorkingSetCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore) {

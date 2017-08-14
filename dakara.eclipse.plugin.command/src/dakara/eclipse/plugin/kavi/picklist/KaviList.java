@@ -92,7 +92,6 @@ public class KaviList<T> {
 	private void handleRefresh(String filter) {
 		try {
 			if (table == null) return;
-			
 			final InputCommand inputCommand = InputCommand.parse(filter);
 			InputState inputState = new InputState(inputCommand, contentProvider(), previousProvider);
 			List<RankedItem<T>> tableEntries = contentProvider().updateTableEntries(inputState).getTableEntries();
@@ -286,14 +285,14 @@ public class KaviList<T> {
 				case SWT.TAB:
 					nextContentMode();
 					table.getParent().getShell().setRedraw(false);
-					handleRefresh(( (Text) e.widget).getText());
+					requestRefresh(( (Text) e.widget).getText());
 					display.asyncExec(() -> table.getParent().getShell().setRedraw(true));
 					break;
 				case ';':
 					e.doit = false;
 					toggleInternalCommands();
 					table.getParent().getShell().setRedraw(false);
-					handleRefresh(( (Text) e.widget).getText());
+					requestRefresh(( (Text) e.widget).getText());
 					display.asyncExec(() -> table.getParent().getShell().setRedraw(true));					
 					break;
 				}

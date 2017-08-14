@@ -342,7 +342,7 @@ public class KaviList<T> {
 		if (currentContentProvider.equals("context")) {
 			setCurrentProvider(previousProvider.name);
 		} else {
-			setCurrentProvider("context");
+			setCurrentProvider("context").refreshFromContentProvider();
 		}
 	}
 	

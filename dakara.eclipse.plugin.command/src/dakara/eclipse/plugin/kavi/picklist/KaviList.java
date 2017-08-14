@@ -229,7 +229,10 @@ public class KaviList<T> {
 	}
 
 	private void handleSelection() {
-		if (contentProvider().handleSelectionAction()) close();
+		if (contentProvider().handleSelectionAction()) {
+			close();
+			return;
+		}
 		
 		contentProvider().handleContextSelectionAction(previousProvider);
 	}
@@ -330,8 +333,9 @@ public class KaviList<T> {
 		return currentContentProvider;
 	}
 	
-	public void togglePreviousProvider() {
-		if (previousProvider != null) setCurrentProvider(previousProvider.name);
+	public InternalContentProviderProxy<T> togglePreviousProvider() {
+		if (previousProvider != null) return setCurrentProvider(previousProvider.name);
+		return contentProvider();
 	}
 	
 	public void toggleInternalCommands() {
@@ -342,9 +346,9 @@ public class KaviList<T> {
 		}
 	}
 	
-	public void setCurrentProvider(String mode) {
-		if (currentContentProvider != null && currentContentProvider.equals(mode)) return;
-		if (!providerExists(mode)) return;
+	public InternalContentProviderProxy<T> setCurrentProvider(String mode) {
+		if (currentContentProvider != null && currentContentProvider.equals(mode)) return contentProvider();
+		if (!providerExists(mode)) return contentProvider();
 		
 		previousProvider = contentProvider();
 		currentContentProvider = mode;
@@ -357,9 +361,9 @@ public class KaviList<T> {
 				rapidInputPickList.setFilterInputText("");
 		}
 		autoAdjustColumnWidths(composite);
-		
 		// do this async to prevent timing related flicker
 		display.asyncExec(() -> composite.getShell().setRedraw(true));
+		return contentProvider();
 	}
 	
 	private boolean providerExists(String mode) {

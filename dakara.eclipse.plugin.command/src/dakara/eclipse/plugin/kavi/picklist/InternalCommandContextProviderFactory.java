@@ -12,7 +12,7 @@ public class InternalCommandContextProviderFactory {
 	private static void addDefaultInternalCommands(InternalCommandContextProvider provider, KaviPickListDialog kaviPickList) {
 		provider.addCommand("list: toggle view selected", (InternalContentProviderProxy<Object> currentProvider) -> {
 			currentProvider.toggleViewOnlySelected();
-			kaviPickList.togglePreviousProvider();
+			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 		});
 	}
 	
@@ -21,14 +21,14 @@ public class InternalCommandContextProviderFactory {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
 			provider.clearSelections();
 			provider.clearCursor();
-			kaviPickList.togglePreviousProvider();
+			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 			historyStore.save();
 		});
 		contextProvider.addCommand("working: set favorite", (InternalContentProviderProxy<Object> provider) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
 			provider.clearSelections();
 			provider.clearCursor();
-			kaviPickList.setCurrentProvider("working");
+			kaviPickList.setCurrentProvider("working").refreshFromContentProvider();
 			historyStore.save();
 		});
 	}

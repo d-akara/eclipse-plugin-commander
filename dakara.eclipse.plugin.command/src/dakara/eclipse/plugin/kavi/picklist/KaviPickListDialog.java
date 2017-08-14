@@ -108,8 +108,8 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		return kaviList.setListContentProvider(name, listContentProvider);
 	}
 	
-	public void setCurrentProvider(String mode) {
-		kaviList.setCurrentProvider(mode);
+	public InternalContentProviderProxy<T> setCurrentProvider(String mode) {
+		return kaviList.setCurrentProvider(mode);
 	}
 	
 	private void handleFastSelect(Set<RankedItem<T>> selectedItems, InputCommand command) {
@@ -125,8 +125,8 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		listFilterInputControl.setSelection(newText.length());
 	}
 	
-	public void togglePreviousProvider() {
-		kaviList.togglePreviousProvider();
+	public InternalContentProviderProxy<T> togglePreviousProvider() {
+		return kaviList.togglePreviousProvider();
 	}
 	
 	private class StatusDisplayInfo {

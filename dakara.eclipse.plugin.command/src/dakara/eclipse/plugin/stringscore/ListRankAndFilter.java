@@ -41,7 +41,7 @@ public class ListRankAndFilter<T> {
 				       map(item -> new RankedItem<>(item)).
 				       map(item -> setItemRank(item, inputCommand)).
 				       filter(item -> item.totalScore() > 0).
-				       sorted(Comparator.comparing((RankedItem item) -> item.totalScore()).reversed().thenComparing(item -> sortFieldResolver.apply((T) item.dataItem))).
+				       sorted(Comparator.comparing((RankedItem<T> item) -> item.totalScore()).reversed().thenComparing(item -> sortFieldResolver.apply((T) item.dataItem))).
 					   collect(Collectors.toList());
 	}
 	
@@ -55,7 +55,7 @@ public class ListRankAndFilter<T> {
 		return rankedItems.parallelStream().
 				       map(item -> setItemRank(item, inputCommand)).
 				       filter(item -> item.totalScore() > 0).
-				       sorted(Comparator.comparing((RankedItem item) -> item.totalScore()).reversed().thenComparing(item -> item.order)).
+				       sorted(Comparator.comparing((RankedItem<T> item) -> item.totalScore()).reversed().thenComparing(item -> item.order)).
 					   collect(Collectors.toList());
 	}
 	
@@ -67,7 +67,7 @@ public class ListRankAndFilter<T> {
 	
 	private List<RankedItem<T>> makeRankedListOrdered(List<RankedItem<T>> items) {
 		return items.parallelStream().
-	       sorted(Comparator.comparing((RankedItem item) -> item.order)).
+	       sorted(Comparator.comparing((item) -> item.order)).
 		   collect(Collectors.toList());
 	}
 	

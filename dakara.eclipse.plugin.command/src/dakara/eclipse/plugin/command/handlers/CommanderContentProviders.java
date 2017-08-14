@@ -27,9 +27,7 @@ public class CommanderContentProviders {
 			}
 			
 			List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputState.inputCommand, eclipseCommandProvider.getAllCommands());
-			if ((inputState.inputCommand.getColumnFilter(0).length() == 0) && (historyItems.size() > 0))
-				return listRankAndFilter.moveItem(filteredList, historyItems.get(0), 0);
-			else return filteredList;
+			return filteredList;
 		};
 	}
 	
@@ -42,10 +40,8 @@ public class CommanderContentProviders {
 			}
 			
 			List<QuickAccessElement> uniqueHistoryItems = historyItems.stream().distinct().collect(Collectors.toList());
-			List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputState.inputCommand, uniqueHistoryItems);
-			if ((inputState.inputCommand.getColumnFilter(0).length() == 0) && (historyItems.size() > 0))
-				return listRankAndFilter.moveItem(filteredList, historyItems.get(0), 0);
-			else return filteredList;
+			List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilterOrdered(inputState.inputCommand, uniqueHistoryItems);
+			return filteredList;
 		};
 	}
 	

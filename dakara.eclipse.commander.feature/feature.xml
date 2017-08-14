@@ -2,12 +2,12 @@
 <feature
       id="dakara.eclipse.commander.feature"
       label="Commander Feature"
-      version="1.0.4">
+      version="1.0.5">
 
    <description url="http://www.example.com/description">
-      Commander command pallete.
-Add a new key binding to &apos;Commander&apos; to enable feature after
-installation.
+      1) Commander - a much more powerful version of quick access
+2) Finder - a much more powerful version of open resource
+Assign your preferred key bindings to use these new command features.
    </description>
 
    <license url="http://www.example.com/license">
@@ -18,6 +18,10 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+3rd Party Software Included
+FastUtil - http://fastutil.di.unimi.it/ - Apache License 2.0
+RxJava - https://github.com/ReactiveX/RxJava - Apache License 2.0
    </license>
 
    <plugin

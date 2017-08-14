@@ -31,7 +31,7 @@ public class InternalContentProviderProxy<U> {
 	private final Function<InputState, List<RankedItem<U>>> listContentProvider;
 	public final String name;
 	private KaviListColumns<U> kaviListColumns;
-	private InputCommand previousInputCommand = null;
+	private InputState previousInputState = null;
 	private boolean restoreFilterOnChange = false;
 	private boolean filterOnlySelectedEntries = false;
 	private boolean showAllWhenNoFilter = true;
@@ -76,11 +76,12 @@ public class InternalContentProviderProxy<U> {
 	}
 
 	public InputCommand previousInputCommand() {
-		return previousInputCommand;
+		if (previousInputState == null) return null;
+		return previousInputState.inputCommand;
 	}
 	
 	public InternalContentProviderProxy<U> updateTableEntries(InputState inputState) {
-		final boolean filterChanged = filterChanged(inputState.inputCommand);
+		final boolean filterChanged = filterChanged(inputState);
 		
 		if (!showAllWhenNoFilter && inputState.inputCommand.filterText.length() == 0 && !inputState.inputCommand.fastSelect) setTableEntries(new ArrayList<>());
 		else if (!filterChanged && showAllWhenNoFilter) return this;
@@ -88,9 +89,14 @@ public class InternalContentProviderProxy<U> {
 		return this;
 	}
 	
+	public InternalContentProviderProxy<U> refreshFromContentProvider() {
+		setTableEntries(listContentProvider.apply(previousInputState));
+		return this;
+	}
+	
 	public InternalContentProviderProxy<U> setTableEntries(List<RankedItem<U>> tableEntries) {
 		if (filterOnlySelectedEntries) {
-			this.tableEntries.clear();
+			this.tableEntries = new ArrayList<>();
 			for (RankedItem<U> rankedItem : tableEntries) {
 				if (selectedEntries.contains(rankedItem)) this.tableEntries.add(rankedItem);
 			}
@@ -248,7 +254,7 @@ public class InternalContentProviderProxy<U> {
 	}
 	
 	public InternalContentProviderProxy<U> clearPreviousInputCommand() {
-		previousInputCommand = null;
+		previousInputState = null;
 		return this;
 	}
 	
@@ -288,19 +294,19 @@ public class InternalContentProviderProxy<U> {
 		final RankedItem<U> selectedElement = getCursoredOrDefaultElement();
 		if (resolvedContextActionProvider != null) {
 			resolvedContextActionProvider.accept(selectedElement.dataItem, previousProvider);
-			previousInputCommand = null; // clear out when we execute command
+			previousInputState = null; // clear out when we execute command
 			isResolved = true;
 		}
 		return isResolved;
 	}	
 	
-	public boolean filterChanged(InputCommand inputCommand)	{
-		if (previousInputCommand == null) {
-			previousInputCommand = inputCommand;
+	public boolean filterChanged(InputState inputState)	{
+		if (previousInputState == null) {
+			previousInputState = inputState;
 			return true;
 		}
-		boolean filterChanged = !inputCommand.isFilterEqual(previousInputCommand);
-		previousInputCommand = inputCommand;
+		boolean filterChanged = !inputState.inputCommand.isFilterEqual(previousInputState.inputCommand);
+		previousInputState = inputState;
 		return filterChanged;
 	}
 	

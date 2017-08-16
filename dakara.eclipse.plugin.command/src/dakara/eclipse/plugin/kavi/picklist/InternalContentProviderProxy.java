@@ -2,16 +2,17 @@ package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import org.eclipse.swt.widgets.Item;
+import java.util.stream.Stream;
 
 import dakara.eclipse.plugin.stringscore.RankedItem;
 
@@ -39,6 +40,8 @@ public class InternalContentProviderProxy<U> {
 	private boolean restoreFilterOnChange = false;
 	private boolean filterOnlySelectedEntries = false;
 	private boolean showAllWhenNoFilter = true;
+	private Function<Stream<RankedItem<U>>, Stream<RankedItem<U>>> sortResolverFn;
+	private final Map<String, Function<Stream<RankedItem<U>>, Stream<RankedItem<U>>>> filterResolvers = new HashMap<>();
 
 	public InternalContentProviderProxy(@SuppressWarnings("rawtypes") KaviList kaviList, String name,	Function<InputState, List<RankedItem<U>>> listContentProvider) {
 		this.name = name;
@@ -99,6 +102,10 @@ public class InternalContentProviderProxy<U> {
 	}
 	
 	public InternalContentProviderProxy<U> setTableEntries(List<RankedItem<U>> tableEntries) {
+//		Stream<RankedItem<U>> tableStream = tableEntries.parallelStream();
+//		if (sortResolverFn != null) {
+//			tableStream = sortResolverFn.apply(tableStream);
+//		}
 		if (filterOnlySelectedEntries) {
 			this.tableEntries = new ArrayList<>();
 			for (RankedItem<U> rankedItem : tableEntries) {

@@ -33,7 +33,8 @@ public class ListRankAndFilter<T> {
 		fields.add(new FieldResolver<>(fieldId, fieldResolver));
 		return this;
 	}
-	
+	// TODO - provide version that returns a stream
+	// this will allow better optimization of post filtering and sorting from the internal provider proxy
 	public List<RankedItem<T>> rankAndFilter(final InputCommand inputCommand, List<T> items) {
 		if (!inputCommand.isColumnFiltering && inputCommand.getColumnFilter(0).length() == 0) return makeRankedList(items);
 

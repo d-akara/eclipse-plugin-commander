@@ -14,7 +14,7 @@ public class InternalCommandContextProviderFactory {
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 		});
 		
-		provider.addCommand("list: sort default", (currentProvider) -> {
+		provider.addCommand("working", "list: toggle sort name", (currentProvider) -> {
 			kaviPickList.togglePreviousProvider().sortDefault().refreshFromContentProvider();
 		});		
 	}

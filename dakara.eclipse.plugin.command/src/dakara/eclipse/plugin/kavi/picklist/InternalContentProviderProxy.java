@@ -102,10 +102,11 @@ public class InternalContentProviderProxy<U> {
 	}
 	
 	public InternalContentProviderProxy<U> setTableEntries(List<RankedItem<U>> tableEntries) {
-//		Stream<RankedItem<U>> tableStream = tableEntries.parallelStream();
-//		if (sortResolverFn != null) {
-//			tableStream = sortResolverFn.apply(tableStream);
-//		}
+		Stream<RankedItem<U>> tableStream = tableEntries.parallelStream();
+		if (sortResolverFn != null) {
+			tableStream = sortResolverFn.apply(tableStream);
+		}
+		
 		if (filterOnlySelectedEntries) {
 			this.tableEntries = new ArrayList<>();
 			for (RankedItem<U> rankedItem : tableEntries) {
@@ -114,7 +115,18 @@ public class InternalContentProviderProxy<U> {
 		} else {
 			this.tableEntries = tableEntries;
 		}
+		
+		this.tableEntries = tableStream.collect(Collectors.toList());
 		return this;
+	}
+	
+	private Stream<RankedItem<U>> applyFilters(Stream<RankedItem<U>> stream) {
+		if (filterResolvers.isEmpty()) return stream;
+		for (Function<Stream<RankedItem<U>>, Stream<RankedItem<U>>> filterResolver : filterResolvers.values()) {
+			stream = filterResolver.apply(stream);
+		}
+		
+		return stream;
 	}
 
 	public List<RankedItem<U>> getTableEntries() {

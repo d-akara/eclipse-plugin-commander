@@ -38,7 +38,6 @@ public class InternalContentProviderProxy<U> {
 	private KaviListColumns<U> kaviListColumns;
 	private InputState previousInputState = null;
 	private boolean restoreFilterOnChange = false;
-	private boolean filterOnlySelectedEntries = false;
 	private boolean showAllWhenNoFilter = true;
 	private Function<Stream<RankedItem<U>>, Stream<RankedItem<U>>> sortResolverFn;
 	private final Map<String, Function<Stream<RankedItem<U>>, Stream<RankedItem<U>>>> filterResolvers = new HashMap<>();
@@ -102,19 +101,13 @@ public class InternalContentProviderProxy<U> {
 	}
 	
 	public InternalContentProviderProxy<U> setTableEntries(List<RankedItem<U>> tableEntries) {
+		// TODO optimize and only create a stream when necessary
 		Stream<RankedItem<U>> tableStream = tableEntries.parallelStream();
 		if (sortResolverFn != null) {
 			tableStream = sortResolverFn.apply(tableStream);
 		}
 		
-		if (filterOnlySelectedEntries) {
-			this.tableEntries = new ArrayList<>();
-			for (RankedItem<U> rankedItem : tableEntries) {
-				if (selectedEntries.contains(rankedItem)) this.tableEntries.add(rankedItem);
-			}
-		} else {
-			this.tableEntries = tableEntries;
-		}
+		tableStream = applyFilters(tableStream);
 		
 		this.tableEntries = tableStream.collect(Collectors.toList());
 		return this;
@@ -267,7 +260,9 @@ public class InternalContentProviderProxy<U> {
 	}
 
 	public InternalContentProviderProxy<U> toggleViewOnlySelected() {
-		filterOnlySelectedEntries = !filterOnlySelectedEntries;
+		if (!filterResolvers.containsKey("filterSelected"))
+			filterResolvers.put("filterSelected", stream -> stream.filter(item -> selectedEntries.contains(item)));
+		else filterResolvers.remove("filterSelected");
 		return this;
 	}
 
@@ -353,8 +348,13 @@ public class InternalContentProviderProxy<U> {
 	}
 	
 	public InternalContentProviderProxy<U> sortDefault() {
+		if (sortResolverFn != null) {
+			sortResolverFn = null;
+			return this;
+		}
+		
 		BiFunction<U, Integer, String> contentFn = getKaviListColumns().getColumnOptions().get(1).getColumnContentFn();
-		tableEntries = tableEntries.stream().sorted(Comparator.comparing(item -> contentFn.apply(item.dataItem, 0))).collect(Collectors.toList());
+		sortResolverFn = stream -> stream.sorted(Comparator.comparing(item -> contentFn.apply(item.dataItem, 0)));
 		return this;
 	}
 }

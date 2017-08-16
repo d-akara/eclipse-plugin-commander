@@ -4,8 +4,8 @@
       label="Commander Feature"
       version="1.0.5">
 
-   <description url="http://www.example.com/description">
-      1) Commander - a much more powerful version of quick access
+   <description url="https://github.com/dakaraphi/eclipse-plugin-commander">
+      1) Commander - a more powerful version of quick access
 2) Finder - a much more powerful version of open resource
 Assign your preferred key bindings to use these new command features.
    </description>

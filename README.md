@@ -1,6 +1,12 @@
 # Eclipse Commander
-Set of enhancements providing a command palette like interface exceeding the capabilities of sublime text command palette.
+Provides command palette [KAVI](https://github.com/dakaraphi/kavi) interfaces exceeding capabilities of typical sublime like command palettes
 
+Current interfaces provided:
+ * **Commander** - provides interface for selecting and executing all Eclipse commands.
+ * **Finder** - provides interface for selecting and opening workspace resources.
+ 
+# KAVI implemented features for all interfaces 
+ 
 ## Term Matching
 
 ### Multi column
@@ -20,6 +26,8 @@ Set of enhancements providing a command palette like interface exceeding the cap
 ### Single select
 ### Range select
 ### Inverse select
+### All select/deselect
+### Implied selections
 
 ## Navigation
 ### List paging
@@ -33,3 +41,12 @@ Set of enhancements providing a command palette like interface exceeding the cap
 ## Context Actions
 ### Favorites
 ### Sort
+
+## Modes and selection states
+
+#Commander
+## Columns
+## Launcher
+#Finder
+## Columns
+##

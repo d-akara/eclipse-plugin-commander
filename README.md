@@ -44,9 +44,9 @@ Current interfaces provided:
 
 ## Modes and selection states
 
-#Commander
+# Commander
 ## Columns
 ## Launcher
-#Finder
+# Finder
 ## Columns
 ##

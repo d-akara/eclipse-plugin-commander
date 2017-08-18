@@ -18,6 +18,8 @@ Current interfaces provided:
 ### Fuzzy out of order
 ### Quality filtering
 
+## Ranking Sort
+
 ## Fast Select
 ### Immediate action invocation
 ### Multi select

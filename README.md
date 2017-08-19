@@ -23,6 +23,8 @@ Contiguous characters matched using a fuzzy strategy that attempts to match word
 A space separating words will force matching of the literal words also allowing for out of order matces.
 ![fuzzy column](/readme-images/fuzzy-out-of-order-match.gif)
 ### Quality filtering
+One or two letters will not match in the middle of words.  This is done to prevent a long tail of low ranking matches.
+![quality](/readme-images/quality-match.gif)
 ### Acronym
 Fuzzy matching also will attempt to match by acronym
 ![acronym column](/readme-images/acronym-match.gif)

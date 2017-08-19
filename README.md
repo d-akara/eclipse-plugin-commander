@@ -4,7 +4,26 @@ Provides command palette [KAVI](https://github.com/dakaraphi/kavi) interfaces ex
 Current interfaces provided:
  * **Commander** - provides interface for selecting and executing all Eclipse commands.
  * **Finder** - provides interface for selecting and opening workspace resources.
- 
+
+# Background
+## The problem
+* In a very large complex application such as Eclipse, your workflow can be significantly slowed due to the massive complexity of the application.
+* Eclipse environments can easily have well over 2000 commands which are executed through menus, hot keys, custom dialogs or buttons.
+* Remembering where are the locations of menus, views, buttons or attempting to assign so many actions to hot keys proves to be impractical to impossible.
+* Think time increases simply attempting to navigate and execute your intentions.
+* Quick Access is the Eclipse attempt to address these issues, but fails to be an optimal implementation of a solution.
+    * Modern fuzzy matching like sublime is not implemented requiring additional keystrokes 
+    * Ranking is not optimal, partially due also to group sorting of actions by category which requires navigation further down the list
+    * Reuse of recent actions is not implemented in an intuitive way
+    * Not designed with fast keyboard interaction in mind
+
+## Goals
+* Provide fastest workflow possible in a complex application
+    * Interface should be faster than using mouse, menus, buttons, or even hot keys in most cases.
+    * Typing flow should never be interrupted.
+    * All actions should be possible without use of mouse.
+    * Common used actions should have quicker access.
+
 # KAVI implemented features for all interfaces 
  
 ## Term Matching

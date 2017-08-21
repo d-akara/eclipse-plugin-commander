@@ -48,9 +48,17 @@ One or two letters will not match in the middle of words.  This is done to preve
 Fuzzy matching also will attempt to match by acronym
 ![acronym column](/readme-images/acronym-match.gif)
 ## Ranking Sort
+Items are sorted first by rank and then by name.
+This allows for grouping of items by rank and easier identification of items within the ranked group.
+![acronym column](/readme-images/ranking-sort.gif)
 
 ## Fast Select
+Fast select allows list actions directly on target items without needing to navigate to the item with mouse or keyboard cursor.
+This mode is enabled when typing `/` in the filter input.
+
 ### Immediate action invocation
+With `Fast Select` enabled, typing the letters in the fast select guide next to the row immediately inititates that row action.
+![acronym column](/readme-images/fast-select.gif)
 ### Multi select
 
 ## Selections

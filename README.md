@@ -59,9 +59,12 @@ This mode is enabled when typing `/` in the filter input.
 
 ### Immediate action invocation
 With `Fast Select` enabled, typing the letters in the fast select guide next to the row immediately inititates that row action.
+
 ![acronym column](/readme-images/fast-select.gif)
 ### Multi select
 `Fast Multi Select` allows fast selection of multiple items.  This mode is active when `//` is entered in the input field.
+
+![acronym column](/readme-images/fast-multi-select.gif)
 
 ### Range select
 A range can be selected by starting the row identifier with `-`.  The range will be applied from the last selected item and will use the selected state of the that same item.
@@ -97,6 +100,8 @@ However, this view does need to be primed before it is useful.  Over the course 
 ### Switching modes
 Press `TAB` to instantly switch view modes between `Working` and `Discovery`
 
+![acronym column](/readme-images/mode-toggle.gif)
+
 ### Recent
 Recent items are shown in the `Working` view.  The items are always sorted by most recent.  To reuse the last used item, simply open the dialog and press enter which will default to using the first item in the list.
 
@@ -122,6 +127,8 @@ Favorites can be added or removed through context actions.
 
 ### Sort
 Items which are normally sorted by rank or sorted by most recent can be sorted by name using this context action.
+
+![acronym column](/readme-images/context-sort.gif)
 
 # Commander
 ## Columns

@@ -50,6 +50,7 @@ Fuzzy matching also will attempt to match by acronym
 ## Ranking Sort
 Items are sorted first by rank and then by name.
 This allows for grouping of items by rank and easier identification of items within the ranked group.
+
 ![acronym column](/readme-images/ranking-sort.gif)
 
 ## Fast Select
@@ -60,26 +61,61 @@ This mode is enabled when typing `/` in the filter input.
 With `Fast Select` enabled, typing the letters in the fast select guide next to the row immediately inititates that row action.
 ![acronym column](/readme-images/fast-select.gif)
 ### Multi select
+`Fast Multi Select` allows fast selection of multiple items.  This mode is active when `//` is entered in the input field.
 
-## Selections
-### Single select
 ### Range select
+A range can be selected by starting the row identifier with `-`.  The range will be applied from the last selected item and will use the selected state of the that same item.
+
 ### Inverse select
+Inverse select will inverse all selections currently in the filtered view.  
+
 ### All select/deselect
+If any items in the view are selected, this action will deselect all selected.  Otherwise, this same action will select all in the filtered view.
+
 ### Implied selections
+Some actions will always use the first item in the list if there is no selection or cursored item.
 
 ## Navigation
 ### List paging
+`crtl+j` will page down in the list.
+`ctrl+k` will page up in the list.
 
-## Working
+### Cursor movement in input field
+`ctrl+j` will move to beginning of input field
+`ctrl+l` will move to the end of the input field
+
+## Working and Discovery Modes
+`Working` is a view of the set of items that consist of favorites and or recently used items.
+This view is intended to be the primary view that you would use most of the time and therefore is the default view.
+However, this view does need to be primed before it is useful.  Over the course of a few days this view would accumulate actions or items you are currently using.
+
+`Discovery` is a view of all possible items.  Selection of items from Discovery will add them to the recent list which makes them appear in the `Working` view.
+
+### Switching modes
+Press `TAB` to instantly switch view modes between `Working` and `Discovery`
+
 ### Recent
+Recent items are shown in the `Working` view.  The items are always sorted by most recent.  To reuse the last used item, simply open the dialog and press enter which will default to using the first item in the list.
+
 ### Favorites
+Items can also be permanently added to the `Working` view.  These are considered favorite items.  They are also sorted in by most recently used in the same view as recent items.
+
 ### Export/Import preferences
+The `Working` set of items is contained within preferences and will be exported and imported with Eclipse preferences.
+
 ### Across workspaces
+The `Working` set of items is stored in the global preferences store.  Therefore, your recently used commands will still be available across workspaces.
 
 ## Context Actions
+Context actions are those actions that otherwise would require right clicking on an item to bring up another menu or dialog.
+Context actions here are initiated using the `;` key.
+The context actions will be performed on all selected items from the previous view.
+
 ### Favorites
+Favorites can be added or removed through context actions.
+
 ### Sort
+Items which are normally sorted by rank or sorted by most recent can be sorted by name using this context action.
 
 ## Modes and selection states
 

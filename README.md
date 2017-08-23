@@ -68,12 +68,15 @@ A range can be selected by starting the row identifier with `-`.  The range will
 
 ### Inverse select
 Inverse select will inverse all selections currently in the filtered view.  
+Inverse select is performed by pressing `!` after the fast select slashes `//`
 
 ### All select/deselect
 If any items in the view are selected, this action will deselect all selected.  Otherwise, this same action will select all in the filtered view.
+`All select/deselect` is performed by pressing `space` after the fast select slashses `//`
 
 ### Implied selections
 Some actions will always use the first item in the list if there is no selection or cursored item.
+Context actions will perform actions on all items of the previous view of there is nothing selected.
 
 ## Navigation
 ### List paging
@@ -111,13 +114,14 @@ Context actions are those actions that otherwise would require right clicking on
 Context actions here are initiated using the `;` key.
 The context actions will be performed on all selected items from the previous view.
 
+### View Selected
+This action will toggle showing only the selected items in the view.  This allows you to type different input filters, select items and then finally see all the items you have selected at once before performing some action on those items.
+
 ### Favorites
 Favorites can be added or removed through context actions.
 
 ### Sort
 Items which are normally sorted by rank or sorted by most recent can be sorted by name using this context action.
-
-## Modes and selection states
 
 # Commander
 ## Columns

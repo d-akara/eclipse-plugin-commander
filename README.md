@@ -69,6 +69,8 @@ With `Fast Select` enabled, typing the letters in the fast select guide next to 
 ### Range select
 A range can be selected by starting the row identifier with `-`.  The range will be applied from the last selected item and will use the selected state of the that same item.
 
+![acronym column](/readme-images/fast-range-select.gif)
+
 ### Inverse select
 Inverse select will inverse all selections currently in the filtered view.  
 Inverse select is performed by pressing `!` after the fast select slashes `//`

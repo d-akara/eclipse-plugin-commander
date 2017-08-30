@@ -140,6 +140,7 @@ Specific features for the `commander` interface
 ## Launchers
 Launch configurations are added to the list of available commands.
 Currently, all launch configurations are run in debug mode by default.  In the future this may be configurable.
+![acronym column](/readme-images/launcher.gif)
 # Finder
 Specific features for the `finder` interface
 ## Columns

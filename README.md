@@ -133,8 +133,43 @@ Items which are normally sorted by rank or sorted by most recent can be sorted b
 ![acronym column](/readme-images/context-sort.gif)
 
 # Commander
+Specific features for the `commander` interface
 ## Columns
-## Launcher
+1.  Name and description of the command
+2.  Category of the command
+## Launchers
+Launch configurations are added to the list of available commands.
+Currently, all launch configurations are run in debug mode by default.  In the future this may be configurable.
 # Finder
+Specific features for the `finder` interface
 ## Columns
-##
+1.  File name
+2.  Project name
+3.  File path within project
+## Working
+The recent list ordering of items in finder will be updated whenever you change editors in Eclipse.  
+You can use this to always go back to previous file being editted after opening a view.  Just launch the finder and hit `enter` to go back to the last editor.
+## Camel Case Matching
+Note, this is currently planned for finder, but not yet implemented.
+
+# Design Notes
+## Fuzzy matching
+There are multiple types of user intentions when matching
+1.  User has in mind words or abbreviations of a term
+2.  User is unsure of spelling or exact phrasing and is exploring with hopes of some character guesses in the filter input
+3.  User is attempting to narrow existing displayed results using any random characters within the displayed row
+
+Commander has chosen to focus only on intention #1.  Therefore less than 2 letter consecutive intra word matches are ignored.
+This appears to typically be better when filtering very long lists of thousands of items such as eclipse commands or large project files.
+
+## User intention
+Unlike other fuzzy matchers, `Commander` attempts to take into account the user intention where possible.
+For example, terms separated by a `space` are considered to be literal words and fuzzy matching is not used.
+A leading or trailing `space` can be used to specify intent for literal matching of a single filter term.
+Future considerations of other intentions may include capitalize letters to specify only abbreviation or camel case matching.
+Also options to specify how fuzzy a match might also be considered.
+
+## Technical
+* Plugin is built using Java 8 features.  Minimum Eclipse is therefore Neon
+* Java 8 streams are utilized to parallelize the matching algorithm.  Each row is scored on a thread.
+* RxJava is used to debounce the input.  All matching and scoring is done in background off the UI thread.

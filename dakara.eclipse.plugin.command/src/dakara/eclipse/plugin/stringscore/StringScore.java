@@ -55,9 +55,9 @@ public class StringScore {
 		final String[] words = splitWords(match);
 		Score score;
 		
-		if (match.charAt(0) == ' ') {
-			// If there is a leading space, then treat all chars following as literal
-			score = scoreAsContiguousSequence(match.substring(1), target);
+		if (match.charAt(0) == ' ' || match.charAt(match.length() - 1) == ' ') {
+			// If there is a leading or trailing space, then treat all chars following as literal
+			score = scoreAsContiguousSequence(match.trim(), target);
 		} else if (words.length == 1) {
 			score = scoreAsContiguousSequence(match, target);
 			if (score.rank == 4) return score;  // perfect whole word match
@@ -104,14 +104,17 @@ public class StringScore {
 		StringCursor targetCursor = new StringCursor(target);
 		
 		int rank = 0;
-		if (!targetCursor.moveCursorIndexOf(match).cursorPositionTerminal()) {
+		while (!targetCursor.moveCursorForwardIndexOf(match).cursorPositionTerminal()) {
 			rank = contiguousSequenceRankingProvider.apply(match, targetCursor);
+			if (rank > 2) break;
+			targetCursor.moveCursorForward();
 		}
 		
 		if (rank > 0)
 			return new Score(rank, targetCursor.markFillRangeForward(match.length()).markers());
 		return NOT_FOUND_SCORE;
-	}		
+	}
+	
 	
 	public Score scoreAsAcronym(String searchInput, String text) {
 		StringCursor matchesCursor = new StringCursor(text);
@@ -160,12 +163,13 @@ public class StringScore {
 		StringCursor matchCursor = new StringCursor(match);
 		matchCursor.addMark(0);
 		while (!matchCursor.cursorPositionTerminal()) {
+			// Attempt to find the largest match.
+			// updates the cursors with location of partial match completed
+			// returns false if no match possible
 			if (!longestMatchingSequence(matchCursor, targetCursor)) break;
 			
 			if (shouldBailOut(targetCursor, matchCursor)) {
-				break; // non contiguous match not at word start.  bail out
-				// TODO - consider that bail out may not be the best behavior.  
-				// optionally we continue but look for better match
+				break;
 			}
 			
 			targetCursor.markFillRangeForward(matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark());
@@ -195,13 +199,18 @@ public class StringScore {
 		return false;
 	}
 	
+	/*
+	 * Attempt to find the longest matching sequence from match within target.
+	 * Updates both the match and target locations for match found
+	 * returns false if no match could be found
+	 */
 	private boolean longestMatchingSequence(StringCursor matchCursor, StringCursor target) {
 		boolean partialMatchExists = false;
 		int lastFoundIndex = -1;
 		while(!matchCursor.cursorPositionTerminal() && !target.cursorPositionTerminal()) {
 			String remainingPartToMatch = matchCursor.text.substring(matchCursor.indexOfCurrentMark(), matchCursor.indexOfCursor() + 1);
-			//target.moveCursorForwardIndexOfAlphaSequence(remainingPartToMatch);  // search for alpha sequence
 			// TODO consider repeating to find better match starting at word beginning
+			// Need to check bail out condition here.  If will bail out, then try again
 			target.moveCursorForwardIndexOf(remainingPartToMatch);
 			
 			if (!target.cursorPositionTerminal()) matchCursor.moveCursorForward();  // match was found in target, keep advancing match

@@ -20,6 +20,8 @@ public class ListRankAndSelectorTest2 {
 		itemList.add(new TestItem("1", "WizardSnow",         "4"));
 		itemList.add(new TestItem("2", "AbstractWizard.js",  "4"));
 		itemList.add(new TestItem("3", "one",                "4"));
+		itemList.add(new TestItem("4", "open endure",        "4"));
+		itemList.add(new TestItem("5", "seven vender",       "4"));
 		
 
 		
@@ -36,6 +38,20 @@ public class ListRankAndSelectorTest2 {
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals("1",  listItems.get(0).dataItem.field1);
 		Assert.assertEquals("2", listItems.get(1).dataItem.field1);
+	}
+	
+	@Test
+	public void weakMatchAtEndShouldSkipAndAllowForStrongerMatchLater() {
+		InputCommand inputCommand = InputCommand.parse("en");
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		Assert.assertEquals(1, listItems.size());
+	}
+	
+	@Test
+	public void weakMatchAtEndShouldSkipAndAllowForStrongerMatchLater2() {
+		InputCommand inputCommand = InputCommand.parse("sve");
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		Assert.assertEquals(1, listItems.size());
 	}
 
 	private class TestItem {

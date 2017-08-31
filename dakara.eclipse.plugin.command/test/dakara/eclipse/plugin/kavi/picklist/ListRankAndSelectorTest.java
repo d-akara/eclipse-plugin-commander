@@ -77,16 +77,29 @@ public class ListRankAndSelectorTest {
 	public void spaceAtEndShouldNotMatch() {
 		InputCommand inputCommand = InputCommand.parse("xyz ");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
-		Assert.assertEquals(0, listItems.size());
+		RankedItem<TestItem> listItem = listItems.get(0);
+		Assert.assertEquals(1, listItems.size());
+		Assert.assertEquals(3, (listItem.getColumnScore("f3").matches.size()));
 	}
 	
 	@Test
-	public void spaceAtEndShouldMatch() {
+	public void spaceAtEndShouldNotMatch2() {
 		InputCommand inputCommand = InputCommand.parse("adg ");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		RankedItem<TestItem> listItem = listItems.get(0);
 		Assert.assertEquals("8", listItem.dataItem.field1);
-		Assert.assertEquals(4, (listItem.getColumnScore("f3").matches.size()));
+		Assert.assertEquals(3, (listItem.getColumnScore("f3").matches.size()));
+	}
+	
+	@Test
+	public void spaceAtEndForceLiteralMatching() {
+		InputCommand inputCommand = InputCommand.parse("ad");
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		Assert.assertEquals(4, listItems.size());
+		
+		inputCommand = InputCommand.parse("ad ");
+		listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		Assert.assertEquals(1, listItems.size());
 	}
 	
 	@Test

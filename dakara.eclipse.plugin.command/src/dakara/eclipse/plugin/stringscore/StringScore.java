@@ -41,7 +41,6 @@ public class StringScore {
 	private Function<StringCursor, Integer> acronymRankingProvider;
 	private Function<StringCursor, Integer> nonContiguousSequenceRankingProvider;
 	
-	// TODO consider the scoring strategies could be converted to streams and made parallel
 	public StringScore(BiFunction<String, StringCursor, Integer> contiguousSequenceRankingProvider, Function<StringCursor, Integer> acronymRankingProvider, Function<StringCursor, Integer> nonContiguousSequenceRankingProvider) {
 		this.contiguousSequenceRankingProvider = contiguousSequenceRankingProvider;
 		this.acronymRankingProvider = acronymRankingProvider;
@@ -55,8 +54,11 @@ public class StringScore {
 		final String[] words = splitWords(match);
 		Score score;
 		
-		if (match.charAt(0) == ' ' || match.charAt(match.length() - 1) == ' ') {
-			// If there is a leading or trailing space, then treat all chars following as literal
+		if (match.charAt(0) == ' ') {
+			// If there is a leading space, then treat all chars as acronym
+			score = scoreAsAcronym(match.trim(), target);
+		} else if (match.charAt(match.length() - 1) == ' ') {
+			// If there is a trailing space, then treat all chars following as literal
 			score = scoreAsContiguousSequence(match.trim(), target);
 		} else if (words.length == 1) {
 			score = scoreAsContiguousSequence(match, target);

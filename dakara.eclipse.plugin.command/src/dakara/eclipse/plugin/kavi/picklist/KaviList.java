@@ -23,6 +23,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.internal.cocoa.NSTableView;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -241,6 +242,7 @@ public class KaviList<T> {
 		// check for keys being held down
 		// possibly tab toggle for command mode
 		filterText.addKeyListener(new KeyListener() {
+			@SuppressWarnings("restriction")
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (isKeys(SWT.CTRL, 'j', e)) {
@@ -267,13 +269,13 @@ public class KaviList<T> {
 				case SWT.ARROW_DOWN:
 					e.doit = false;
 					contentProvider().moveCursorDown().getCursorItem();
-					tableViewer.getTable().setTopIndex(contentProvider().getCursorIndex());
+					((NSTableView)tableViewer.getTable().view).scrollRowToVisible(contentProvider().getCursorIndex());
 					tableViewer.refresh();
 					break;
 				case SWT.ARROW_UP:
 					e.doit = false;
 					contentProvider().moveCursorUp().getCursorItem();
-					tableViewer.getTable().setTopIndex(contentProvider().getCursorIndex());
+					((NSTableView)tableViewer.getTable().view).scrollRowToVisible(contentProvider().getCursorIndex());
 					tableViewer.refresh();
 					break;
 				case SWT.CR:

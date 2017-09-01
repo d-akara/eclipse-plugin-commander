@@ -106,7 +106,7 @@ public class StringScore {
 		int rank = 0;
 		while (!targetCursor.moveCursorForwardIndexOf(match).cursorPositionTerminal()) {
 			rank = contiguousSequenceRankingProvider.apply(match, targetCursor);
-			if (rank > 2) break;
+			if (rank > 0) break;
 			targetCursor.moveCursorForward();
 		}
 		
@@ -162,13 +162,20 @@ public class StringScore {
 		StringCursor targetCursor = new StringCursor(target);
 		StringCursor matchCursor = new StringCursor(match);
 		matchCursor.addMark(0);
-		while (!matchCursor.cursorPositionTerminal()) {
-			// Attempt to find the largest match.
-			// updates the cursors with location of partial match completed
-			// returns false if no match possible
-			if (!longestMatchingSequence(matchCursor, targetCursor)) break;
-			
-			if (shouldBailOut(targetCursor, matchCursor)) {
+		outer: while (!matchCursor.cursorPositionTerminal()) {
+			while (true) {
+				// Attempt to find the largest match.
+				// updates the cursors with location of partial match completed
+				// returns false if no match possible
+				if (!longestMatchingSequence(matchCursor, targetCursor))	break outer;
+				if (veryWeakMatch(targetCursor, matchCursor)) {
+					// try again
+					// reset match position
+					matchCursor.setCursorPosition(matchCursor.indexOfCurrentMark());
+					// advance target by 1
+					targetCursor.moveCursorForward();
+					continue;
+				} 
 				break;
 			}
 			
@@ -190,7 +197,7 @@ public class StringScore {
 		}
 	}
 
-	private boolean shouldBailOut(StringCursor targetCursor, StringCursor matchCursor) {
+	private boolean veryWeakMatch(StringCursor targetCursor, StringCursor matchCursor) {
 		// If we are not at the start and selected count less than 2, this is too weak.
 		if (!targetCursor.cursorAtWordStart() && matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark() < 3) return true;
 		// If we are starting at the end of a word, this is a weak match

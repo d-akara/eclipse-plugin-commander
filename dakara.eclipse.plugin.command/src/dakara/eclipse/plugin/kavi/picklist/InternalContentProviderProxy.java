@@ -32,7 +32,7 @@ public class InternalContentProviderProxy<U> {
 	private Consumer<List<U>> setMultiResolvedAction;
 	private List<RankedItem<U>> tableEntries = new ArrayList<>();
 	private final Set<RankedItem<U>> selectedEntries = new HashSet<>();
-	private int rowCursorIndex = -1;
+	private int rowCursorIndex = 0;
 	private final Function<InputState, List<RankedItem<U>>> listContentProvider;
 	public final String name;
 	private KaviListColumns<U> kaviListColumns;
@@ -88,6 +88,8 @@ public class InternalContentProviderProxy<U> {
 	
 	public InternalContentProviderProxy<U> updateTableEntries(InputState inputState) {
 		final boolean filterChanged = filterChanged(inputState);
+		
+		if (filterChanged) rowCursorIndex = 0;
 		
 		if (!showAllWhenNoFilter && inputState.inputCommand.filterText.length() == 0 && !inputState.inputCommand.fastSelect) setTableEntries(new ArrayList<>());
 		else if (!filterChanged && showAllWhenNoFilter) return this;
@@ -300,10 +302,11 @@ public class InternalContentProviderProxy<U> {
 	
 	private RankedItem<U> getCursoredOrDefaultElement() {
 		RankedItem<U> selectedElement = null;
-		if (getSelectedEntries().size() <= 1) {
+		if (getSelectedEntries().size() == 0) {
 			selectedElement = (RankedItem<U>) getCursorItem();
+		} else if (getSelectedEntries().size() == 1) {
+			selectedElement = selectedEntries.stream().findFirst().get();
 		}
-		if ((selectedElement == null) && (tableEntries.size() > 0)) selectedElement = tableEntries.get(0);
 		return selectedElement;
 	}
 

@@ -5,7 +5,14 @@ import java.util.function.Function;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
-
+/**
+ * TODO - 2nd generation ideas.
+ * - precalculate all interesting indexes at time of lower case transformation and store bitwise mask
+ * - for example, start end of words, alpha chars vs non alpha, capital letters etc.
+ * - this data might be best in a StringCursorPrimitive that can be used to construct StringCursor's so that we 
+ * - can have multiple cursors on the same data without recomputation.
+ *
+ */
 public class StringCursor {
 	public String text;
 	private int indexOfCursor = 0;

@@ -286,7 +286,7 @@ public class InternalContentProviderProxy<U> {
 		if (tableEntries.isEmpty()) return isResolved;
 		
 		if (setMultiResolvedAction != null)  {
-			if (selectedEntries.size() == 0) toggleSelectedState(tableEntries.get(0));
+			if (selectedEntries.size() == 0 && rowCursorIndex > -1) toggleSelectedState(tableEntries.get(rowCursorIndex));
 			isResolved = true;
 			setMultiResolvedAction.accept(selectedEntries.stream().map(rankedItem -> rankedItem.dataItem).collect(Collectors.toList()));
 		}

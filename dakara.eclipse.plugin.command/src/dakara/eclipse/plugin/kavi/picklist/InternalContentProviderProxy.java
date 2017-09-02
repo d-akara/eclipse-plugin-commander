@@ -251,7 +251,7 @@ public class InternalContentProviderProxy<U> {
 		return this;
 	}
 
-	public int isSelected(RankedItem<U> item) {
+	public int itemRowState(RankedItem<U> item) {
 		int state = 0;
 		if (selectedEntries.contains(item))
 			state |= RowState.SELECTED.value;

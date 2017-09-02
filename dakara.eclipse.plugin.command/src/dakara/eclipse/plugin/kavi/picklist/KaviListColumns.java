@@ -15,8 +15,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.themes.ColorUtil;
@@ -42,14 +46,30 @@ public class KaviListColumns<T> {
 		final ColumnOptions<T> options = new ColumnOptions<T>(this, columnId, columnContentFn, columnOptions.size());
 		StyledCellLabelProvider labelProvider = new StyledCellLabelProvider(StyledCellLabelProvider.COLORS_ON_SELECTION) {
 			@Override
-	        	public void update(ViewerCell cell) {
-	        		// TODO reuse and manage SWT resources
-	        		final RankedItem<T> rankedItem = applyCellDefaultStyles(options, cell);
-	        		resolveCellTextValue(columnContentFn, cell, rankedItem);
-	        		if (options.isSearchable())
-	        			applyCellScoreMatchStyles(cell, rankedItem);
-	            super.update(cell);
-	        	}
+        	public void update(ViewerCell cell) {
+        		// TODO reuse and manage SWT resources
+        		final RankedItem<T> rankedItem = applyCellDefaultStyles(options, cell);
+        		resolveCellTextValue(columnContentFn, cell, rankedItem);
+        		if (options.isSearchable())
+        			applyCellScoreMatchStyles(cell, rankedItem);
+        		super.update(cell);
+        	}
+			@Override
+			protected void paint(Event event, Object element) {
+				Function<T, Boolean> markerIndicatorProvider = options.getMarkerIndicatorProvider();
+				// TODO - make this more generic so we can have different types of markers
+				// - possibly allow the provider to draw its own marker
+				// - consider passing rankedItem.  We could then draw ranking strength markers
+				if (markerIndicatorProvider != null && markerIndicatorProvider.apply(((RankedItem<T>) element).dataItem)) {
+					GC gc = event.gc;
+					ViewerCell cell = getViewer().getCell(new Point(event.x, event.y));
+					Rectangle bounds = cell.getBounds();
+					gc.setForeground(fromRegistry(new RGB(242, 215, 135)));
+					gc.setBackground(fromRegistry(new RGB(242, 215, 135)));
+					gc.fillRectangle(bounds.x + 2, bounds.y + 2, 3, bounds.height - 4);
+				}
+				super.paint(event, element);
+			}
 		};
 		options.setLabelProvider(labelProvider);
 		columnOptions.add(options);

@@ -72,6 +72,13 @@ public class PersistedWorkingSet<T> {
 		return currentEntries;
 	}
 	
+	public HistoryEntry getHistoryEntry(T historyItem) {
+		HistoryEntry newHistoryEntry = makeEntry(historyItem);
+		final int index = commanderSettings.entries.indexOf(newHistoryEntry);
+		if (index > -1) return commanderSettings.entries.get(index);
+		return null;
+	}
+	
 	public PersistedWorkingSet<T> addToHistory(T historyItem) {
 		historyChangedSinceCheck = true;
 		HistoryEntry newHistoryEntry = makeEntry(historyItem);

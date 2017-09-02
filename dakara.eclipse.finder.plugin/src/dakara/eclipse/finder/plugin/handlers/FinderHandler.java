@@ -18,6 +18,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.IDE;
 
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryEntry;
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryKey;
 import dakara.eclipse.plugin.kavi.picklist.InputState;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider;
@@ -63,7 +64,11 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		
 		finder.setListContentProvider("working", listContentProviderWorkingSet(listRankAndFilter(nameResolver, pathResolver, projectResolver), historyStore, files))
 			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(historyStore, workbenchPage, workspace, resourceItems))
-			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30)
+			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30).setMarkerIndicatorProvider(item -> { 
+					HistoryEntry historyEntry = historyStore.getHistoryEntry(item);
+					if (historyEntry == null) return true;
+					return !historyEntry.keepForever;
+				})
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 

@@ -13,6 +13,7 @@ import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.command.eclipse.internal.EclipseCommandProvider;
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryEntry;
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryKey;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProviderFactory;
@@ -55,7 +56,11 @@ public class CommanderHandler extends AbstractHandler {
 		
 		kaviPickList.setListContentProvider("working",    CommanderContentProviders.listContentRecallProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
 					.setResolvedAction(resolvedAction(display, historyStore))
-					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
+					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100).setMarkerIndicatorProvider(item -> { 
+						HistoryEntry historyEntry = historyStore.getHistoryEntry(item);
+						if (historyEntry == null) return true;
+						return !historyEntry.keepForever;
+					})
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
 		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(kaviPickList);
@@ -69,7 +74,7 @@ public class CommanderHandler extends AbstractHandler {
 
 	private PersistedWorkingSet<QuickAccessElement> createSettingsStore(EclipseCommandProvider eclipseCommandProvider) {
 		Function<HistoryKey, QuickAccessElement> historyItemResolver = historyKey -> eclipseCommandProvider.getCommand(historyKey.keys.get(0), historyKey.keys.get(1));
-		PersistedWorkingSet<QuickAccessElement> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, 100, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
+		PersistedWorkingSet<QuickAccessElement> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, 20, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
 		historyStore.load();
 		
 		return historyStore;

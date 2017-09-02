@@ -290,8 +290,6 @@ public class InternalContentProviderProxy<U> {
 			isResolved = true;
 			setMultiResolvedAction.accept(selectedEntries.stream().map(rankedItem -> rankedItem.dataItem).collect(Collectors.toList()));
 		}
-		// TODO temp work around until we decide how to auto select
-		// get first item in the list
 		if (selectedElement != null && resolvedActionProvider != null) {
 			isResolved = true;
 			resolvedActionProvider.accept(selectedElement.dataItem);

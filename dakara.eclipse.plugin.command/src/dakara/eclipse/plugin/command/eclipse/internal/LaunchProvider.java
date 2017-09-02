@@ -16,7 +16,6 @@ public class LaunchProvider extends QuickAccessProvider {
 
 	@Override
 	public String getId() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -27,7 +26,6 @@ public class LaunchProvider extends QuickAccessProvider {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -41,7 +39,6 @@ public class LaunchProvider extends QuickAccessProvider {
 				elements.add(new LauncherElement(this, configuration.getMemento(), configuration.getName(), configuration.getType().getName()));
 			}
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return elements.toArray(new QuickAccessElement[] {});
@@ -52,7 +49,6 @@ public class LaunchProvider extends QuickAccessProvider {
 			ILaunchConfiguration configuration = DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(element.getId());
 			configuration.launch(ILaunchManager.DEBUG_MODE, new NullProgressMonitor());
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -63,7 +59,6 @@ public class LaunchProvider extends QuickAccessProvider {
 			ILaunchConfiguration configuration = DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(id);
 			return new LauncherElement(this, configuration.getMemento(), configuration.getName(), configuration.getType().getName());
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -71,8 +66,6 @@ public class LaunchProvider extends QuickAccessProvider {
 
 	@Override
 	protected void doReset() {
-		// TODO Auto-generated method stub
-
 	}
 
 }

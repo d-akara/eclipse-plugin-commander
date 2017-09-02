@@ -19,8 +19,6 @@ public class PersistedWorkingSet<T> {
 	private CommanderSettings commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
 	private EclipsePreferencesSerializer<CommanderSettings> eclipsePreferencesSerializer;
 	static final String HISTORY_KEY = "HISTORY";
-	// TODO separate history and settings store
-	// TODO keep long term history of all items
 	
 	public PersistedWorkingSet(String id, int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
 		this.historyLimit = historyLimit;

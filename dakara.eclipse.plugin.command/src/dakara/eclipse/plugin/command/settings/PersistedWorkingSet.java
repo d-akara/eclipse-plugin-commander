@@ -86,8 +86,12 @@ public class PersistedWorkingSet<T> {
 		if (existingIndex > -1) newHistoryEntry = commanderSettings.entries.get(existingIndex);  // get existing so we keep other attributes.  We just want to move to first in the list
 		commanderSettings.entries.remove(newHistoryEntry);
 		commanderSettings.entries.add(0, newHistoryEntry);
-		if (commanderSettings.entries.size() > historyLimit) {
-			commanderSettings.entries.remove(commanderSettings.entries.size() - 1);
+		
+		// count items that are not favorites and which have a valid item reference
+		if (commanderSettings.entries.stream().filter(entry->!entry.keepForever && entry.historyItem != null).count() > historyLimit) {
+			HistoryEntry lastRecentEntry = commanderSettings.entries.stream().filter(entry->!entry.keepForever && entry.historyItem != null).reduce((a, b) -> b).orElse(null);
+			if(lastRecentEntry != null) 
+				commanderSettings.entries.remove(commanderSettings.entries.indexOf(lastRecentEntry));
 		}
 		return this;
 	}

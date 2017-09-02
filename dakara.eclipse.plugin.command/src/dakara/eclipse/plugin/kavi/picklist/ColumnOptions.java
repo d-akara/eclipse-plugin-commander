@@ -19,6 +19,7 @@ public class ColumnOptions<T> {
 	private RGB backgroundRGB = new RGB(255,255,255);
 	private Font font;
 	private BiFunction<T, Integer, String> columnContentFn;
+	private Function<T, Boolean> markerIndicatorProvider;
 	private KaviListColumns<T> kaviListColumns;
 	private StyledCellLabelProvider labelProvider;
 	private int columnWidth = 100;
@@ -145,5 +146,14 @@ public class ColumnOptions<T> {
 	
 	public void setEnableBackgroundSelection(boolean enableBackgroundSelection) {
 		this.enableBackgroundSelection = enableBackgroundSelection;
+	}
+	
+	public Function<T, Boolean> getMarkerIndicatorProvider() {
+		return markerIndicatorProvider;
+	}
+	
+	public ColumnOptions<T> setMarkerIndicatorProvider(Function<T, Boolean> markerIndicatorProvider) {
+		this.markerIndicatorProvider = markerIndicatorProvider;
+		return this;
 	}
 }

@@ -68,7 +68,7 @@ public class KaviList<T> {
 	
 	public <U> InternalContentProviderProxy<U> setListContentProvider(String name, Function<InputState, List<RankedItem<U>>> listContentProvider) {
 		InternalContentProviderProxy<U> contentProvider = new InternalContentProviderProxy<U>(this, name, listContentProvider);
-		KaviListColumns<U> kaviListColumns = new KaviListColumns<U>(tableViewer, contentProvider::isSelected);
+		KaviListColumns<U> kaviListColumns = new KaviListColumns<U>(tableViewer, contentProvider::itemRowState);
 		kaviListColumns.addColumn("fastSelect", (item, rowIndex) -> alphaColumnConverter.toAlpha(rowIndex + 1)).width(0).searchable(false)
 					   .backgroundColor(242, 215, 135).setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT)).setEnableBackgroundSelection(false);	
 		contentProvider.setKaviListColumns(kaviListColumns);
@@ -242,7 +242,6 @@ public class KaviList<T> {
 		// check for keys being held down
 		// possibly tab toggle for command mode
 		filterText.addKeyListener(new KeyListener() {
-			@SuppressWarnings("restriction")
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (isKeys(SWT.CTRL, 'j', e)) {

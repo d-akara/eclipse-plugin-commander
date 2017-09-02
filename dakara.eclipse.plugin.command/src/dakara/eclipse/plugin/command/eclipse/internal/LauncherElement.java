@@ -22,7 +22,6 @@ public class LauncherElement extends QuickAccessElement {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

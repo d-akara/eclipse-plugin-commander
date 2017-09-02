@@ -218,8 +218,6 @@ public class StringScore {
 		int lastFoundIndex = -1;
 		while(!matchCursor.cursorPositionTerminal() && !target.cursorPositionTerminal()) {
 			String remainingPartToMatch = matchCursor.text.substring(matchCursor.indexOfCurrentMark(), matchCursor.indexOfCursor() + 1);
-			// TODO consider repeating to find better match starting at word beginning
-			// Need to check bail out condition here.  If will bail out, then try again
 			target.moveCursorForwardIndexOf(remainingPartToMatch);
 			
 			if (!target.cursorPositionTerminal()) matchCursor.moveCursorForward();  // match was found in target, keep advancing match

@@ -118,7 +118,6 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 	}
 	
 	public static Function<InputState, List<RankedItem<ResourceItem>>> listContentProviderWorkingSet(ListRankAndFilter<ResourceItem> listRankAndFilter, PersistedWorkingSet<ResourceItem> historyStore, List<ResourceItem> workspaceResources) {
-		// TODO the working set recent order should be updated each time focus is changed on an open file
 		return (inputState) -> {
 			List<ResourceItem> workingFiles = historyStore.getHistory().stream()
 														 .map(historyItem -> historyItem.getHistoryItem())

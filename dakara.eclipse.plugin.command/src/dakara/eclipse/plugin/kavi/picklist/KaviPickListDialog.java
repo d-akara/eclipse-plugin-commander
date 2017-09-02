@@ -18,9 +18,8 @@ import org.eclipse.ui.internal.progress.ProgressManagerUtil;
 
 import dakara.eclipse.plugin.stringscore.RankedItem;
 /*
- * TODO - add page numbers to bottom
- * add item count
- * selected count
+ * TODO - move status info to top of window
+ * - allow window to be dragged from status handle
  */
 @SuppressWarnings("restriction")
 public class KaviPickListDialog<T> extends PopupDialog {

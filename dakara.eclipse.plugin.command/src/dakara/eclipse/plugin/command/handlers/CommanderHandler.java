@@ -58,8 +58,8 @@ public class CommanderHandler extends AbstractHandler {
 					.setResolvedAction(resolvedAction(display, historyStore))
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100).setMarkerIndicatorProvider(item -> { 
 						HistoryEntry historyEntry = historyStore.getHistoryEntry(item);
-						if (historyEntry == null) return true;
-						return !historyEntry.keepForever;
+						if (historyEntry == null) return false;
+						return historyEntry.keepForever;
 					})
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		

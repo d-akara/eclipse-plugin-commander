@@ -82,6 +82,8 @@ public class PersistedWorkingSet<T> {
 	public PersistedWorkingSet<T> addToHistory(T historyItem) {
 		historyChangedSinceCheck = true;
 		HistoryEntry newHistoryEntry = makeEntry(historyItem);
+		final int existingIndex = commanderSettings.entries.indexOf(newHistoryEntry);
+		if (existingIndex > -1) newHistoryEntry = commanderSettings.entries.get(existingIndex);  // get existing so we keep other attributes.  We just want to move to first in the list
 		commanderSettings.entries.remove(newHistoryEntry);
 		commanderSettings.entries.add(0, newHistoryEntry);
 		if (commanderSettings.entries.size() > historyLimit) {

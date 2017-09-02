@@ -64,9 +64,10 @@ public class KaviListColumns<T> {
 					GC gc = event.gc;
 					ViewerCell cell = getViewer().getCell(new Point(event.x, event.y));
 					Rectangle bounds = cell.getBounds();
+					
 					gc.setForeground(fromRegistry(new RGB(242, 215, 135)));
 					gc.setBackground(fromRegistry(new RGB(242, 215, 135)));
-					gc.fillRectangle(bounds.x + 2, bounds.y + 2, 3, bounds.height - 4);
+					gc.fillRectangle(bounds.x, bounds.y + 2, 3, bounds.height - 4);
 				}
 				super.paint(event, element);
 			}

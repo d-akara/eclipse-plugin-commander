@@ -23,11 +23,11 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.internal.cocoa.NSTableView;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
@@ -268,15 +268,11 @@ public class KaviList<T> {
 				switch (e.keyCode) {
 				case SWT.ARROW_DOWN:
 					e.doit = false;
-					contentProvider().moveCursorDown().getCursorItem();
-					((NSTableView)tableViewer.getTable().view).scrollRowToVisible(contentProvider().getCursorIndex());
-					tableViewer.refresh();
+					moveRowCursorDown();
 					break;
 				case SWT.ARROW_UP:
 					e.doit = false;
-					contentProvider().moveCursorUp().getCursorItem();
-					((NSTableView)tableViewer.getTable().view).scrollRowToVisible(contentProvider().getCursorIndex());
-					tableViewer.refresh();
+					moveRowCursorUp();
 					break;
 				case SWT.CR:
 					handleSelection();
@@ -311,6 +307,31 @@ public class KaviList<T> {
 	
 	private boolean isKeys(int modifier, int keyCode, KeyEvent event) {
 		return ((event.stateMask & modifier) != 0) && (event.keyCode == keyCode);
+	}
+	
+	private void moveRowCursorUp() {
+		Composite composite = table.getParent();
+		composite.getShell().setRedraw(false);
+		
+		final int cursorIndex = contentProvider().moveCursorUp().getCursorIndex();
+		if (cursorIndex >= 0) {
+			TableItem cursoredTableItem = tableViewer.getTable().getItem(cursorIndex);
+			tableViewer.getTable().showItem(cursoredTableItem);
+		}
+		tableViewer.refresh();
+		composite.getShell().setRedraw(true);
+	}
+	private void moveRowCursorDown() {
+		Composite composite = table.getParent();
+		composite.getShell().setRedraw(false);
+		
+		final int cursorIndex = contentProvider().moveCursorDown().getCursorIndex();
+		if (cursorIndex >= 0) {
+			TableItem cursoredTableItem = tableViewer.getTable().getItem(cursorIndex);
+			tableViewer.getTable().showItem(cursoredTableItem);
+		}
+		tableViewer.refresh();
+		composite.getShell().setRedraw(true);
 	}
 	
 	private void nextContentMode() {
@@ -390,7 +411,11 @@ public class KaviList<T> {
 		int itemsInViewPort = numberOfItemsVisible(tableViewer.getTable());
 		int topIndex = tableViewer.getTable().getTopIndex() + itemsInViewPort;
 		if (topIndex == tableViewer.getTable().getItemCount() - getAdjustmentForRowCountVisible()) topIndex = 0;
+		
+		Composite composite = table.getParent();
+		composite.getShell().setRedraw(false);
 		tableViewer.getTable().setTopIndex(topIndex);
+		composite.getShell().setRedraw(true);
 	}
 
 	private void scrollPageUp() {
@@ -398,7 +423,11 @@ public class KaviList<T> {
 		int topIndex = tableViewer.getTable().getTopIndex();
 		if (topIndex == 0) topIndex = tableViewer.getTable().getItemCount() - itemsInViewPort;
 		else topIndex -= itemsInViewPort;
+		
+		Composite composite = table.getParent();
+		composite.getShell().setRedraw(false);
 		tableViewer.getTable().setTopIndex(topIndex);
+		composite.getShell().setRedraw(true);
 	}
 
 

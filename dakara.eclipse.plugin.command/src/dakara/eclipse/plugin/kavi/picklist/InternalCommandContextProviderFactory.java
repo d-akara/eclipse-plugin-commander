@@ -8,9 +8,15 @@ import org.eclipse.swt.dnd.Transfer;
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
 /*
  * TODO - copy to clipboard commands
- * - export/import 
+ * - export/import history/preferences as JSON.  maybe just export/import from clipboard as first option.  Import would add to existing, not replace.
+ *    - option to export hidden or non active items as well.
  * - toggle favorite
  * - show table headers, needed for resizing
+ * - sort on other columns
+ * - list unique by column
+ *   - some way to view unique and expand items in the flat list
+ * - show hidden / non active items.
+ * - create alias: prepend alias name to command name or replace name entirely.
  */
 public class InternalCommandContextProviderFactory {
 	public static InternalCommandContextProvider makeProvider(KaviPickListDialog kaviPickList) {

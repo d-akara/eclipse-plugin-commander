@@ -157,6 +157,10 @@ public class InternalContentProviderProxy<U> {
 	public int getCursorIndex() {
 		return rowCursorIndex;
 	}
+	
+	public void setCursorIndex(int rowCursorIndex) {
+		this.rowCursorIndex = rowCursorIndex;
+	}
 
 	public Set<RankedItem<U>> getSelectedEntries() {
 		return selectedEntries;

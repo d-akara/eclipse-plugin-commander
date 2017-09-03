@@ -22,6 +22,7 @@ import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
@@ -199,7 +200,11 @@ public class KaviList<T> {
         tableViewer.getControl().setLayoutData(gridData);
 		
 		tableViewer.setContentProvider((ILazyContentProvider) rowIndex -> tableViewer.replace(contentProvider().getTableEntries().get(rowIndex), rowIndex));
-		table.addListener(SWT.Selection, event-> handleSelection());
+		table.addListener(SWT.Selection, event-> {
+			TableItem item = (TableItem) event.item;
+			contentProvider().setCursorIndex(contentProvider().getRowIndex((RankedItem<T>) item.getData()));
+			handleSelection();
+		});
 		composite.getShell().addListener(SWT.Resize, event ->  autoAdjustColumnWidths(composite));
 		
 		subjectFilter.debounce(0, TimeUnit.MILLISECONDS).subscribe( filter -> handleRefresh(filter));
@@ -241,6 +246,12 @@ public class KaviList<T> {
 		// TODO - create separate key binding manager
 		// check for keys being held down
 		// possibly tab toggle for command mode
+		// - need a way to set cursor immediately.  maybe use fast select with '+' + alpha index
+		// - should we use ctrl shift + j,k for page up and crtl + j,k for single cursor movements
+		// - change 'l' and 'h' to move section or word at a time
+		// - fallbacks to normal UI paradigms.  ex. shift + cursor to select items etc.
+		// - allow user customization of key bindings
+		// - possibly have default schemes. vi or gamer mode using spatial layout.
 		filterText.addKeyListener(new KeyListener() {
 			@Override
 			public void keyPressed(KeyEvent e) {

@@ -19,7 +19,11 @@ import org.eclipse.ui.internal.progress.ProgressManagerUtil;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 /*
  * TODO - move status info to top of window
+ * - add colors to status text.
+ * - status text should include more info such as when showing only selected or sorting methods etc.
  * - allow window to be dragged from status handle
+ * - maybe extend bottom info area as an optional info area that will display more details about the item under cursor
+ *   - could be used to linearly list columns too long to display etc.  would offer a toggle or hot key to show/hide
  */
 @SuppressWarnings("restriction")
 public class KaviPickListDialog<T> extends PopupDialog {

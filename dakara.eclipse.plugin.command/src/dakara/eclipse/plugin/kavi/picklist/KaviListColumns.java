@@ -28,7 +28,9 @@ import org.eclipse.ui.themes.ColorUtil;
 import dakara.eclipse.plugin.kavi.picklist.InternalContentProviderProxy.RowState;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 import dakara.eclipse.plugin.stringscore.StringScore.Score;
-
+/*
+ * TODO - move a colors to a common location.  prior step to allowing user customizations.
+ */
 public class KaviListColumns<T> {
 	private final List<ColumnOptions<T>> columnOptions = new ArrayList<>();
 	private final TableViewer tableViewer;

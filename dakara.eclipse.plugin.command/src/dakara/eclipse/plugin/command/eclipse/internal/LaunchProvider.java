@@ -12,6 +12,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 import org.eclipse.ui.internal.quickaccess.QuickAccessProvider;
 
+// TODO - provide an extension point so that 3rd parties can contribute providers
 public class LaunchProvider extends QuickAccessProvider {
 
 	@Override

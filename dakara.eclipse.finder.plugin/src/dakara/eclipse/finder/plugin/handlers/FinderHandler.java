@@ -31,7 +31,12 @@ import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
 import dakara.eclipse.plugin.stringscore.RankedItem;
 
 /**
- * TODO - types - org.eclipse.jdt.internal.ui.dialogs.FilteredTypesSelectionDialog.TypeSearchRequestor
+ * TODO -  add types, either here or as another dialog - org.eclipse.jdt.internal.ui.dialogs.FilteredTypesSelectionDialog.TypeSearchRequestor
+ * - add eclipse context commands for files.  Same options as viewing from package explorer
+ * - track edited files as another attribute in history.  So we can list all files we have edited.
+ * - add markers for files edited, files currently open
+ * - filter by files edited
+ * 
  * org.eclipse.jdt.core.search.TypeNameMatchRequestor
  */
 public class FinderHandler extends AbstractHandler implements IStartup {

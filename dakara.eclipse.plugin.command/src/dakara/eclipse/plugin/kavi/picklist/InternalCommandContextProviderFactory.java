@@ -1,6 +1,17 @@
 package dakara.eclipse.plugin.kavi.picklist;
-import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
+import java.util.function.BiFunction;
 
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
+
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
+/*
+ * TODO - copy to clipboard commands
+ * - export/import 
+ * - toggle favorite
+ * - show table headers, needed for resizing
+ */
 public class InternalCommandContextProviderFactory {
 	public static InternalCommandContextProvider makeProvider(KaviPickListDialog kaviPickList) {
 		InternalCommandContextProvider provider = new InternalCommandContextProvider();
@@ -12,6 +23,17 @@ public class InternalCommandContextProviderFactory {
 		provider.addCommand("list: toggle view selected", (currentProvider) -> {
 			currentProvider.toggleViewOnlySelected();
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
+		});
+		
+		// TODO - align column output.  Include all 'searchable' columns
+		provider.addCommand("list: selected to clipboard", (currentProvider) -> {
+			Clipboard clipboard = new Clipboard(kaviPickList.getShell().getDisplay());
+			StringBuilder builder = new StringBuilder();
+			BiFunction<Object, Integer, String> columnContentFn = currentProvider.getKaviListColumns().getColumnOptions().get(1).getColumnContentFn();
+			currentProvider.getSelectedEntriesImplied().stream().forEach(item -> builder.append(columnContentFn.apply(item.dataItem, 0) + "\n"));
+			clipboard.setContents(new Object[] { builder.toString() },	new Transfer[] { TextTransfer.getInstance() });
+			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
+			clipboard.dispose();
 		});
 		
 		provider.addCommand("working", "list: toggle sort name", (currentProvider) -> {

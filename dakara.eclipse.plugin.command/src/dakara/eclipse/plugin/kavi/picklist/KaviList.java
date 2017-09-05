@@ -123,6 +123,10 @@ public class KaviList<T> {
 		return contentChanged;
 	}
 
+	// TODO - consider drawing fast select as a separate widget that will sync/update when the table scroll stops
+	// this would allow using single letter selectors in most cases as long as what is visible is 26 items or less
+	// hook into the display update from ILazyContentProvider to update the fast select on content change
+	// not sure if there is a scrolling hook
 	private void fastSelectItem(final InputCommand inputCommand) {
 		List<ColumnOptions<T>> columnOptions = contentProvider().getKaviListColumns().getColumnOptions();
 		showOrHideFastSelectColumn(inputCommand, columnOptions);

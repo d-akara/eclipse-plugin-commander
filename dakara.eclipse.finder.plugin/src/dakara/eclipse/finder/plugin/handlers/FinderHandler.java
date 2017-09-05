@@ -71,8 +71,8 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(historyStore, workbenchPage, workspace, resourceItems))
 			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30).setMarkerIndicatorProvider(item -> { 
 					HistoryEntry historyEntry = historyStore.getHistoryEntry(item);
-					if (historyEntry == null) return true;
-					return !historyEntry.keepForever;
+					if (historyEntry == null) return false;
+					return historyEntry.keepForever;
 				})
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);

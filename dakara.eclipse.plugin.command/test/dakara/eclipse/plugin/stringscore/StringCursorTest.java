@@ -138,4 +138,21 @@ public class StringCursorTest {
 		cursor.moveCursorForwardIndexOfAlphaSequence("fgha");
 		assertEquals(-1, cursor.indexOfCursor());
 	}
+	
+	@Test
+	public void verifyCamelCaseWordSupport() {
+		StringCursor cursor = new StringCursor("openFileName testing longList");
+		cursor.moveCursorForwardNextWord();
+		assertEquals(4, cursor.indexOfCursor());
+		
+		cursor.moveCursorForwardNextWord();
+		assertEquals(8, cursor.indexOfCursor());
+		
+		cursor.moveCursorForwardNextWord();
+		assertEquals(12, cursor.indexOfCursor());
+		
+		cursor.moveCursorForwardNextWord();
+		assertEquals(17, cursor.indexOfCursor());
+
+	}
 }

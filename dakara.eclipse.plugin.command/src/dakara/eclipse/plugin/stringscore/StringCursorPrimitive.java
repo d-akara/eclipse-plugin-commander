@@ -3,8 +3,11 @@ package dakara.eclipse.plugin.stringscore;
 import java.util.Arrays;
 
 public class StringCursorPrimitive {
-	int F_UPPERCASE = 0x1;
-	int F_CAMELCASE = 0x2;
+	int F_UPPERCASE = 0x1 ;
+	int F_CAMELCASE = 0x1 << 1;
+	int F_ALPHA	    = 0x1 << 2;
+	int F_WORDSTART = 0x1 << 3;
+	int F_WORDEND   = 0x1 << 4;
 	
 	char[] text;
 	int[] properties;
@@ -27,11 +30,28 @@ public class StringCursorPrimitive {
 			
 			// is character uppercase
 			if (text[index] != originalChar) properties[index] |= F_UPPERCASE;
+
+			// is character alpha
+			if (Character.isAlphabetic(text[index])) properties[index] |= F_ALPHA;
+			
+			// is word start
+			if (	(properties[index]     & F_ALPHA) == F_ALPHA &&  				// current char is alpha
+					(index == 0 || (properties[index - 1] & F_ALPHA) == 0)) {		// previous char is not alpha or there is no previous char
+				properties[index] |= F_WORDSTART;
+			}
+			
+			// is word end
+			if (	(properties[index]     & F_ALPHA) == F_ALPHA && index == text.length - 1)                         // current char is alpha and is last char
+				properties[index] |= F_WORDEND;																	
+			else if 	((properties[index] & F_ALPHA) == 0 && (properties[index - 1] & F_ALPHA) == F_ALPHA) {		// current char is non alpha and previous is alpha
+				properties[index - 1] |= F_WORDEND;
+			}
 			
 			// is transition camel case
 			if (index > 0 &&
 					(properties[index]     & F_UPPERCASE) == F_UPPERCASE &&  // current char is upper case
-					(properties[index - 1] & F_UPPERCASE) == 0) {		    // previous char is lower case
+					(properties[index - 1] & F_UPPERCASE) == 0 &&		    // previous char is lower case
+					(properties[index - 1] & F_ALPHA) == F_ALPHA) {		    		// previous char is alpha
 				properties[index] |= F_CAMELCASE;
 			}
 			index++;
@@ -44,6 +64,9 @@ public class StringCursorPrimitive {
 		builder.append(makeRuler(F_UPPERCASE, 'U')).append('\n');
 		builder.append(text).append('\n');
 		builder.append(makeRuler(F_CAMELCASE, 'C').append('\n'));
+		builder.append(makeRuler(F_ALPHA, 'A').append('\n'));
+		builder.append(makeRuler(F_WORDSTART, 'W').append('\n'));
+		builder.append(makeRuler(F_WORDEND, 'w').append('\n'));
 		return builder.toString();
 	}
 	

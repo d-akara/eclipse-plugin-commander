@@ -1,5 +1,6 @@
 package dakara.eclipse.plugin.stringscore;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -386,6 +387,40 @@ public class StringCursor {
 	
 	@Override
 	public String toString() {
-		return text + ":: cursorIndex[" + indexOfCursor + "] markerNumIndex[" + currentMarker + "," + indexOfCurrentMark()+ "] markers " + markers;
+		StringBuilder builder = new StringBuilder();
+		builder.append(buildMarkerRuler()).append('\n');
+		builder.append(text).append('\n');
+		builder.append(buildCurrentIndexRuler().append('\n'));
+		return builder.toString();
+	}
+	
+	private StringBuilder buildMarkerRuler() {
+		StringBuilder builder = makeFilledBuilder(text.length(), ' ');
+		for (int markIndex : markers) {
+			builder.setCharAt(markIndex, 'M');
+		}
+		return builder;
+	}
+	
+	private StringBuilder makeFilledBuilder(int length,  char fillChar) {
+		StringBuilder builder = new StringBuilder(text.length());
+		char[] fillArray = new char[length];
+		Arrays.fill(fillArray, fillChar);
+		builder.append(fillArray);
+		return builder;
+	}
+	
+	private StringBuilder buildCurrentIndexRuler() {
+		final int currentIndexMark = indexOfCurrentMark();
+		StringBuilder builder = makeFilledBuilder(text.length(), ' ');
+		if (currentIndexMark > -1 && indexOfCursor == currentIndexMark) {
+			builder.setCharAt(indexOfCursor, '+');
+		} else {
+			if (indexOfCursor > -1)
+				builder.setCharAt(indexOfCursor, '|');
+			if (currentIndexMark > -1)
+				builder.setCharAt(currentIndexMark, '-');
+		}
+		return builder;
 	}
 }

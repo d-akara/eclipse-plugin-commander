@@ -20,6 +20,30 @@ public class StringCursorPrimitive {
 		this.properties = primitive.properties;
 	}
 	
+	public char charAt(int index) {return text[index];}
+	public int length()	{return text.length;}
+	
+	public int indexOf(final String string) {
+		return indexOf(string.toCharArray(), 0);
+	}
+	public int indexOf(final String string, final int startingOffset) {
+		return indexOf(string.toCharArray(), startingOffset);
+	}
+
+	public int indexOf(final char[] needle, final int startingOffset) {
+	    for(int offsetForCompare = startingOffset; offsetForCompare < text.length - needle.length+1; ++offsetForCompare) {
+	        boolean found = true;
+	        for(int indexToCompare = 0; indexToCompare < needle.length; ++indexToCompare) {
+	           if (text[offsetForCompare+indexToCompare] != needle[indexToCompare]) {
+	               found = false;
+	               break;
+	           }
+	        }
+	        if (found) return offsetForCompare;
+	     }
+	   return -1;  
+	}  
+	
 	private void analyzeAndTransform(String inputText) {
 		char[] originalChars = inputText.toCharArray();
 		text = new char[originalChars.length];
@@ -35,23 +59,23 @@ public class StringCursorPrimitive {
 			if (Character.isAlphabetic(text[index])) properties[index] |= F_ALPHA;
 			
 			// is word start
-			if (	(properties[index]     & F_ALPHA) == F_ALPHA &&  				// current char is alpha
-					(index == 0 || (properties[index - 1] & F_ALPHA) == 0)) {		// previous char is not alpha or there is no previous char
+			if ((properties[index]     & F_ALPHA) == F_ALPHA &&  				// current char is alpha
+				(index == 0 || (properties[index - 1] & F_ALPHA) == 0)) {		// previous char is not alpha or there is no previous char
 				properties[index] |= F_WORDSTART;
 			}
 			
 			// is word end
-			if (	(properties[index]     & F_ALPHA) == F_ALPHA && index == text.length - 1)                         // current char is alpha and is last char
+			if ((properties[index]     & F_ALPHA) == F_ALPHA && index == text.length - 1)                         // current char is alpha and is last char
 				properties[index] |= F_WORDEND;																	
-			else if 	((properties[index] & F_ALPHA) == 0 && (properties[index - 1] & F_ALPHA) == F_ALPHA) {		// current char is non alpha and previous is alpha
+			else if ((properties[index] & F_ALPHA) == 0 && (properties[index - 1] & F_ALPHA) == F_ALPHA) {		// current char is non alpha and previous is alpha
 				properties[index - 1] |= F_WORDEND;
 			}
 			
 			// is transition camel case
 			if (index > 0 &&
-					(properties[index]     & F_UPPERCASE) == F_UPPERCASE &&  // current char is upper case
-					(properties[index - 1] & F_UPPERCASE) == 0 &&		    // previous char is lower case
-					(properties[index - 1] & F_ALPHA) == F_ALPHA) {		    		// previous char is alpha
+				(properties[index]     & F_UPPERCASE) == F_UPPERCASE &&  // current char is upper case
+				(properties[index - 1] & F_UPPERCASE) == 0 &&		    // previous char is lower case
+				(properties[index - 1] & F_ALPHA) == F_ALPHA) {		    		// previous char is alpha
 				properties[index] |= F_CAMELCASE;
 			}
 			index++;

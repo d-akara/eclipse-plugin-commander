@@ -49,22 +49,30 @@ public class StringScore {
 	
 	public Score scoreCombination(String match, String target) {
 		if ((match.length() == 0) || (target == null) || (target.length() == 0)) return NOT_FOUND_SCORE;
-		match = match.toLowerCase();
-		target = target.toLowerCase();
-		final String[] words = splitWords(match);
+		
+		boolean scoreAsAcronym = false;
+		boolean scoreAsLiteral = false;
+		
+		if (match.charAt(0) == ' ') scoreAsAcronym = true;
+		if (match.charAt(match.length() - 1) == ' ') scoreAsLiteral = true;
+		
+		StringCursorPrimitive matchCursorPrimitive  = new StringCursorPrimitive(match.trim());
+		StringCursorPrimitive targetCursorPrimitive = new StringCursorPrimitive(target.trim());
+		
+		final String[] words = splitWords(matchCursorPrimitive.asString());
 		Score score;
 		
-		if (match.charAt(0) == ' ') {
+		if (scoreAsAcronym) {
 			// If there is a leading space, then treat all chars as acronym
-			score = scoreAsAcronym(match.trim(), target);
-		} else if (match.charAt(match.length() - 1) == ' ') {
+			score = scoreAsAcronym(matchCursorPrimitive, targetCursorPrimitive);
+		} else if (scoreAsLiteral) {
 			// If there is a trailing space, then treat all chars following as literal
-			score = scoreAsContiguousSequence(match.trim(), target);
+			score = scoreAsContiguousSequence(matchCursorPrimitive, targetCursorPrimitive);
 		} else if (words.length == 1) {
-			score = scoreAsContiguousSequence(match, target);
+			score = scoreAsContiguousSequence(matchCursorPrimitive, targetCursorPrimitive);
 			if (score.rank == 4) return score;  // perfect whole word match
 			
-			Score acronymScore = scoreAsAcronym(match, target);
+			Score acronymScore = scoreAsAcronym(matchCursorPrimitive, targetCursorPrimitive);
 			if (acronymScore.rank == 4) return acronymScore; // perfect acronym match;
 			
 			if (acronymScore.rank > score.rank) {
@@ -72,22 +80,23 @@ public class StringScore {
 			} 
 			
 			if (match.length() > 2) {
-				Score nonContiguousScore = scoreAsNonContiguousSequence(match, target);
+				Score nonContiguousScore = scoreAsNonContiguousSequence(matchCursorPrimitive, targetCursorPrimitive);
 				if (nonContiguousScore.rank > score.rank) {
 					score = nonContiguousScore;
 				}
 			}
 		} else {
-			score = scoreMultipleContiguousSequencesAnyOrder(words, target);			
+			score = scoreMultipleContiguousSequencesAnyOrder(words, targetCursorPrimitive);			
 		}
 		return score;
 	}
 	
-	public Score scoreMultipleContiguousSequencesAnyOrder(final String[] words, final String target) {
+	public Score scoreMultipleContiguousSequencesAnyOrder(final String[] words, final StringCursorPrimitive target) {
 		int totalRank = 0;
 		IntArrayList matches = new IntArrayList();
 		for (String word : words) {
-			Score score = scoreAsContiguousSequence(word, maskRegions(target, matches));
+			StringCursor targetCursor = new StringCursor(target).maskRegions(matches);
+			Score score = scoreAsContiguousSequence(new StringCursorPrimitive(word), targetCursor.getCursorPrimitive());
 			if ( score.rank <= 0) {
 				totalRank = 0;
 				break;  // all words must be found
@@ -101,13 +110,16 @@ public class StringScore {
 	}
 	
 	public Score scoreAsContiguousSequence(String match, String target) {
+		return scoreAsContiguousSequence(new StringCursorPrimitive(match), new StringCursorPrimitive(target));
+	}
+	public Score scoreAsContiguousSequence(StringCursorPrimitive match, StringCursorPrimitive target) {
 		if ((match == null) || (match.length() == 0)) return EMPTY_SCORE;
 		
 		StringCursor targetCursor = new StringCursor(target);
 		
 		int rank = 0;
-		while (!targetCursor.moveCursorForwardIndexOf(match).cursorPositionTerminal()) {
-			rank = contiguousSequenceRankingProvider.apply(match, targetCursor);
+		while (!targetCursor.moveCursorForwardIndexOf(match.asString()).cursorPositionTerminal()) {
+			rank = contiguousSequenceRankingProvider.apply(match.asString(), targetCursor);
 			if (rank > 0) break;
 			targetCursor.moveCursorForward();
 		}
@@ -117,18 +129,21 @@ public class StringScore {
 		return NOT_FOUND_SCORE;
 	}
 	
-	
-	public Score scoreAsAcronym(String searchInput, String text) {
+	public Score scoreAsAcronym(String match, String target) {
+		return scoreAsAcronym(new StringCursorPrimitive(match), new StringCursorPrimitive(target));
+	}
+	public Score scoreAsAcronym(StringCursorPrimitive searchInput, StringCursorPrimitive text) {
 		StringCursor matchesCursor = new StringCursor(text);
-		StringCursor acronymCursor = addMarkersForAcronym(new StringCursor(text));
 		StringCursor inputCursor = new StringCursor(searchInput);
 		
-		while (!acronymCursor.markerPositionTerminal() && !inputCursor.cursorPositionTerminal()) {
-			if (acronymCursor.currentMarker() == inputCursor.currentChar()) {
+		while (!matchesCursor.cursorPositionTerminal() && !inputCursor.cursorPositionTerminal()) {
+			matchesCursor.moveCursorForwardPartialWordStart();
+			if (matchesCursor.cursorPositionTerminal()) break;
+			if (matchesCursor.currentChar() == inputCursor.currentChar()) {
 				inputCursor.moveCursorForward();
-				matchesCursor.addMark(acronymCursor.indexOfCurrentMark());
+				matchesCursor.addMark(matchesCursor.indexOfCursor());
 			}
-			acronymCursor.setNextMarkCurrent();
+			matchesCursor.moveCursorForward();
 		}
 		
 		// did we complete all matches from the input
@@ -140,25 +155,12 @@ public class StringScore {
 		return EMPTY_SCORE;
 	}
 	
-	private StringCursor addMarkersForAcronym(StringCursor text) {
-		char previousChar = text.peekPreviousChar();
-		boolean previousIsAlpha = Character.isAlphabetic(previousChar);
-		while (!text.cursorPositionTerminal()) {
-			char currentChar = text.currentChar();
-			boolean currentIsAlpha = Character.isAlphabetic(currentChar);
-			// TODO hot method
-			// maybe capture current char in variable and reuse for previous char
-			if (currentIsAlpha && !previousIsAlpha) {
-				text.addMark(text.indexOfCursor());
-			}
-			text.moveCursorForward();
-			previousChar = currentChar;
-			previousIsAlpha = currentIsAlpha;
-		}
-		return text;
-	}
 	
 	public Score scoreAsNonContiguousSequence(String match, String target) {
+		return scoreAsNonContiguousSequence(new StringCursorPrimitive(match), new StringCursorPrimitive(target));
+	}
+	
+	public Score scoreAsNonContiguousSequence(StringCursorPrimitive match, StringCursorPrimitive target) {
 		if ((match == null) || (match.length() < 2)) return EMPTY_SCORE;
 		
 		StringCursor targetCursor = new StringCursor(target);
@@ -227,16 +229,6 @@ public class StringScore {
 		}
 		target.setCursorPosition(lastFoundIndex);
 		return partialMatchExists;
-	}
-	
-	/*
-	 * replace matched regions with space so we don't match them again
-	 */
-	private String maskRegions(String text, IntArrayList maskIndexes) {
-		if (maskIndexes.size() == 0) return text;
-		StringBuilder builder = new StringBuilder(text);
-		maskIndexes.stream().forEach(index -> builder.setCharAt(index, ' '));
-		return builder.toString();
 	}
 	
 	private String[] splitWords(String text) {

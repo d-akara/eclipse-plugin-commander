@@ -15,12 +15,17 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  *
  */
 public class StringCursor {
-	public String text;
+	public StringCursorPrimitive text;
 	private int indexOfCursor = 0;
 	private int currentMarker = 0;
 	private IntArrayList markers = new IntArrayList(16);
 	public StringCursor(String text) {
-		this.text = text;
+		this.text = new StringCursorPrimitive(text);
+		//this.text = text;
+	}
+	
+	public StringCursor(StringCursorPrimitive primitive) {
+		this.text = primitive;
 	}
 	
 	public StringCursor setMarkers(List<Integer> markers) {
@@ -186,6 +191,15 @@ public class StringCursor {
 		return text.substring(indexStart, indexEnd + 1);
 	}
 	
+	public String partialWordAtCursor() {
+		if (cursorPositionTerminal()) return "";
+		int currentIndex = indexOfCursor;
+		int indexStart = moveCursorPreviousPartialWordStart().indexOfCursor();
+		int indexEnd   = moveCursorForwardPartialWordEnd().indexOfCursor();
+		indexOfCursor = currentIndex;
+		return text.substring(indexStart, indexEnd + 1);
+	}
+	
 	public String markersAsString() {
 		StringBuilder builder = new StringBuilder();
 		for(int index : markers) {
@@ -250,6 +264,22 @@ public class StringCursor {
 		return this;
 	}
 	
+	public StringCursor moveCursorPreviousPartialWordStart() {
+		 while(!cursorPositionTerminal()) {
+			 if ((text.properties[indexOfCursor] & (text.F_WORD_PARTIAL_START | text.F_WORDSTART)) != 0) break;
+			 indexOfCursor--;
+		 }
+		 return this;
+	}
+	
+	public StringCursor moveCursorForwardPartialWordEnd() {
+		 while(!cursorPositionTerminal()) {
+			 if ((text.properties[indexOfCursor] & (text.F_WORD_PARTIAL_END | text.F_WORDEND)) != 0) break;
+			 indexOfCursor++;
+		 }
+		 return this;
+	}
+	
 	public StringCursor moveCursorIndexOf(String match) {
 		indexOfCursor = text.indexOf(match);
 		return this;
@@ -310,13 +340,6 @@ public class StringCursor {
 		 return this;
 	}
 	
-	public StringCursor moveCursorForwardNextWord() {
-		 moveCursorNextAlphaBoundary();  // end of current word
-		 moveCursorForward(); // char beyond word
-		 moveCursorForwardUntil(cursor -> Character.isAlphabetic(cursor.text.charAt(indexOfCursor))); // move until first char of next word
-		 return this;
-	}
-	
 	public StringCursor moveCursorForward() {
 		 indexOfCursor++;
 		 return this;
@@ -326,6 +349,30 @@ public class StringCursor {
 		 while(!cursorPositionTerminal()) {
 			 indexOfCursor++;
 			 if (cursorPositionTerminal() || Character.isAlphabetic(text.charAt(indexOfCursor))) break;
+		 }
+		 return this;
+	}
+	
+	public StringCursor moveCursorForwardWordStart() {
+		 while(!cursorPositionTerminal()) {
+			 if ((text.properties[indexOfCursor] & text.F_WORDSTART) == text.F_WORDSTART) break;
+			 indexOfCursor++;
+		 }
+		 return this;
+	}
+	
+	public StringCursor moveCursorPreviousWordStart() {
+		 while(!cursorPositionTerminal()) {
+			 if ((text.properties[indexOfCursor] & text.F_WORDSTART) == text.F_WORDSTART) break;
+			 indexOfCursor--;
+		 }
+		 return this;
+	}
+	
+	public StringCursor moveCursorForwardPartialWordStart() {
+		 while(!cursorPositionTerminal()) {
+			 if ((text.properties[indexOfCursor] & (text.F_WORDSTART | text.F_WORD_PARTIAL_START)) != 0) break;
+			 indexOfCursor++;
 		 }
 		 return this;
 	}
@@ -376,13 +423,12 @@ public class StringCursor {
 	
 	public StringCursor maskRegions(IntArrayList maskIndexes) {
 		if (maskIndexes.size() == 0) return this;
-		StringBuilder builder = new StringBuilder(text);
-		int masks[] = maskIndexes.elements();
-		for (int index = 0; index < maskIndexes.size(); index++) {
-			builder.setCharAt(masks[index], ' ');
-		}
-		text = builder.toString();
+		text = StringCursorPrimitive.makePrimitiveWithMask(text, maskIndexes);
 		return this;
+	}
+	
+	public StringCursorPrimitive getCursorPrimitive() {
+		return text;
 	}
 	
 	@Override

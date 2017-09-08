@@ -64,6 +64,34 @@ public class StringScoreTest {
 	}
 	
 	@Test
+	public void verifyAcronymCamelCaseScoring() {
+		// TODO - currently ranking is not correct for camel case because the gap calculations
+		// are not considering camel case as gaps
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
+		
+		Score score = stringScore.scoreAsAcronym("abc", "abcDefGhiJkl");
+		Assert.assertEquals(0, score.rank);
+		
+		score = stringScore.scoreAsAcronym("ad", "abcDefGhiJkl");
+		Assert.assertEquals(4, score.rank);
+		
+		score = stringScore.scoreAsAcronym("aj", "abcDef GhiJkl");
+		Assert.assertEquals(4, score.rank);
+		
+		score = stringScore.scoreAsAcronym("adz", "abcDefGhiJklmn");
+		Assert.assertEquals(0, score.rank);
+		
+		score = stringScore.scoreAsAcronym("dgj", "abcDefGhiJklmn");
+		Assert.assertEquals(3, score.rank);
+		
+		score = stringScore.scoreAsAcronym("dj", "abcDefGhiJklmn");
+		Assert.assertEquals(3, score.rank);
+		
+		score = stringScore.scoreAsAcronym("ax", "abcDefGhiJklmnMopXyz");
+		Assert.assertEquals(4, score.rank);
+	}
+	
+	@Test
 	public void verifyCombinationScoring() {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		

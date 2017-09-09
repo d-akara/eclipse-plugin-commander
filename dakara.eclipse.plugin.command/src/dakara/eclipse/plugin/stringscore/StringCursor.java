@@ -185,8 +185,8 @@ public class StringCursor {
 	public String wordAtCursor() {
 		if (cursorPositionTerminal()) return "";
 		int currentIndex = indexOfCursor;
-		int indexStart = moveCursorPreviousAlphaBoundary().indexOfCursor();
-		int indexEnd   = moveCursorNextAlphaBoundary().indexOfCursor();
+		int indexStart = moveCursorPreviousWordStart().indexOfCursor();
+		int indexEnd   = moveCursorForwardWordEnd().indexOfCursor();
 		indexOfCursor = currentIndex;
 		return text.substring(indexStart, indexEnd + 1);
 	}
@@ -250,20 +250,6 @@ public class StringCursor {
 		return this;
 	}
 	
-	public StringCursor moveCursorPreviousAlphaBoundary() {
-		while(Character.isAlphabetic(peekPreviousChar())) {
-			moveCursorBackward();
-		}
-		return this;
-	}
-	
-	public StringCursor moveCursorNextAlphaBoundary() {
-		while(Character.isAlphabetic(peekNextChar())) {
-			moveCursorForward();
-		}
-		return this;
-	}
-	
 	public StringCursor moveCursorPreviousPartialWordStart() {
 		 while(!cursorPositionTerminal()) {
 			 if ((text.properties[indexOfCursor] & (text.F_WORD_PARTIAL_START | text.F_WORDSTART)) != 0) break;
@@ -273,8 +259,16 @@ public class StringCursor {
 	}
 	
 	public StringCursor moveCursorForwardPartialWordEnd() {
+		while(!cursorPositionTerminal()) {
+			if ((text.properties[indexOfCursor] & (text.F_WORD_PARTIAL_END | text.F_WORDEND)) != 0) break;
+			indexOfCursor++;
+		}
+		return this;
+	}
+	
+	public StringCursor moveCursorForwardWordEnd() {
 		 while(!cursorPositionTerminal()) {
-			 if ((text.properties[indexOfCursor] & (text.F_WORD_PARTIAL_END | text.F_WORDEND)) != 0) break;
+			 if ((text.properties[indexOfCursor] & (text.F_WORDEND)) != 0) break;
 			 indexOfCursor++;
 		 }
 		 return this;

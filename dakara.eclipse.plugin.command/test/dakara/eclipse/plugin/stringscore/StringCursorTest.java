@@ -46,28 +46,54 @@ public class StringCursorTest {
 	}
 	
 	@Test
-	public void verifyAlphaBoundaries() {
-		StringCursor cursor = new StringCursor("abc def ghi");
-		assertEquals('c', cursor.moveCursorNextAlphaBoundary().currentChar());
-		assertEquals('c', cursor.moveCursorNextAlphaBoundary().currentChar());
-		assertEquals('a', cursor.moveCursorPreviousAlphaBoundary().currentChar());
-		assertEquals('a', cursor.moveCursorPreviousAlphaBoundary().currentChar());
+	public void verifyWordBoundaries() {
+		StringCursor cursor = new StringCursor("abc def ghi2");
+		assertEquals('c', cursor.moveCursorForwardPartialWordEnd().currentChar());
+		assertEquals('c', cursor.moveCursorForwardPartialWordEnd().currentChar());
+		assertEquals('a', cursor.moveCursorPreviousPartialWordStart().currentChar());
+		assertEquals('a', cursor.moveCursorPreviousPartialWordStart().currentChar());
 		
-		assertEquals('f', cursor.setCursorPosition(5).moveCursorNextAlphaBoundary().currentChar());
-		assertEquals('f', cursor.moveCursorNextAlphaBoundary().currentChar());
-		assertEquals('d', cursor.moveCursorPreviousAlphaBoundary().currentChar());
-		assertEquals('d', cursor.moveCursorPreviousAlphaBoundary().currentChar());
+		assertEquals('f', cursor.setCursorPosition(5).moveCursorForwardPartialWordEnd().currentChar());
+		assertEquals('f', cursor.moveCursorForwardPartialWordEnd().currentChar());
+		assertEquals('d', cursor.moveCursorPreviousPartialWordStart().currentChar());
+		assertEquals('d', cursor.moveCursorPreviousPartialWordStart().currentChar());
+		
+		assertEquals('i', cursor.setCursorPosition(9).moveCursorForwardPartialWordEnd().currentChar());
+		assertEquals('i', cursor.moveCursorForwardPartialWordEnd().currentChar());
+	}
+	
+	@Test
+	public void verifyWordBoundariesDigits() {
+		StringCursor cursor = new StringCursor("123 456 789");
+		assertEquals('3', cursor.moveCursorForwardPartialWordEnd().currentChar());
+		assertEquals('3', cursor.moveCursorForwardPartialWordEnd().currentChar());
+		assertEquals('1', cursor.moveCursorPreviousPartialWordStart().currentChar());
+		assertEquals('1', cursor.moveCursorPreviousPartialWordStart().currentChar());
+		
+		assertEquals('6', cursor.setCursorPosition(5).moveCursorForwardPartialWordEnd().currentChar());
+		assertEquals('6', cursor.moveCursorForwardPartialWordEnd().currentChar());
+		assertEquals('4', cursor.moveCursorPreviousPartialWordStart().currentChar());
+		assertEquals('4', cursor.moveCursorPreviousPartialWordStart().currentChar());
+		
+		assertEquals('9', cursor.setCursorPosition(9).moveCursorForwardPartialWordEnd().currentChar());
+		assertEquals('9', cursor.moveCursorForwardPartialWordEnd().currentChar());
 	}
 	
 	@Test
 	public void verifyWordAtCursor() {
 		StringCursor cursor = new StringCursor("abc def ghi");
+		assertEquals("", cursor.setCursorPosition(-1).wordAtCursor());
+		assertEquals(-1, cursor.indexOfCursor());
+		
 		assertEquals("abc", cursor.setCursorPosition(0).wordAtCursor());
 		assertEquals(0, cursor.indexOfCursor());
 		assertEquals("abc", cursor.setCursorPosition(1).wordAtCursor());
 		assertEquals(1, cursor.indexOfCursor());
 		assertEquals("abc", cursor.setCursorPosition(2).wordAtCursor());
 		assertEquals(2, cursor.indexOfCursor());
+		
+		assertEquals("abc", cursor.setCursorPosition(3).wordAtCursor());
+		assertEquals(3, cursor.indexOfCursor());
 		
 		assertEquals("def", cursor.setCursorPosition(4).wordAtCursor());
 		assertEquals("def", cursor.setCursorPosition(5).wordAtCursor());
@@ -76,6 +102,8 @@ public class StringCursorTest {
 		assertEquals("ghi", cursor.setCursorPosition(8).wordAtCursor());
 		assertEquals("ghi", cursor.setCursorPosition(9).wordAtCursor());
 		assertEquals("ghi", cursor.setCursorPosition(10).wordAtCursor());
+		
+		assertEquals("", cursor.setCursorPosition(11).wordAtCursor());
 	}
 	
 	@Test

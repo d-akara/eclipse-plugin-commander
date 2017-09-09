@@ -9,8 +9,9 @@ public class StringCursorPrimitive {
 	int F_WORD_PARTIAL_START 	= 0x1 << 1;
 	int F_WORD_PARTIAL_END 	 	= 0x1 << 2;
 	int F_ALPHA	   			 	= 0x1 << 3;
-	int F_WORDSTART 				= 0x1 << 4;
-	int F_WORDEND   				= 0x1 << 5;
+	int F_DIGIT	   			 	= 0x1 << 4;
+	int F_WORDSTART 				= 0x1 << 5;
+	int F_WORDEND   				= 0x1 << 6;
 	
 	char[] text;
 	int[] properties;
@@ -92,11 +93,22 @@ public class StringCursorPrimitive {
 		for(char originalChar : originalChars) {
 			text[index] = (char)Character.toLowerCase((int)originalChar);
 			
+			final int charType = Character.getType((int)originalChar);
+			
 			// is character uppercase
 			if (text[index] != originalChar) properties[index] |= F_UPPERCASE;
 
 			// is character alpha
-			if (Character.isAlphabetic(text[index])) properties[index] |= F_ALPHA;
+			if (((((1 << Character.UPPERCASE_LETTER) |
+		            (1 << Character.LOWERCASE_LETTER) |
+		            (1 << Character.TITLECASE_LETTER) |
+		            (1 << Character.MODIFIER_LETTER) |
+		            (1 << Character.OTHER_LETTER) |
+		            (1 << Character.DECIMAL_DIGIT_NUMBER)) >> charType) & 1) != 0)
+		            properties[index] |= F_ALPHA;
+			
+			// is character digit
+			if (charType == Character.DECIMAL_DIGIT_NUMBER) properties[index] |= F_DIGIT;
 			
 			// is word start
 			if ((properties[index]     & F_ALPHA) == F_ALPHA &&  				// current char is alpha
@@ -111,14 +123,20 @@ public class StringCursorPrimitive {
 				properties[index - 1] |= F_WORDEND;
 			}
 			
-			// is transition camel case
+			// partial word start and end
 			if (index > 0 &&
-				(properties[index]     & F_UPPERCASE) == F_UPPERCASE &&  // current char is upper case
-				(properties[index - 1] & F_UPPERCASE) == 0 &&		    // previous char is lower case
-				(properties[index - 1] & F_ALPHA) == F_ALPHA) {		    		// previous char is alpha
+					(properties[index]     & F_UPPERCASE) != 0 &&  // current char is upper case
+					(properties[index - 1] & F_UPPERCASE) == 0 &&  // previous char is lower case
+					(properties[index - 1] & F_ALPHA) != 0) {	  // previous char is alpha
+				properties[index] |= F_WORD_PARTIAL_START;
+				properties[index-1] |= F_WORD_PARTIAL_END;
+			}
+			if (index > 0 &&
+				(properties[index]     & F_DIGIT) != 0 &&  // current char is digit
+				(properties[index - 1] & F_DIGIT) == 0 &&  // previous char is not digit
+				(properties[index - 1] & F_ALPHA) != 0) {  // previous char is alpha
 					properties[index] |= F_WORD_PARTIAL_START;
 					properties[index-1] |= F_WORD_PARTIAL_END;
-					
 			}
 			index++;
 		}
@@ -129,7 +147,8 @@ public class StringCursorPrimitive {
 		StringBuilder builder = new StringBuilder();
 		builder.append(makeRuler(F_UPPERCASE, 'U')).append('\n');
 		builder.append(text).append('\n');
-		builder.append(makeRuler(F_WORD_PARTIAL_START, 'C').append('\n'));
+		builder.append(makeRuler(F_WORD_PARTIAL_START, 'P').append('\n'));
+		builder.append(makeRuler(F_WORD_PARTIAL_END, 'p').append('\n'));
 		builder.append(makeRuler(F_ALPHA, 'A').append('\n'));
 		builder.append(makeRuler(F_WORDSTART, 'W').append('\n'));
 		builder.append(makeRuler(F_WORDEND, 'w').append('\n'));

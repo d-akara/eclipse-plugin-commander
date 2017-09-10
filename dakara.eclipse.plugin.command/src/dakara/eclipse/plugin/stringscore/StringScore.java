@@ -203,9 +203,9 @@ public class StringScore {
 
 	private boolean veryWeakMatch(StringCursor targetCursor, StringCursor matchCursor) {
 		// If we are not at the start and selected count less than 2, this is too weak.
-		if (!targetCursor.cursorAtWordStart() && matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark() < 3) return true;
+		if (!targetCursor.cursorAtPartialWordStart() && matchCursor.indexOfCursor() - matchCursor.indexOfCurrentMark() < 3) return true;
 		// If we are starting at the end of a word, this is a weak match
-		if (targetCursor.cursorAtWordEnd()) return true;
+		if (targetCursor.cursorAtPartialWordEnd() && !targetCursor.cursorAtPartialWordStart()) return true;
 		
 		return false;
 	}

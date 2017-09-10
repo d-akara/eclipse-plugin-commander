@@ -131,9 +131,22 @@ public class StringCursorTest {
 		
 		cursor.clearMarkers().addMark(1).addMark(22);
 		assertEquals(4, cursor.countUnMarkedWordsBetweenMarkers(0, 1));
-
+		
 		cursor.clearMarkers().addMark(0).addMark(12);
 		assertEquals(2, cursor.countUnMarkedWordsBetweenMarkers(0, 1));
+	}
+	
+	@Test
+	public void verifyPartialWordGaps() {
+		StringCursor cursor = new StringCursor("abcDef ghi abc def ghi");
+		cursor.addMark(1).addMark(10);
+		assertEquals(2, cursor.countPartialWordsBetweenMarkers(0, 1));
+		
+		cursor.clearMarkers().addMark(1).addMark(21);
+		assertEquals(5, cursor.countPartialWordsBetweenMarkers(0, 1));
+
+		cursor.clearMarkers().addMark(0).addMark(12);
+		assertEquals(3, cursor.countPartialWordsBetweenMarkers(0, 1));
 	}
 	
 	@Test

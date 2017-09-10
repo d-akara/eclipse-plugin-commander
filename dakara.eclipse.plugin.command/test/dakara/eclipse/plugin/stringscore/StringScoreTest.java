@@ -182,4 +182,20 @@ public class StringScoreTest {
 		Assert.assertEquals(0, score.rank);	
 	}	
 	
+	@Test
+	public void fuzzyAcronymWithExtraChar() {
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
+		Score score = stringScore.scoreCombination("pwse", "PersistedWorkingSet.java");
+		Assert.assertEquals(4, score.matches.size());	
+		Assert.assertEquals(3, score.rank);	
+	}	
+	
+	@Test
+	public void edgeCasePartialWordStartThatIsAlsoWordEnd() {
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
+		Score score = stringScore.scoreCombination("lrselect2", "ListRankAndSelectorTest2.java");
+		Assert.assertEquals(9, score.matches.size());	
+		Assert.assertEquals(3, score.rank);	
+	}	
+	
 }

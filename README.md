@@ -35,7 +35,7 @@ Default match will search across columns for matches.
 Columns can be selected individual for matches by using a `,` to separate the column filters.
 ![specific column](/readme-images/specific-column-match.gif)
 ### Literal 
-A space preceding filter text will cause the following text to be matched literal instead of fuzzy.
+A space after the filter text will cause the preceding text to be matched literal instead of fuzzy.
 ![literal column](/readme-images/literal-match.gif) 
 ### Fuzzy multi word out of order
 Contiguous characters matched using a fuzzy strategy that attempts to match words in any order.
@@ -45,7 +45,8 @@ A space separating words will force matching of the literal words also allowing 
 One or two letters will not match in the middle of words.  This is done to prevent a long tail of low ranking matches.
 ![quality](/readme-images/quality-match.gif)
 ### Acronym
-Fuzzy matching also will attempt to match by acronym
+Fuzzy matching also will attempt to match by acronym.
+You can force acronym pattern matching by preceding the input with a space.
 ![acronym column](/readme-images/acronym-match.gif)
 ## Ranking Sort
 Items are sorted first by rank and then by name.
@@ -102,13 +103,15 @@ However, this view does need to be primed before it is useful.  Over the course 
 ### Switching modes
 Press `TAB` to instantly switch view modes between `Working` and `Discovery`
 
-![acronym column](/readme-images/mode-toggle.gif)
+![mode-toggle](/readme-images/mode-toggle.gif)
 
 ### Recent
 Recent items are shown in the `Working` view.  The items are always sorted by most recent.  To reuse the last used item, simply open the dialog and press enter which will default to using the first item in the list.
 
 ### Favorites
 Items can also be permanently added to the `Working` view.  These are considered favorite items.  They are also sorted in by most recently used in the same view as recent items.
+A vertical marker bar appears to the left of items which are favorites.
+![favorites](/readme-images/favorites.gif)
 
 ### Export/Import preferences
 The `Working` set of items is contained within preferences and will be exported and imported with Eclipse preferences.
@@ -120,6 +123,11 @@ The `Working` set of items is stored in the global preferences store.  Therefore
 Context actions are those actions that otherwise would require right clicking on an item to bring up another menu or dialog.
 Context actions here are initiated using the `;` key.
 The context actions will be performed on all selected items from the previous view.
+![context](/readme-images/context.gif)
+
+### Copy selected to clipboard
+This action will copy all items in the selection to the clipboard.
+![clipboard](/readme-images/clipboard.gif)
 
 ### View Selected
 This action will toggle showing only the selected items in the view.  This allows you to type different input filters, select items and then finally see all the items you have selected at once before performing some action on those items.
@@ -150,27 +158,33 @@ Specific features for the `finder` interface
 ## Working
 The recent list ordering of items in finder will be updated whenever you change editors in Eclipse.  
 You can use this to always go back to previous file being editted after opening a view.  Just launch the finder and hit `enter` to go back to the last editor.
-## Camel Case Matching
-Note, this is currently planned for finder, but not yet implemented.
 
-# Design Notes
+# Design and Technical Notes
 ## Fuzzy matching
 There are multiple types of user intentions when matching
 1.  User has in mind words or abbreviations of a term
-2.  User is unsure of spelling or exact phrasing and is exploring with hopes of some character guesses in the filter input
+2.  User is unsure of spelling or exact phrasing and is exploring using character guesses in the filter input
 3.  User is attempting to narrow existing displayed results using any random characters within the displayed row
 
 Commander has chosen to focus only on intention #1.  Therefore less than 2 letter consecutive intra word matches are ignored.
 This appears to typically be better when filtering very long lists of thousands of items such as eclipse commands or large project files.
 
+## Ranking
+In contrast to other typical fuzzy matching command palletes, Commander does not use unlimited ranking scale.
+There are only 4 levels of ranking from very strong to weak.  This was done to present some order to the found items making it easier to visually assess the information and locate items of interest.
+Therefore, within each of the 4 ranking categories items are alphabetically sorted.
+
 ## User intention
 Unlike other fuzzy matchers, `Commander` attempts to take into account the user intention where possible.
 For example, terms separated by a `space` are considered to be literal words and fuzzy matching is not used.
-A leading or trailing `space` can be used to specify intent for literal matching of a single filter term.
-Future considerations of other intentions may include capitalize letters to specify only abbreviation or camel case matching.
+A trailing `space` can be used to specify intent for literal matching of a single filter term and a leading `space` will indicate that the following term should be used as acronym only matching.
 Also options to specify how fuzzy a match might also be considered.
 
-## Technical
+## Software
 * Plugin is built using Java 8 features.  Minimum Eclipse is therefore Neon
 * Java 8 streams are utilized to parallelize the matching algorithm.  Each row is scored on a thread.
 * RxJava is used to debounce the input.  All matching and scoring is done in background off the UI thread.
+
+## Building Plugin
+* Install Eclipse Committers edition which has the required eclipse SDK bundled.
+* 

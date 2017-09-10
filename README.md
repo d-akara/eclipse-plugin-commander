@@ -47,7 +47,9 @@ One or two letters will not match in the middle of words.  This is done to preve
 ### Acronym
 Fuzzy matching also will attempt to match by acronym.
 You can force acronym pattern matching by preceding the input with a space.
+
 ![acronym column](/readme-images/acronym-match.gif)
+
 ## Ranking Sort
 Items are sorted first by rank and then by name.
 This allows for grouping of items by rank and easier identification of items within the ranked group.
@@ -79,10 +81,6 @@ Inverse select is performed by pressing `!` after the fast select slashes `//`
 ### All select/deselect
 If any items in the view are selected, this action will deselect all selected.  Otherwise, this same action will select all in the filtered view.
 `All select/deselect` is performed by pressing `space` after the fast select slashses `//`
-
-### Implied selections
-Some actions will always use the first item in the list if there is no selection or cursored item.
-Context actions will perform actions on all items of the previous view of there is nothing selected.
 
 ## Navigation
 ### List paging
@@ -123,6 +121,7 @@ The `Working` set of items is stored in the global preferences store.  Therefore
 Context actions are those actions that otherwise would require right clicking on an item to bring up another menu or dialog.
 Context actions here are initiated using the `;` key.
 The context actions will be performed on all selected items from the previous view.
+
 ![context](/readme-images/context.gif)
 
 ### Copy selected to clipboard

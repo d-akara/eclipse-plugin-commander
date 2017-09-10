@@ -85,7 +85,7 @@ public class StringScoreRanking {
 		}
 		// A good acryonym match should have been matched by the acryonym score and ranker.
 		// Assume acronyms here are weak or out of order and discard
-		if (acronymMatching) rank = 0;
+		if (acronymMatching) rank -= 1;
 		
 		return rank;
 	}

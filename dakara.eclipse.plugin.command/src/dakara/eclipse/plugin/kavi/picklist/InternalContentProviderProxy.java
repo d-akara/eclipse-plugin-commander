@@ -92,7 +92,7 @@ public class InternalContentProviderProxy<U> {
 		if (filterChanged) rowCursorIndex = 0;
 		
 		if (!showAllWhenNoFilter && inputState.inputCommand.filterText.length() == 0 && !inputState.inputCommand.fastSelect) setTableEntries(new ArrayList<>());
-		else if (!filterChanged && showAllWhenNoFilter) return this;
+		else if (!filterChanged) return this;
 		else setTableEntries(listContentProvider.apply(inputState));
 		return this;
 	}

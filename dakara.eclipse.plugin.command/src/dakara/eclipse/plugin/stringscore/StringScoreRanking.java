@@ -11,7 +11,7 @@ public class StringScoreRanking {
 	
 	private static int rankContiguousSequence(String match, StringCursor targetCursor) {
 		int rank = 0;
-		final boolean fullMatch = targetCursor.wordAtCursor().equals(match);  // did we match full word
+		final boolean fullMatch = targetCursor.partialWordAtCursor().equals(match);  // did we match full word
 		if ( fullMatch ) {
 			rank = 3;
 		} else {

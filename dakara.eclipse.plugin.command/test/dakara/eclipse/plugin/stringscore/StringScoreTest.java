@@ -151,7 +151,7 @@ public class StringScoreTest {
 		
 		score = stringScore.scoreAsNonContiguousSequence("ghidef", "abc def jklmn mop xyz ghi");
 		Assert.assertEquals(6, score.matches.size());	
-		Assert.assertEquals(2, score.rank);			
+		Assert.assertEquals(1, score.rank);			
 		
 		score = stringScore.scoreAsNonContiguousSequence("defghi", "abc defg jklmn mop xyz ghi");
 		Assert.assertEquals(0, score.matches.size());	
@@ -167,7 +167,7 @@ public class StringScoreTest {
 
 		score = stringScore.scoreAsNonContiguousSequence("abdexy", "abcd vbe deb def xyz ghi");
 		Assert.assertEquals(6, score.matches.size());	
-		Assert.assertEquals(3, score.rank);	
+		Assert.assertEquals(2, score.rank);	
 		
 		score = stringScore.scoreAsNonContiguousSequence("", "abc");
 		Assert.assertEquals(0, score.matches.size());	
@@ -188,6 +188,14 @@ public class StringScoreTest {
 		Score score = stringScore.scoreCombination("pwse", "PersistedWorkingSet.java");
 		Assert.assertEquals(4, score.matches.size());	
 		Assert.assertEquals(3, score.rank);	
+	}	
+	
+	@Test
+	public void multiWordInputPartialMatches() {
+		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
+		Score score = stringScore.scoreCombination("test case", "testCase");
+		Assert.assertEquals(8, score.matches.size());	
+		Assert.assertEquals(7, score.rank);	
 	}	
 	
 	@Test

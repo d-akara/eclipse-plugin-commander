@@ -15,7 +15,7 @@ public class StringScoreRanking {
 		if ( fullMatch ) {
 			rank = 3;
 		} else {
-			if (targetCursor.cursorAtWordStart())
+			if (targetCursor.cursorAtPartialWordStart())
 				rank = 2;
 			else if (match.length() > 2)  // 1 or 2 character matches are very weak when not at beginning of word, lets not show them at all.
 				rank = 1;
@@ -57,33 +57,35 @@ public class StringScoreRanking {
 	private static int rankNonContiguousSequence(StringCursor targetCursor) {
 		int rank = 2;
 		
-		int gaps = 0;
+		int totalGaps = 0;
 		while(!targetCursor.markerPositionTerminal()) {
-			int numCharactersBetween = targetCursor.countAlphabeticCharsBetween(targetCursor.indexOfCurrentMark(), targetCursor.indexOfNextMark());
-			if (numCharactersBetween > 0) {
-				gaps++;
-			}
+			int partialBetween = targetCursor.countWordsBetween(targetCursor.indexOfCurrentMark(), targetCursor.indexOfNextMark());
+			totalGaps += partialBetween;
 			
-//			if (targetCursor.currentMarkIsFirstOfMarkedRegion()) {
-//				if (!targetCursor.setCursorPosition(targetCursor.indexOfCurrentMark()).cursorAtWordStart()) {
-//					
-//				}
-//			}
-			
-			// TODO count lentgh of marked region.  Single chars in middle of word should rank 0
 			targetCursor.setNextMarkCurrent();
 		}
-//		
-//		if (gaps == 0) {
-//			rank +=1;
-//		}
-		
+
 		if (targetCursor.setFirstMarkCurrent().indexOfCurrentMark() == 0) 
 			rank += 1;
 		
-		if (gaps > targetCursor.markers().size() / 3) {
-			rank = 0;
+		// are gaps too wide to be valuable?
+		if (totalGaps > 1) {
+			rank -= 1;
 		}
+		
+		// if we have acronym matches.  All are single char.
+		int previousMarkerIndex = -2;
+		boolean acronymMatching = true;
+		for (int markerIndex : targetCursor.markers()) {
+			if (markerIndex - previousMarkerIndex == 1) {  // 2 markers are next to each other.  Not pure acronym match
+				acronymMatching = false;
+				break;
+			}
+			previousMarkerIndex = markerIndex;
+		}
+		// A good acryonym match should have been matched by the acryonym score and ranker.
+		// Assume acronyms here are weak or out of order and discard
+		if (acronymMatching) rank = 0;
 		
 		return rank;
 	}

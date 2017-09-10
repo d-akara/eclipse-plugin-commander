@@ -163,6 +163,37 @@ public class StringCursor {
 		
 		return count;
 	}
+
+	public int countPartialWordsBetweenMarkers(int startMarker, int endMarker) {
+		if (markers.isEmpty()) return 0;
+		int indexOfCursor = markers.getInt(startMarker) + 1;
+		final int endIndex = markers.getInt(endMarker);
+		return countPartialWordsBetween(indexOfCursor, endIndex);
+	}
+	
+	public int countPartialWordsBetween(int startIndex, int endIndex) {
+		int indexOfCursor = startIndex + 1;
+		int count = 0;
+		while(indexOfCursor < endIndex) {
+			if ((text.properties[indexOfCursor] & (text.F_WORD_PARTIAL_START | text.F_WORDSTART)) != 0) {
+				count++;
+			} 
+			indexOfCursor++;
+		}
+		return count;
+	}
+	
+	public int countWordsBetween(int startIndex, int endIndex) {
+		int indexOfCursor = startIndex + 1;
+		int count = 0;
+		while(indexOfCursor < endIndex) {
+			if ((text.properties[indexOfCursor] & (text.F_WORDSTART)) != 0) {
+				count++;
+			} 
+			indexOfCursor++;
+		}
+		return count;
+	}
 	
 	public StringCursor setCurrentMarkToEndOfCurrentMarkedRegion() {
 		if (markerPositionTerminal()) return this;
@@ -213,14 +244,12 @@ public class StringCursor {
 		return false;
 	}
 	
-	public boolean cursorAtWordStart() {
-		if (!Character.isAlphabetic(text.charAt(indexOfCursor))) return false;
-		return !Character.isAlphabetic(peekPreviousChar());
+	public boolean cursorAtPartialWordStart() {
+		return (text.properties[indexOfCursor] & (text.F_WORD_PARTIAL_START | text.F_WORDSTART)) != 0;
 	}
 	
-	public boolean cursorAtWordEnd() {
-		if (!Character.isAlphabetic(text.charAt(indexOfCursor))) return false;
-		return !Character.isAlphabetic(peekNextChar());
+	public boolean cursorAtPartialWordEnd() {
+		return (text.properties[indexOfCursor] & (text.F_WORD_PARTIAL_END | text.F_WORDEND)) != 0;
 	}
 	
 	public char currentChar() {
@@ -397,6 +426,10 @@ public class StringCursor {
 	
 	public int indexOfLastMark() {
 		return markers.getInt(markers.size() - 1);
+	}
+	
+	public int lastCharIndex() {
+		return text.length() - 1;
 	}
 	
 	public int indexOfCursor() {

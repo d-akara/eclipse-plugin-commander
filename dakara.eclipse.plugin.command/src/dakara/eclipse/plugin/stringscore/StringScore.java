@@ -29,8 +29,9 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  *  - matches in middle of word
  *  
  *  TODO - remaining match strategies to implement
- *         1) camel case matching.  will be more useful when used for filename matching, not so much in commands
- *         2) sequence matching. there can be any distance between all letters, but must be in same order.
+ *         1) sequence matching. there can be any distance between all letters, but must be in same order. 
+ *            - possibly start filter with special char '#'
+ *         2) super fuzzy.  all items which contain letters in any order.  special char input '?'
  */
 
 public class StringScore {

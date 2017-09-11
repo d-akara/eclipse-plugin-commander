@@ -17,6 +17,7 @@ import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
  *   - some way to view unique and expand items in the flat list
  * - show hidden / non active items.
  * - create alias: prepend alias name to command name or replace name entirely.
+ * - show state or status of properties in a 2nd column.
  */
 public class InternalCommandContextProviderFactory {
 	public static InternalCommandContextProvider makeProvider(KaviPickListDialog kaviPickList) {

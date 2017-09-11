@@ -2,11 +2,11 @@
 <feature
       id="dakara.eclipse.commander.feature"
       label="Commander Feature"
-      version="1.0.6">
+      version="1.0.7">
 
    <description url="https://github.com/dakaraphi/eclipse-plugin-commander">
       1) Commander - a more powerful version of quick access
-2) Finder - a much more powerful version of open resource
+2) Finder - a more powerful version of open resource
 Assign your preferred key bindings to use these new command features.
    </description>
 

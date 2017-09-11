@@ -1,5 +1,5 @@
 # Eclipse Commander
-Provides command palette [KAVI](https://github.com/dakaraphi/kavi) interfaces exceeding capabilities of typical sublime like command palettes
+Next generation command palette using [KAVI](https://github.com/dakaraphi/kavi) interfaces exceeding capabilities of typical sublime like command palettes
 
 Current interfaces provided:
  * **Commander** - provides interface for selecting and executing all Eclipse commands.

@@ -125,6 +125,7 @@ Recent items are shown in the `Working` view.  The items are always sorted by mo
 ### Favorites
 Items can also be permanently added to the `Working` view.  These are considered favorite items.  They are also sorted in by most recently used in the same view as recent items.
 A vertical marker bar appears to the left of items which are favorites.
+
 ![favorites](/readme-images/favorites.gif)
 
 ### Export/Import preferences

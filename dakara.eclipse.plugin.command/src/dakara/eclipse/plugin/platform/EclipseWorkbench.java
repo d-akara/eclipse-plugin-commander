@@ -31,7 +31,6 @@ public class EclipseWorkbench {
 				if (proxy.isPhantom()) return false;
 				if (proxy.isHidden()) return false;
 				IFile file = (IFile) proxy.requestResource();
-				if (file.getProjectRelativePath().segment(0).equals("indices")) return false;
 				files.add(makeResourceItem(file));
 				return false;
 			}

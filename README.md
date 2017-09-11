@@ -4,6 +4,22 @@ Provides command palette [KAVI](https://github.com/dakaraphi/kavi) interfaces ex
 Current interfaces provided:
  * **Commander** - provides interface for selecting and executing all Eclipse commands.
  * **Finder** - provides interface for selecting and opening workspace resources.
+# Installation
+## Eclipse Marketplace
+
+## Recommended setup
+All available commands available to key bindings can be found by going to the Eclipse key preferences and searching for `dakara` 
+* Key Bindings - no default bindings are registered to avoid possible conflicts.  Below are recommended bindings.
+    * Commander - `shift+enter` - This is one of the fastest launching bindings possible which also does not interrupt the typing flow.
+    You will likely need to bind this for both `windows and dialogs` as well as `text editing`.  The exact terms and options differ for different platforms and plugins installed.
+    * Finder - `shift+space` - This is another very fast binding, but for some this binding may be hit sometimes accidentally.  Otherwise, you might opt to replace the default `open resource` binding to use `Finder`
+
+![key-bindings](/readme-images/key-bindings.gif)
+
+* First time use
+    * Launching `Commander` and `Finder` initially opens your `working` view which contains the list of items you have been using recently.  The first time you launch, these will be blank.
+    * Press the `tab` key to switch to the `discovery` mode to find items.  
+    * In a short period of time, the `working` view will be populated with items you commonly use and you will only infrequently need to switch to `discovery`
 
 # Background
 ## The problem
@@ -186,4 +202,4 @@ Also options to specify how fuzzy a match might also be considered.
 
 ## Building Plugin
 * Install Eclipse Committers edition which has the required eclipse SDK bundled.
-* 
+

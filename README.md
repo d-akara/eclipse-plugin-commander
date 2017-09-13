@@ -4,6 +4,36 @@ Next generation command palette using [KAVI](https://github.com/dakaraphi/kavi) 
 Current interfaces provided:
  * **Commander** - provides interface for selecting and executing all Eclipse commands.
  * **Finder** - provides interface for selecting and opening workspace resources.
+ 
+# Background
+## The problem
+* In a very large complex application such as Eclipse, your workflow can be significantly slowed due to the massive complexity of the application.
+* Eclipse environments can easily have well over 2000 commands which are executed through menus, hot keys, custom dialogs or buttons.
+* Remembering where are the locations of menus, views, buttons or attempting to assign so many actions to hot keys proves to be impractical to impossible.
+* Think time increases simply attempting to navigate and execute your intentions.
+* Quick Access is the Eclipse attempt to address these issues, but fails to be an optimal implementation of a solution.
+    * Modern fuzzy matching like sublime is not implemented requiring additional keystrokes 
+    * Ranking is not optimal, partially due also to group sorting of actions by category which requires navigation further down the list
+    * Reuse of recent actions is not implemented in an intuitive way
+    * Not designed with fast keyboard interaction in mind 
+ 
+## Goals
+* Provide fastest workflow possible in a complex application
+    * Interface should be faster than using mouse, menus, buttons, or even hot keys in most cases.
+    * Typing flow should never be interrupted.
+    * All actions should be possible without use of mouse.
+    * Common used actions should have quicker access. 
+
+# Optimum Experience
+Once the working view is populated with commands that are used frequently, you should be able to experience the following benefits:
+
+1. **Relevant Information:** your working view presents you with only items which you actually use.  This minimizes mental focus interuptions that subtly happen when presented with too much irrelevant visual information to consume.
+2. **Focus on Recent:** items are ordered in the working view by last use.  Therefore to execute the last command again, simply launch the interface and press `enter`.  The first item will already be selected, no other key strokes required.  This feature can also be used in the `Finder` interface for navigating among recently viewed or opened files.
+3. **Fast Interface Launch:** this is dependent on how you configure your keybindings.  The intent of the recommended key bindings is to provide an experience where you are not interupted in your typing flow to execute commands. `shift+enter` allows to launch the interface without moving your hands from natural typing position and immediately follow with typing into the input filter to select a command to execute.  Also, it becomes very natural to re-execute the last command with a very fast sequence of `shift+enter enter` which can be executed fast enough that you may not even see the interface fully appear.
+4. **Fast Selections:** a combination of features allows for very fast selection and execution of commands.  Since your working view is contstrained to only those items useful to you, your working view likely consists of dozens of items vs. thousands that are available in the application.  You will therefore be able to select items with usually one or two keystrokes using first letter or acronym of a command.  Equal weighted matches in the working view are also sorted by recent.  So if you happen to have 5 different launch configurations, you can re-launch the last configuration simply by pressing `l` and `enter`.  Additionaly, the interface has a `fast select` feature allowing you to execute any item in the list without scrolling, cursor down, or using the mouse.
+
+The Optimum Exerpience should look something like this: TBD (animated gif)
+
 # Installation
 ## Eclipse Marketplace
 
@@ -20,25 +50,6 @@ All available commands available to key bindings can be found by going to the Ec
     * Launching `Commander` and `Finder` initially opens your `working` view which contains the list of items you have been using recently.  The first time you launch, these will be blank.
     * Press the `tab` key to switch to the `discovery` mode to find items.  
     * In a short period of time, the `working` view will be populated with items you commonly use and you will only infrequently need to switch to `discovery`
-
-# Background
-## The problem
-* In a very large complex application such as Eclipse, your workflow can be significantly slowed due to the massive complexity of the application.
-* Eclipse environments can easily have well over 2000 commands which are executed through menus, hot keys, custom dialogs or buttons.
-* Remembering where are the locations of menus, views, buttons or attempting to assign so many actions to hot keys proves to be impractical to impossible.
-* Think time increases simply attempting to navigate and execute your intentions.
-* Quick Access is the Eclipse attempt to address these issues, but fails to be an optimal implementation of a solution.
-    * Modern fuzzy matching like sublime is not implemented requiring additional keystrokes 
-    * Ranking is not optimal, partially due also to group sorting of actions by category which requires navigation further down the list
-    * Reuse of recent actions is not implemented in an intuitive way
-    * Not designed with fast keyboard interaction in mind
-
-## Goals
-* Provide fastest workflow possible in a complex application
-    * Interface should be faster than using mouse, menus, buttons, or even hot keys in most cases.
-    * Typing flow should never be interrupted.
-    * All actions should be possible without use of mouse.
-    * Common used actions should have quicker access.
 
 # KAVI implemented features for all interfaces 
  

@@ -32,7 +32,11 @@ Once the working view is populated with commands that are used frequently, you s
 3. **Fast Interface Launch:** this is dependent on how you configure your keybindings.  The intent of the recommended key bindings is to provide an experience where you are not interupted in your typing flow to execute commands. `shift+enter` allows to launch the interface without moving your hands from natural typing position and immediately follow with typing into the input filter to select a command to execute.  Also, it becomes very natural to re-execute the last command with a very fast sequence of `shift+enter enter` which can be executed fast enough that you may not even see the interface fully appear.
 4. **Fast Selections:** a combination of features allows for very fast selection and execution of commands.  Since your working view is contstrained to only those items useful to you, your working view likely consists of dozens of items vs. thousands that are available in the application.  You will therefore be able to select items with usually one or two keystrokes using first letter or acronym of a command.  Equal weighted matches in the working view are also sorted by recent.  So if you happen to have 5 different launch configurations, you can re-launch the last configuration simply by pressing `l` and `enter`.  Additionaly, the interface has a `fast select` feature allowing you to execute any item in the list without scrolling, cursor down, or using the mouse.
 
-The Optimum Exerpience should look something like this: TBD (animated gif)
+The Optimum Exerpience should look something like the following:
+
+In this short clip, the time to launch and execute commands is subsecond.  The longest time delay is waiting on the Eclipse UI to open and paint the views as they are being opened.  This is all done without hot keys.  Abreviations of the commands we use are easier to remember and faster to execute all without leaving our typing flow.
+
+![optimal](/readme-images/optimal.gif)
 
 # Installation
 ## Eclipse Marketplace

@@ -32,6 +32,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  *         1) sequence matching. there can be any distance between all letters, but must be in same order. 
  *            - possibly start filter with special char '#'
  *         2) super fuzzy.  all items which contain letters in any order.  special char input '?'
+ *         3) Negative matching.  Prefix words with ! to match when word is not found
  */
 
 public class StringScore {

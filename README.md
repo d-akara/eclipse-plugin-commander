@@ -40,6 +40,7 @@ In this short clip, the time to launch and execute commands is subsecond.  The l
 
 # Installation
 ## Eclipse Marketplace
+[Marketplace Installer](https://marketplace.eclipse.org/content/commander)
 
 ## Recommended setup
 All available commands available to key bindings can be found by going to the Eclipse key preferences and searching for `dakara` 

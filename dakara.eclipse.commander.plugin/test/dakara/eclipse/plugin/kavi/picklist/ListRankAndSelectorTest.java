@@ -113,6 +113,14 @@ public class ListRankAndSelectorTest {
 		Assert.assertEquals(1, (listItem.getColumnScore("f1").matches.size()));
 	}
 	
+	@Test
+	public void multiColumnWithLiteralMatch() {
+		InputCommand inputCommand = InputCommand.parse("5 ,def,");
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		RankedItem<TestItem> listItem = listItems.get(0);
+		Assert.assertEquals(1, listItems.size());
+	}
+	
 	private class TestItem {
 		public final String field1;
 		public final String field2;

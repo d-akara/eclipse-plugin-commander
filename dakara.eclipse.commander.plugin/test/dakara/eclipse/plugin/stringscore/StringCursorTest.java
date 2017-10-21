@@ -203,7 +203,25 @@ public class StringCursorTest {
 		
 		cursor.moveCursorForward().moveCursorForwardPartialWordStart();
 		assertEquals(true, cursor.cursorPositionTerminal());
-
+		
+	}
+	
+	@Test
+	public void verifyCamelCaseWordSupport2() {
+		StringCursor cursor = new StringCursor("IHTTPClient IActionBar");
+		cursor.moveCursorForwardPartialWordStart();
+		assertEquals(0, cursor.indexOfCursor());
+		
+		cursor.moveCursorForward().moveCursorForwardPartialWordStart();
+		assertEquals(5, cursor.indexOfCursor());
+		
+		cursor.moveCursorForward().moveCursorForwardPartialWordStart();
+		assertEquals(12, cursor.indexOfCursor());
+		cursor.moveCursorForward().moveCursorForwardPartialWordStart();
+		assertEquals(13, cursor.indexOfCursor());
+		
+		cursor.moveCursorForward().moveCursorForwardPartialWordStart();
+		assertEquals(19, cursor.indexOfCursor());
 	}
 	
 	@Test

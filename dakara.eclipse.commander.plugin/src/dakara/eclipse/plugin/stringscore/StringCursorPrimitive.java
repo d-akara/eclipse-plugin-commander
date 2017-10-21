@@ -124,6 +124,7 @@ public class StringCursorPrimitive {
 			}
 			
 			// partial word start and end
+			// create markers for transition from lower case to upper case
 			if (index > 0 &&
 					(properties[index]     & F_UPPERCASE) != 0 &&  // current char is upper case
 					(properties[index - 1] & F_UPPERCASE) == 0 &&  // previous char is lower case
@@ -131,6 +132,16 @@ public class StringCursorPrimitive {
 				properties[index] |= F_WORD_PARTIAL_START;
 				properties[index-1] |= F_WORD_PARTIAL_END;
 			}
+			// create markers for transition from upper case to lower case
+			// This is needed for when there are more multiple consecutive upper case chars
+			// For example IClientBase should make acronym ICB
+			if (index > 1 &&
+					(properties[index]     & F_UPPERCASE) == 0 &&  // current char is lower case
+					(properties[index - 1] & F_UPPERCASE) != 0 &&  // previous char is upper case
+					(properties[index - 1] & F_ALPHA) != 0) {	  // previous char is alpha
+				properties[index-1] |= F_WORD_PARTIAL_START;
+				properties[index-2] |= F_WORD_PARTIAL_END;
+			}			
 			if (index > 0 &&
 				(properties[index]     & F_DIGIT) != 0 &&  // current char is digit
 				(properties[index - 1] & F_DIGIT) == 0 &&  // previous char is not digit

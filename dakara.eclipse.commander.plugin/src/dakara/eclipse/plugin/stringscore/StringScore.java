@@ -128,7 +128,7 @@ public class StringScore {
 		
 		if (rank > 0)
 			return new Score(rank, targetCursor.markFillRangeForward(match.length()).markers());
-		return NOT_FOUND_SCORE;
+		return EMPTY_SCORE;
 	}
 	
 	public Score scoreAsAcronym(String match, String target) {
@@ -199,7 +199,7 @@ public class StringScore {
 		if (targetCursor.markers().size() == match.length()) {
 			return new Score(nonContiguousSequenceRankingProvider.apply(targetCursor), 	targetCursor.markers());
 		} else {
-			return NOT_FOUND_SCORE;
+			return EMPTY_SCORE;
 		}
 	}
 

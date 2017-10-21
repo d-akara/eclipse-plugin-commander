@@ -25,10 +25,10 @@ public class StringScoreTest {
 		Assert.assertEquals(3, score.rank);
 		
 		score = stringScore.scoreAsContiguousSequence("e", "abc def ghi jkl");
-		Assert.assertEquals(-1, score.rank);
+		Assert.assertEquals(0, score.rank);
 		
 		score = stringScore.scoreAsContiguousSequence("ef", "abc def ghi jklmn");
-		Assert.assertEquals(-1, score.rank);
+		Assert.assertEquals(0, score.rank);
 		
 		score = stringScore.scoreAsContiguousSequence("de", "abc def ghi jklmn");
 		Assert.assertEquals(2, score.rank);
@@ -155,7 +155,7 @@ public class StringScoreTest {
 		
 		score = stringScore.scoreAsNonContiguousSequence("defghi", "abc defg jklmn mop xyz ghi");
 		Assert.assertEquals(0, score.matches.size());	
-		Assert.assertEquals(-1, score.rank);
+		Assert.assertEquals(0, score.rank);
 		
 		score = stringScore.scoreAsNonContiguousSequence("deflmn", "abc defg jklmn mop xyz ghi");
 		Assert.assertEquals(6, score.matches.size());	

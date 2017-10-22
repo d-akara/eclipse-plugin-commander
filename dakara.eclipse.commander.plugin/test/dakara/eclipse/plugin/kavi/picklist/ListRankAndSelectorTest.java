@@ -29,7 +29,7 @@ public class ListRankAndSelectorTest {
 		itemList.add(new TestItem("0", "",			 ""));
 		
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
-		rankSelectorMultiColumn = new ListRankAndFilter<>(stringScore::scoreCombination, item -> item.field1);
+		rankSelectorMultiColumn = new ListRankAndFilter<>(stringScore::parseMatchAndScore, item -> item.field1);
 		rankSelectorMultiColumn.addField("f1", item -> item.field1);
 		rankSelectorMultiColumn.addField("f2", item -> item.field2);
 		rankSelectorMultiColumn.addField("f3", item -> item.field3);
@@ -117,8 +117,21 @@ public class ListRankAndSelectorTest {
 	public void multiColumnWithLiteralMatch() {
 		InputCommand inputCommand = InputCommand.parse("5 ,def,");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
-		RankedItem<TestItem> listItem = listItems.get(0);
 		Assert.assertEquals(1, listItems.size());
+	}
+	
+	@Test
+	public void inverseMatching() {
+		InputCommand inputCommand = InputCommand.parse("!5,def");
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		Assert.assertEquals(5, listItems.size());
+	}
+
+	@Test
+	public void inverseMatching2() {
+		InputCommand inputCommand = InputCommand.parse("!abc");
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		Assert.assertEquals(6, listItems.size());
 	}
 	
 	private class TestItem {

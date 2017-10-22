@@ -22,7 +22,7 @@ public class ListRankAndSelectorPerformanceTest {
 		}
 		
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
-		rankSelectorMultiColumn = new ListRankAndFilter<>(stringScore::scoreCombination, item -> item.field1);
+		rankSelectorMultiColumn = new ListRankAndFilter<>(stringScore::parseMatchAndScore, item -> item.field1);
 		rankSelectorMultiColumn.addField("f1", item -> item.field1);
 		rankSelectorMultiColumn.addField("f2", item -> item.field2);
 		rankSelectorMultiColumn.addField("f3", item -> item.field3);

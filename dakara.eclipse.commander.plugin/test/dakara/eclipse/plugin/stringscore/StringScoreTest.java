@@ -95,25 +95,25 @@ public class StringScoreTest {
 	public void verifyCombinationScoring() {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		
-		Score score = stringScore.scoreCombination("abc", "abc def ghi jkl");
+		Score score = stringScore.parseMatchAndScore("abc", "abc def ghi jkl");
 		Assert.assertEquals(4, score.rank);
 		
-		score = stringScore.scoreCombination("ad", "abc def ghi jkl");
+		score = stringScore.parseMatchAndScore("ad", "abc def ghi jkl");
 		Assert.assertEquals(4, score.rank);
 		
-		score = stringScore.scoreCombination("aj", "abc def ghi jkl");
+		score = stringScore.parseMatchAndScore("aj", "abc def ghi jkl");
 		Assert.assertEquals(3, score.rank);
 		
-		score = stringScore.scoreCombination("adz", "abc def ghi jklmn");
+		score = stringScore.parseMatchAndScore("adz", "abc def ghi jklmn");
 		Assert.assertEquals(0, score.rank);
 		
-		score = stringScore.scoreCombination("dgj", "abc def ghi jklmn");
+		score = stringScore.parseMatchAndScore("dgj", "abc def ghi jklmn");
 		Assert.assertEquals(3, score.rank);
 		
-		score = stringScore.scoreCombination("dj", "abc def ghi jklmn");
+		score = stringScore.parseMatchAndScore("dj", "abc def ghi jklmn");
 		Assert.assertEquals(2, score.rank);
 		
-		score = stringScore.scoreCombination("ax", "abc def ghi jklmn mop xyz");
+		score = stringScore.parseMatchAndScore("ax", "abc def ghi jklmn mop xyz");
 		Assert.assertEquals(0, score.rank);
 		
 	}
@@ -122,7 +122,7 @@ public class StringScoreTest {
 	public void emptyScoring() {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		// TODO investigate inconsistencies between scores of 0 and -1
-		Score score = stringScore.scoreCombination("", "abc def ghi jklmn mop xyz");
+		Score score = stringScore.parseMatchAndScore("", "abc def ghi jklmn mop xyz");
 		Assert.assertEquals(-1, score.rank);	
 		
 		score = stringScore.scoreAsContiguousSequence("", "abc def ghi jklmn mop xyz");
@@ -132,7 +132,7 @@ public class StringScoreTest {
 	@Test
 	public void multiWordOutOfOrderScoring() {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
-		Score score = stringScore.scoreCombination("def abc", "abc def ghi jklmn mop xyz");
+		Score score = stringScore.parseMatchAndScore("def abc", "abc def ghi jklmn mop xyz");
 		Assert.assertEquals(6, score.matches.size());	
 		Assert.assertEquals(7, score.rank);	
 	}
@@ -177,7 +177,7 @@ public class StringScoreTest {
 	@Test
 	public void extraCharacterMatchTest() {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
-		Score score = stringScore.scoreCombination("eeeeeeee", "dakara.eclipse.commander");
+		Score score = stringScore.parseMatchAndScore("eeeeeeee", "dakara.eclipse.commander");
 		Assert.assertEquals(0, score.matches.size());	
 		Assert.assertEquals(0, score.rank);	
 	}	
@@ -185,7 +185,7 @@ public class StringScoreTest {
 	@Test
 	public void fuzzyAcronymWithExtraChar() {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
-		Score score = stringScore.scoreCombination("pwse", "PersistedWorkingSet.java");
+		Score score = stringScore.parseMatchAndScore("pwse", "PersistedWorkingSet.java");
 		Assert.assertEquals(4, score.matches.size());	
 		Assert.assertEquals(3, score.rank);	
 	}	
@@ -193,7 +193,7 @@ public class StringScoreTest {
 	@Test
 	public void multiWordInputPartialMatches() {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
-		Score score = stringScore.scoreCombination("test case", "testCase");
+		Score score = stringScore.parseMatchAndScore("test case", "testCase");
 		Assert.assertEquals(8, score.matches.size());	
 		Assert.assertEquals(7, score.rank);	
 	}	
@@ -201,7 +201,7 @@ public class StringScoreTest {
 	@Test
 	public void edgeCasePartialWordStartThatIsAlsoWordEnd() {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
-		Score score = stringScore.scoreCombination("lrselect2", "ListRankAndSelectorTest2.java");
+		Score score = stringScore.parseMatchAndScore("lrselect2", "ListRankAndSelectorTest2.java");
 		Assert.assertEquals(9, score.matches.size());	
 		Assert.assertEquals(3, score.rank);	
 	}	

@@ -25,7 +25,7 @@ public class ListRankAndFilter<T> {
 	public static <T> ListRankAndFilter<T> make(Function<T, String> sortFieldResolver) {
 		StringScore stringScore = new StringScore(StringScoreRanking.standardContiguousSequenceRanking(), StringScoreRanking.standardAcronymRanking(), StringScoreRanking.standardNonContiguousSequenceRanking());
 		return new ListRankAndFilter<>(
-				(filter, columnText) -> stringScore.scoreCombination(filter, columnText),
+				(filter, columnText) -> stringScore.parseMatchAndScore(filter, columnText),
 				sortFieldResolver);
 	}
 	

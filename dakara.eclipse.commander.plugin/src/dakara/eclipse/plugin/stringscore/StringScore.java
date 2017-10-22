@@ -38,6 +38,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 public class StringScore {
 	private static final Score EMPTY_SCORE = new Score(0, new IntArrayList(0));
 	private static final Score NOT_FOUND_SCORE = new Score(-1, new IntArrayList(0));
+	private static final Score INVERSE_FOUND_SCORE = new Score(1, new IntArrayList(0));	
 	
 	private BiFunction<String, StringCursor, Integer> contiguousSequenceRankingProvider;
 	private Function<StringCursor, Integer> acronymRankingProvider;
@@ -49,21 +50,42 @@ public class StringScore {
 		this.nonContiguousSequenceRankingProvider = nonContiguousSequenceRankingProvider;
 	}
 	
-	public Score scoreCombination(String match, String target) {
+	public Score parseMatchAndScore(String match, String target) {
 		if ((match.length() == 0) || (target == null) || (target.length() == 0)) return NOT_FOUND_SCORE;
 		
 		boolean scoreAsAcronym = false;
 		boolean scoreAsLiteral = false;
+		boolean inverseMatch = false;
+		
+		String trimmedMatch = match.trim();
 		
 		if (match.charAt(0) == ' ') scoreAsAcronym = true;
 		if (match.charAt(match.length() - 1) == ' ') scoreAsLiteral = true;
+		if (trimmedMatch.charAt(0) == '!') {
+			inverseMatch = true;
+			trimmedMatch = trimmedMatch.substring(1);
+		}
 		
-		StringCursorPrimitive matchCursorPrimitive  = new StringCursorPrimitive(match.trim());
+		StringCursorPrimitive matchCursorPrimitive  = new StringCursorPrimitive(trimmedMatch);
 		StringCursorPrimitive targetCursorPrimitive = new StringCursorPrimitive(target.trim());
 		
 		final String[] words = splitWords(matchCursorPrimitive.asString());
 		Score score;
 		
+		score = determineScore(scoreAsAcronym, scoreAsLiteral, matchCursorPrimitive, targetCursorPrimitive, words);
+		
+		if (inverseMatch) {
+			if (score.rank > 0) {
+				return EMPTY_SCORE;
+			} else {
+				return INVERSE_FOUND_SCORE;
+			}
+		}
+		return score;
+	}
+
+	private Score determineScore(boolean scoreAsAcronym, boolean scoreAsLiteral, StringCursorPrimitive matchCursorPrimitive, StringCursorPrimitive targetCursorPrimitive, final String[] words) {
+		Score score;
 		if (scoreAsAcronym) {
 			// If there is a leading space, then treat all chars as acronym
 			score = scoreAsAcronym(matchCursorPrimitive, targetCursorPrimitive);
@@ -81,7 +103,7 @@ public class StringScore {
 				score = acronymScore;
 			} 
 			
-			if (match.length() > 2) {
+			if (matchCursorPrimitive.length() > 2) {
 				Score nonContiguousScore = scoreAsNonContiguousSequence(matchCursorPrimitive, targetCursorPrimitive);
 				if (nonContiguousScore.rank > score.rank) {
 					score = nonContiguousScore;

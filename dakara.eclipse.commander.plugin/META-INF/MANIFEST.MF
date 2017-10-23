@@ -6,6 +6,7 @@ Bundle-Version: 1.0.1.qualifier
 Bundle-Vendor: Dakara
 Require-Bundle: org.eclipse.core.expressions,
  org.eclipse.e4.core.commands,
+ org.eclipse.core.resources,
  org.eclipse.e4.ui.model.workbench,
  org.eclipse.ui,
  org.eclipse.ui.ide,
@@ -13,7 +14,8 @@ Require-Bundle: org.eclipse.core.expressions,
  org.eclipse.debug.core,
  com.google.gson,
  org.junit,
- dakara.eclipse.commander.plugin
+ dakara.eclipse.commander.plugin,
+ org.eclipse.jdt.core
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Import-Package: org.eclipse.e4.core.contexts
 Export-Package: dakara.eclipse.plugin.kavi.picklist,

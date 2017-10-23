@@ -10,6 +10,8 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
@@ -54,6 +56,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		IWorkbenchPage workbenchPage = HandlerUtil.getActiveWorkbenchWindowChecked(event).getActivePage();
 		IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
 		List<ResourceItem> files = EclipseWorkbench.collectAllWorkspaceFiles(workspace);	
+		files.addAll(EclipseWorkbench.collectAllWorkspaceTypes());
 		
 		FieldResolver<ResourceItem> nameResolver    = new FieldResolver<>("name",    resource -> resource.name);
 		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> resource.path);
@@ -107,7 +110,15 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 	public static void openFile(IWorkbenchPage workbenchPage, IWorkspaceRoot workspace, List<ResourceItem> resourceItems) {
 		try {
 			for (ResourceItem resourceItem : resourceItems) {
-				IDE.openEditor(workbenchPage, workspace.getFile(Path.fromPortableString(resourceItem.project + "/" + resourceItem.path + "/" + resourceItem.name)));
+				if (resourceItem.name.endsWith(".class"))
+					try {
+						JavaUI.openInEditor(null, true, true);
+					} catch (JavaModelException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				else
+					IDE.openEditor(workbenchPage, workspace.getFile(Path.fromPortableString(resourceItem.project + "/" + resourceItem.path + "/" + resourceItem.name)));
 			}
 		} catch (PartInitException e) {
 			throw new RuntimeException(e);
@@ -123,11 +134,12 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 	}
 	
 	public static Function<InputState, List<RankedItem<ResourceItem>>> listContentProviderWorkingSet(ListRankAndFilter<ResourceItem> listRankAndFilter, PersistedWorkingSet<ResourceItem> historyStore, List<ResourceItem> workspaceResources) {
+		// TODO need to refresh 'workingFiles' when history changes
+		List<ResourceItem> workingFiles = historyStore.getHistory().stream()
+				.map(historyItem -> historyItem.getHistoryItem())
+				.filter(resourceItem -> workspaceResources.contains(resourceItem))
+				.collect(Collectors.toList());
 		return (inputState) -> {
-			List<ResourceItem> workingFiles = historyStore.getHistory().stream()
-														 .map(historyItem -> historyItem.getHistoryItem())
-														 .filter(resourceItem -> workspaceResources.contains(resourceItem))
-														 .collect(Collectors.toList());
 			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilterOrdered(inputState.inputCommand, workingFiles);
 			return filteredList;
 		};

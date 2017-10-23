@@ -1,5 +1,6 @@
 package dakara.eclipse.plugin.platform;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -11,6 +12,13 @@ import org.eclipse.core.resources.IResourceProxyVisitor;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.internal.core.index.Index;
+import org.eclipse.jdt.internal.core.index.IndexLocation;
+import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
+import org.eclipse.jdt.internal.core.search.PatternSearchJob;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IFileEditorInput;
@@ -45,6 +53,33 @@ public class EclipseWorkbench {
 		} catch (CoreException e) {
 			throw new RuntimeException(e);
 		}
+		return files;
+	}
+	
+	public static List<ResourceItem>	collectAllWorkspaceTypes() {
+		List<ResourceItem> files = new ArrayList<>();
+		IJavaSearchScope scope = BasicSearchEngine.createWorkspaceScope();
+		PatternSearchJob job = new PatternSearchJob(null, SearchEngine.getDefaultSearchParticipant(), scope, null);
+		Index[] selectedIndexes = job.getIndexes(null);
+		for (Index index : selectedIndexes) {
+			IndexLocation indexLocation = index.getIndexLocation();
+			try {
+				String[] names = index.queryDocumentNames(null);
+				if (names != null) {
+					for (String name : names) {
+						IPath filePath = Path.fromPortableString(name);
+						String projectName =  Path.fromPortableString(index.containerPath).lastSegment();
+						String fileName = filePath.lastSegment();
+						String pathName = filePath.uptoSegment(filePath.segmentCount() - 1).toString();
+						files.add(new ResourceItem(fileName, pathName, projectName));
+					} 
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		return files;
 	}
 	

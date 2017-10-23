@@ -61,7 +61,7 @@ public class StringScore {
 		
 		if (match.charAt(0) == ' ') scoreAsAcronym = true;
 		if (match.charAt(match.length() - 1) == ' ') scoreAsLiteral = true;
-		if (trimmedMatch.charAt(0) == '!') {
+		if (trimmedMatch.length() > 0 && trimmedMatch.charAt(0) == '!') {
 			inverseMatch = true;
 			trimmedMatch = trimmedMatch.substring(1);
 		}

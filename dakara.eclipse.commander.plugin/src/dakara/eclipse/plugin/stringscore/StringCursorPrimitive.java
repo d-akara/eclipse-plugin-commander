@@ -5,6 +5,7 @@ import java.util.Arrays;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public class StringCursorPrimitive {
+	public static final StringCursorPrimitive EMPTY = new StringCursorPrimitive("");
 	int F_UPPERCASE = 0x1 ;
 	int F_WORD_PARTIAL_START 	= 0x1 << 1;
 	int F_WORD_PARTIAL_END 	 	= 0x1 << 2;

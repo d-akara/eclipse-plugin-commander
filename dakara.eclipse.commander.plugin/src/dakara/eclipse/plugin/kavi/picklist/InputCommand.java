@@ -1,11 +1,13 @@
 package dakara.eclipse.plugin.kavi.picklist;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+
+import dakara.eclipse.plugin.stringscore.ScoreFilterOptions;
 
 public class InputCommand {
 	public final String filterText;
-	private final List<String> columnFilters;
+	private final List<ScoreFilterOptions> columnFilters;
 	public final String fastSelectIndex;
 	public final boolean fastSelect;
 	public final boolean multiSelect;
@@ -14,7 +16,7 @@ public class InputCommand {
 	public final boolean inverseSelection;
 	public final boolean selectAll;
 
-	public InputCommand(String filterText, List<String> columnFilters, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean selectRange, boolean inverseSelection, boolean selectAll, boolean isColumnFiltering) {
+	public InputCommand(String filterText, List<ScoreFilterOptions> columnFilters, String fastSelectIndex, boolean fastSelect, boolean multiSelect, boolean selectRange, boolean inverseSelection, boolean selectAll, boolean isColumnFiltering) {
 		this.filterText = filterText;
 		this.columnFilters = columnFilters;
 		this.fastSelectIndex = fastSelectIndex;
@@ -26,12 +28,12 @@ public class InputCommand {
 		this.isColumnFiltering = isColumnFiltering;
 	}
 	
-	public String getColumnFilter(final int column) {
+	public ScoreFilterOptions getColumnFilterOptions(final int column) {
 		// When we only have 1 filter it should be applied to all columns
 		// TODO - we can improve performance here by making a StringCursorPrimitive once that will be reused for all of the row matches
 		if (!isColumnFiltering) return columnFilters.get(0);
 		
-		if (column >= columnFilters.size()) return "";
+		if (column >= columnFilters.size()) return ScoreFilterOptions.EMPTY;
 		
 		return columnFilters.get(column);
 	}
@@ -50,9 +52,13 @@ public class InputCommand {
 		boolean isColumnFiltering = commandPart.contains(",");
 		
 		String[] splitPart = commandPart.split("/");
-		String[] columnFilters;
-		if (splitPart.length == 0) columnFilters = new String[]{""};
-		else columnFilters = splitPart[0].split(",");
+		final List<ScoreFilterOptions> columnFilters = new ArrayList<>();
+		if (splitPart.length == 0) columnFilters.add(new ScoreFilterOptions(""));
+		else {
+			for(String part : splitPart[0].split(",")) {
+				columnFilters.add(new ScoreFilterOptions(part));
+			}
+		}
 				
 		String fastSelect = null;
 		if (splitPart.length == 2) fastSelect = splitPart[1];
@@ -73,6 +79,6 @@ public class InputCommand {
 				selectAll = true;
 			} 
 		}
-		return new InputCommand(commandPart, Arrays.asList(columnFilters), fastSelect, fastSelectActive, multiSelectActive, selectRange, inverseSelection, selectAll, isColumnFiltering);
+		return new InputCommand(commandPart, columnFilters, fastSelect, fastSelectActive, multiSelectActive, selectRange, inverseSelection, selectAll, isColumnFiltering);
 	}
 }

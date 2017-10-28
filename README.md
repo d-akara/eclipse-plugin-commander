@@ -34,7 +34,7 @@ Once the working view is populated with commands that are used frequently, you s
 
 The Optimum Exerpience should look something like the following:
 
-In this short clip, the time to launch and execute commands is subsecond. This is all done without hot keys.  Abreviations of the commands we use are easier to remember and faster to execute all without leaving our typing flow.
+In this short clip, the time to launch and execute commands is subsecond. This is all done without hot keys.  Abreviations of the commands we use are easier to remember and faster to execute all without leaving our typing flow.  Since the default command list is our set of recent or favorites, the selections become predictable and often can be done utilizing only 1 or 2 characters.
 
 ![optimal](/readme-images/optimal.gif)
 

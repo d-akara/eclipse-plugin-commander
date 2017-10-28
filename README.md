@@ -34,7 +34,7 @@ Once the working view is populated with commands that are used frequently, you s
 
 The Optimum Exerpience should look something like the following:
 
-In this short clip, the time to launch and execute commands is subsecond.  The longest time delay is waiting on the Eclipse UI to open and paint the views as they are being opened.  This is all done without hot keys.  Abreviations of the commands we use are easier to remember and faster to execute all without leaving our typing flow.
+In this short clip, the time to launch and execute commands is subsecond. This is all done without hot keys.  Abreviations of the commands we use are easier to remember and faster to execute all without leaving our typing flow.
 
 ![optimal](/readme-images/optimal.gif)
 

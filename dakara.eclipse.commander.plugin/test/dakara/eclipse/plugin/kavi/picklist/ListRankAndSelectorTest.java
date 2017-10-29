@@ -126,12 +126,33 @@ public class ListRankAndSelectorTest {
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals(5, listItems.size());
 	}
-
+	
 	@Test
 	public void inverseMatching2() {
 		InputCommand inputCommand = InputCommand.parse("!abc");
 		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
 		Assert.assertEquals(6, listItems.size());
+	}
+
+	@Test
+	public void inverseMatching3() {
+		InputCommand inputCommand = InputCommand.parse("!two");
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		Assert.assertEquals(9, listItems.size());
+	}
+	
+	@Test
+	public void inverseMatching4() {
+		InputCommand inputCommand = InputCommand.parse("!two!four");
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		Assert.assertEquals(8, listItems.size());
+	}
+	
+	@Test
+	public void inverseMatching5() {
+		InputCommand inputCommand = InputCommand.parse("abc!xyz!adg");
+		List<RankedItem<TestItem>> listItems = rankSelectorMultiColumn.rankAndFilter(inputCommand, itemList);
+		Assert.assertEquals(2, listItems.size());
 	}
 	
 	private class TestItem {

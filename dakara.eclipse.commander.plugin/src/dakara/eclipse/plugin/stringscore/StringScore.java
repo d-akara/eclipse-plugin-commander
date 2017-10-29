@@ -1,6 +1,7 @@
 package dakara.eclipse.plugin.stringscore;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -51,39 +52,33 @@ public class StringScore {
 	}
 	
 	public Score parseMatchAndScore(String match, String target) {
-		if ((match.length() == 0) || (target == null) || (target.length() == 0)) return NOT_FOUND_SCORE;
+		return parseMatchAndScore(new ScoreFilterOptions(match), target);
+	}
+	
+	public Score parseMatchAndScore(final ScoreFilterOptions filterOptions, final String target) {
+		final StringCursorPrimitive match = filterOptions.filterTextCursorPrimitive;
+		if ((target == null) || (target.length() == 0)) return NOT_FOUND_SCORE;
+		final StringCursorPrimitive targetCursorPrimitive = new StringCursorPrimitive(target.trim());
 		
-		boolean scoreAsAcronym = false;
-		boolean scoreAsLiteral = false;
-		boolean inverseMatch = false;
-		
-		String trimmedMatch = match.trim();
-		
-		if (match.charAt(0) == ' ') scoreAsAcronym = true;
-		if (match.charAt(match.length() - 1) == ' ') scoreAsLiteral = true;
-		if (trimmedMatch.charAt(0) == '!') {
-			inverseMatch = true;
-			trimmedMatch = trimmedMatch.substring(1);
+		if (filterOptions.inverseMatch) { 
+			if (containsString(targetCursorPrimitive, filterOptions.inverseFilters)) return EMPTY_SCORE;
+			else if (match.length() == 0) return INVERSE_FOUND_SCORE; // no filter supplied, only negative filter
 		}
+		if ((match.length() == 0)) return NOT_FOUND_SCORE;
 		
-		StringCursorPrimitive matchCursorPrimitive  = new StringCursorPrimitive(trimmedMatch);
-		StringCursorPrimitive targetCursorPrimitive = new StringCursorPrimitive(target.trim());
+		final String[] words = splitWords(match.asString());
 		
-		final String[] words = splitWords(matchCursorPrimitive.asString());
-		Score score;
-		
-		score = determineScore(scoreAsAcronym, scoreAsLiteral, matchCursorPrimitive, targetCursorPrimitive, words);
-		
-		if (inverseMatch) {
-			if (score.rank > 0) {
-				return EMPTY_SCORE;
-			} else {
-				return INVERSE_FOUND_SCORE;
-			}
-		}
+		Score score = determineScore(filterOptions.scoreAsAcronym, filterOptions.scoreAsLiteral, match, targetCursorPrimitive, words);
 		return score;
 	}
-
+	
+	private boolean containsString(StringCursorPrimitive target, List<String> filters) {
+		for (String filter : filters) {
+			if (target.indexOf(filter) != -1) return true;
+		}
+		return false;
+	}
+	
 	private Score determineScore(boolean scoreAsAcronym, boolean scoreAsLiteral, StringCursorPrimitive matchCursorPrimitive, StringCursorPrimitive targetCursorPrimitive, final String[] words) {
 		Score score;
 		if (scoreAsAcronym) {

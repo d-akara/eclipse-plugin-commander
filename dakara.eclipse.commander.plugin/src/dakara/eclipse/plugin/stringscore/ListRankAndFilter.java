@@ -14,10 +14,10 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public class ListRankAndFilter<T> {
 	private List<FieldResolver<T>> fields = new ArrayList<>();
-	private BiFunction<String, String, Score> rankingStrategy;
+	private BiFunction<ScoreFilterOptions, String, Score> rankingStrategy;
 	private Function<T, String> sortFieldResolver;
 	
-	public ListRankAndFilter(BiFunction<String, String, Score> rankingStrategy, Function<T, String> sortFieldResolver) {
+	public ListRankAndFilter(BiFunction<ScoreFilterOptions, String, Score> rankingStrategy, Function<T, String> sortFieldResolver) {
 		this.rankingStrategy = rankingStrategy;
 		this.sortFieldResolver = sortFieldResolver;
 	}
@@ -36,7 +36,7 @@ public class ListRankAndFilter<T> {
 	// TODO - provide version that returns a stream
 	// this will allow better optimization of post filtering and sorting from the internal provider proxy
 	public List<RankedItem<T>> rankAndFilter(final InputCommand inputCommand, List<T> items) {
-		if (!inputCommand.isColumnFiltering && inputCommand.getColumnFilter(0).length() == 0) return makeRankedList(items);
+		if (!inputCommand.isColumnFiltering && inputCommand.getColumnFilterOptions(0).rawInputText.length() == 0) return makeRankedList(items);
 
 		return items.parallelStream().
 				       map(item -> new RankedItem<>(item)).
@@ -52,7 +52,7 @@ public class ListRankAndFilter<T> {
 		for (T item : items) {
 			rankedItems.add(rankedItemFactory.make(item));
 		}
-		if (!inputCommand.isColumnFiltering && inputCommand.getColumnFilter(0).length() == 0) return makeRankedListOrdered(rankedItems);
+		if (!inputCommand.isColumnFiltering && inputCommand.getColumnFilterOptions(0).rawInputText.length() == 0) return makeRankedListOrdered(rankedItems);
 		return rankedItems.parallelStream().
 				       map(item -> setItemRank(item, inputCommand)).
 				       filter(item -> item.totalScore() > 0).
@@ -86,7 +86,7 @@ public class ListRankAndFilter<T> {
 			if (inputCommand.isColumnFiltering) {
 				int searchableColumnCount = 0;
 				for (FieldResolver<T> field : fields) {
-					rankedItem.addScore(rankingStrategy.apply(inputCommand.getColumnFilter(searchableColumnCount), field.fieldResolver.apply(rankedItem.dataItem)), field.fieldId);
+					rankedItem.addScore(rankingStrategy.apply(inputCommand.getColumnFilterOptions(searchableColumnCount), field.fieldResolver.apply(rankedItem.dataItem)), field.fieldId);
 					searchableColumnCount++;
 				} 
 			} else {
@@ -108,7 +108,7 @@ public class ListRankAndFilter<T> {
 		StringBuilder allColumnText = new StringBuilder();
 		buildAllColumnTextAndIndexes(listItem, indexesOfColumnBreaks, allColumnText);
 		
-		Score allColumnScore = rankingStrategy.apply( inputCommand.getColumnFilter(0), allColumnText.toString());
+		Score allColumnScore = rankingStrategy.apply( inputCommand.getColumnFilterOptions(0), allColumnText.toString());
 		if (allColumnScore.rank > 0) {
 			return convertScoreToMatchesPerColumn(allColumnText.toString(), allColumnScore, indexesOfColumnBreaks);
 		} else {

@@ -10,7 +10,11 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IClassFile;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.Openable;
+import org.eclipse.jdt.internal.core.util.HandleFactory;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbenchPage;
@@ -59,7 +63,10 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		files.addAll(EclipseWorkbench.collectAllWorkspaceTypes());
 		
 		FieldResolver<ResourceItem> nameResolver    = new FieldResolver<>("name",    resource -> resource.name);
-		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> resource.path);
+		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> {
+			String pathParts[] = resource.path.split("\\|");	
+			return pathParts[pathParts.length - 1];
+		});
 		FieldResolver<ResourceItem> projectResolver = new FieldResolver<>("project", resource -> resource.project);
 		
 		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
@@ -112,7 +119,10 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 			for (ResourceItem resourceItem : resourceItems) {
 				if (resourceItem.name.endsWith(".class"))
 					try {
-						JavaUI.openInEditor(null, true, true);
+						HandleFactory factory = new HandleFactory();
+						Openable openable = factory.createOpenable(resourceItem.path, null);
+						IType classFile = ((IClassFile)openable).getType();
+						JavaUI.openInEditor(classFile, true, true);
 					} catch (JavaModelException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -137,6 +147,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		// TODO need to refresh 'workingFiles' when history changes
 		List<ResourceItem> workingFiles = historyStore.getHistory().stream()
 				.map(historyItem -> historyItem.getHistoryItem())
+				// TODO need a faster method to determine if we should show this resource
 				.filter(resourceItem -> workspaceResources.contains(resourceItem))
 				.collect(Collectors.toList());
 		return (inputState) -> {

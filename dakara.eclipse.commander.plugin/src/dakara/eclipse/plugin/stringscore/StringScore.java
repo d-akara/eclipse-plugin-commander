@@ -55,6 +55,8 @@ public class StringScore {
 		return parseMatchAndScore(new ScoreFilterOptions(match), target);
 	}
 	
+	// TODO - need to accept a StringCursorPrimitive for target
+	// the initialization costs shows up in profiling
 	public Score parseMatchAndScore(final ScoreFilterOptions filterOptions, final String target) {
 		final StringCursorPrimitive match = filterOptions.filterTextCursorPrimitive;
 		if ((target == null) || (target.length() == 0)) return NOT_FOUND_SCORE;

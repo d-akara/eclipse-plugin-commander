@@ -2,7 +2,9 @@ package dakara.eclipse.plugin.platform;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.eclipse.core.resources.IFile;
@@ -13,12 +15,15 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.index.Index;
 import org.eclipse.jdt.internal.core.index.IndexLocation;
 import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
 import org.eclipse.jdt.internal.core.search.PatternSearchJob;
+import org.eclipse.jdt.internal.core.util.HandleFactory;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IFileEditorInput;
@@ -29,6 +34,7 @@ import org.eclipse.ui.PartInitException;
 
 
 public class EclipseWorkbench {
+	private static Map<String, IndexInfoCache> indexCacheMap = new HashMap();
 	public static List<ResourceItem> collectAllWorkspaceFiles(IWorkspaceRoot workspace) {
 		List<ResourceItem> files = new ArrayList<>();
 		
@@ -56,22 +62,34 @@ public class EclipseWorkbench {
 		return files;
 	}
 	
+	/*
+	 * TODO - There are still a lot of duplicates being returned
+	 * 
+	 */
 	public static List<ResourceItem>	collectAllWorkspaceTypes() {
 		List<ResourceItem> files = new ArrayList<>();
 		IJavaSearchScope scope = BasicSearchEngine.createWorkspaceScope();
 		PatternSearchJob job = new PatternSearchJob(null, SearchEngine.getDefaultSearchParticipant(), scope, null);
 		Index[] selectedIndexes = job.getIndexes(null);
-		for (Index index : selectedIndexes) {
+		outer: for (Index index : selectedIndexes) {
+			// TODO - we might can use index last modified to cache information
 			IndexLocation indexLocation = index.getIndexLocation();
 			try {
 				String[] names = index.queryDocumentNames(null);
 				if (names != null) {
 					for (String name : names) {
-						IPath filePath = Path.fromPortableString(name);
-						String projectName =  Path.fromPortableString(index.containerPath).lastSegment();
-						String fileName = filePath.lastSegment();
-						String pathName = filePath.uptoSegment(filePath.segmentCount() - 1).toString();
-						files.add(new ResourceItem(fileName, pathName, projectName));
+						if (!name.contains("$") && !name.endsWith(".java")) {
+							IPath filePath = Path.fromPortableString(name);
+							final String fullResourcePath = index.containerPath + "|" + filePath.toString();
+							
+							if (!hasSourceAttachment(index.containerPath, fullResourcePath)) continue outer;
+							
+							//String projectName = Path.fromPortableString(index.containerPath).lastSegment();
+							String fileName = filePath.lastSegment();
+							String pathName = filePath.uptoSegment(filePath.segmentCount() - 1).toString();
+							//						files.add(new ResourceItem(fileName, pathName, projectName));
+							files.add(new ResourceItem(fileName, index.containerPath + "|" + filePath.toString(), "[class]"));
+						}
 					} 
 				}
 			} catch (IOException e) {
@@ -115,5 +133,33 @@ public class EclipseWorkbench {
 			public void partInputChanged(IWorkbenchPartReference partRef) {}
 		};
 		page.addPartListener(pl);
+	}
+	
+	private static boolean hasSourceAttachment(String containerPath, String fullResourcePath) {
+		if (indexCacheMap.containsKey(containerPath)) return indexCacheMap.get(containerPath).hasSource;
+		
+		boolean hasSource = false;
+		try {
+			HandleFactory factory = new HandleFactory();
+			// TODO - This is very expensive.  Need to cache which indexes have source
+			Openable openable = factory.createOpenable(fullResourcePath, null);
+			// skip all in this index if it has no source attachment
+			if (openable != null && openable.getPackageFragmentRoot().getSourceAttachmentPath() != null) {
+				// note, sometimes there is a source attachment, but still no source for an item
+				hasSource = true;
+			}
+			indexCacheMap.put(containerPath, new IndexInfoCache(hasSource));
+		} catch (JavaModelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return hasSource;
+	}
+	
+	private static class IndexInfoCache {
+		public boolean hasSource = false;
+		public IndexInfoCache(boolean hasSource) {
+			this.hasSource = hasSource;
+		}
 	}
 }

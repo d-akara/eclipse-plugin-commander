@@ -279,6 +279,14 @@ public class KaviList<T> {
 					e.doit = false;
 					filterText.setText("");
 				}				
+				if (e.character == ';') {
+					// Testing ; for keycode seems to cause issues on some non US keyboards.
+					e.doit = false;
+					toggleInternalCommands();
+					table.getParent().getShell().setRedraw(false);
+					requestRefresh(( (Text) e.widget).getText());
+					display.asyncExec(() -> table.getParent().getShell().setRedraw(true));					
+				}				
 				switch (e.keyCode) {
 				case SWT.ARROW_DOWN:
 					e.doit = false;
@@ -299,13 +307,6 @@ public class KaviList<T> {
 					table.getParent().getShell().setRedraw(false);
 					requestRefresh(( (Text) e.widget).getText());
 					display.asyncExec(() -> table.getParent().getShell().setRedraw(true));
-					break;
-				case ';':
-					e.doit = false;
-					toggleInternalCommands();
-					table.getParent().getShell().setRedraw(false);
-					requestRefresh(( (Text) e.widget).getText());
-					display.asyncExec(() -> table.getParent().getShell().setRedraw(true));					
 					break;
 				}
 			}

@@ -64,8 +64,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		
 		FieldResolver<ResourceItem> nameResolver    = new FieldResolver<>("name",    resource -> resource.name);
 		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> {
-			String pathParts[] = resource.path.split("\\|");	
-			return pathParts[pathParts.length - 1];
+			return extractPath(resource.path);
 		});
 		FieldResolver<ResourceItem> projectResolver = new FieldResolver<>("project", resource -> resource.project);
 		
@@ -104,6 +103,19 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		historyStore.load();
 		
 		return historyStore;
+	}
+	
+	private String extractPath(String jarPathAndClass) {
+		int startLocation = 0;
+		int endLocation = jarPathAndClass.length();
+		
+		final int locationOfSeparator = jarPathAndClass.indexOf("|");
+		if (locationOfSeparator >= 0) startLocation = locationOfSeparator + 1;
+		
+		final int locationOfClass = jarPathAndClass.lastIndexOf(("/"));
+		if (locationOfClass >=0 ) endLocation = locationOfClass;
+
+		return jarPathAndClass.substring(startLocation, endLocation);
 	}
 	
 	public static void handleSelectionAction(PersistedWorkingSet<ResourceItem> historyStore, IWorkbenchPage workbenchPage, IWorkspaceRoot workspace, List<ResourceItem> resourceItems) {

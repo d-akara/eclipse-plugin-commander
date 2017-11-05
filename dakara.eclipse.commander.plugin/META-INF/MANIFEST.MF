@@ -15,7 +15,8 @@ Require-Bundle: org.eclipse.core.expressions,
  com.google.gson,
  org.junit,
  dakara.eclipse.commander.plugin,
- org.eclipse.jdt.core
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Import-Package: org.eclipse.e4.core.contexts
 Export-Package: dakara.eclipse.plugin.kavi.picklist,

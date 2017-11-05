@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import dakara.eclipse.plugin.command.Constants;
+import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryEntry;
 import dakara.eclipse.plugin.log.EclipsePluginLogger;
 
 public class PersistedWorkingSet<T> {
@@ -48,7 +49,7 @@ public class PersistedWorkingSet<T> {
 
 	private void checkAndClearOnChanged() {
 		if (historyChangedSinceCheck) {
-			currentEntries.clear();
+			currentEntries = new ArrayList<HistoryEntry>();
 		}
 		historyChangedSinceCheck = false;
 	}

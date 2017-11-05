@@ -2,10 +2,12 @@ package dakara.eclipse.plugin.platform;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -15,15 +17,16 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.index.Index;
-import org.eclipse.jdt.internal.core.index.IndexLocation;
 import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
 import org.eclipse.jdt.internal.core.search.PatternSearchJob;
 import org.eclipse.jdt.internal.core.util.HandleFactory;
+import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IFileEditorInput;
@@ -67,36 +70,68 @@ public class EclipseWorkbench {
 	 * 
 	 */
 	public static List<ResourceItem>	collectAllWorkspaceTypes() {
-		List<ResourceItem> files = new ArrayList<>();
 		IJavaSearchScope scope = BasicSearchEngine.createWorkspaceScope();
 		PatternSearchJob job = new PatternSearchJob(null, SearchEngine.getDefaultSearchParticipant(), scope, null);
-		Index[] selectedIndexes = job.getIndexes(null);
-		outer: for (Index index : selectedIndexes) {
-			// TODO - we might can use index last modified to cache information
-			IndexLocation indexLocation = index.getIndexLocation();
-			try {
-				String[] names = index.queryDocumentNames(null);
-				if (names != null) {
-					for (String name : names) {
-						if (!name.contains("$") && !name.endsWith(".java")) {
-							IPath filePath = Path.fromPortableString(name);
-							final String fullResourcePath = index.containerPath + "|" + filePath.toString();
-							
-							if (!hasSourceAttachment(index.containerPath, fullResourcePath)) continue outer;
-							
-							//String projectName = Path.fromPortableString(index.containerPath).lastSegment();
-							String fileName = filePath.lastSegment();
-							String pathName = filePath.uptoSegment(filePath.segmentCount() - 1).toString();
-							//						files.add(new ResourceItem(fileName, pathName, projectName));
-							files.add(new ResourceItem(fileName, index.containerPath + "|" + filePath.toString(), "[class]"));
-						}
-					} 
+		List<Index> selectedIndexes = new ArrayList<>(Arrays.asList(job.getIndexes(null)));
+		List<ResourceItem> files = selectedIndexes.stream().parallel()
+			.flatMap(index -> {
+				return addResourceForIndexEntry(getIndexEntries(index), index).stream();
+			}).collect(Collectors.toList());
+
+		return files;
+	}
+	
+	private static List<String> getIndexEntries(Index index) {
+		List<String> entries = new ArrayList<>();
+		try {
+			String[] names = index.queryDocumentNames(null);
+			if (names != null) {
+				for (String name : names) {
+					entries.add(name);
 				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return entries;
+	}
+	
+	private static String extractName(String pathWithClass) {
+		int startLocation = 0;
+		int endLocation = pathWithClass.length();
+		
+		final int locationOfClass = pathWithClass.lastIndexOf(("/"));
+		if (locationOfClass >=0 ) startLocation = locationOfClass + 1;
+
+		return pathWithClass.substring(startLocation, endLocation);
+	}
+	
+	private static String extractPath(String pathWithClass) {
+		int startLocation = 0;
+		int endLocation = pathWithClass.length();
+		
+		final int locationOfClass = pathWithClass.lastIndexOf(("/"));
+		if (locationOfClass >=0 ) endLocation = locationOfClass;
+
+		return pathWithClass.substring(startLocation, endLocation);
+	}
+	
+	private static List<ResourceItem> addResourceForIndexEntry(List<String> names, Index index) {
+		List<ResourceItem> files = new ArrayList();
+		for (String name : names) {
+			if (!name.contains("$") && !name.endsWith(".java")) {
+				//IPath filePath = Path.fromPortableString(name);
+				final String fullResourcePath = index.containerPath + "|" + name;
+				
+				// skip all items in same index if no source attached
+				if (!hasSourceAttachment(index.containerPath, fullResourcePath)) return files;
+				
+				String fileName = extractName(name);
+				//String pathName = filePath.uptoSegment(filePath.segmentCount() - 1).toString();
+				files.add(new ResourceItem(fileName, index.containerPath + "|" + extractPath(name), "[class]"));
+			}
+		} 
 		
 		return files;
 	}
@@ -109,6 +144,11 @@ public class EclipseWorkbench {
 		return new ResourceItem(file.getName(), makePathOnly(file.getProjectRelativePath()), file.getProject().getName());
 	}
 	
+	private static ResourceItem makeResourceItem(IClassFile file) {
+		String resourcePath = file.getPath() + "|" + file.getParent().getElementName().replaceAll("\\.", "/");
+		return new ResourceItem(file.getElementName(), resourcePath, "[class]");
+	}
+	
 	public static void createListenerForEditorFocusChanges(IWorkbenchPage page, Consumer<ResourceItem> focusAction) {
 		IPartListener2 pl = new IPartListener2() {
 			public void partActivated(IWorkbenchPartReference ref) {
@@ -116,9 +156,13 @@ public class EclipseWorkbench {
 				IEditorReference editor = (IEditorReference) ref;
 				try {
 					IEditorInput editorInput = editor.getEditorInput();
-					if (!(editorInput instanceof IFileEditorInput)) return;
-					IFileEditorInput fileInput = (IFileEditorInput) editorInput;
-					focusAction.accept(makeResourceItem(fileInput.getFile()));
+					if (editorInput instanceof IFileEditorInput) {						
+						IFileEditorInput fileInput = (IFileEditorInput) editorInput;
+						focusAction.accept(makeResourceItem(fileInput.getFile()));
+					} else if (editorInput instanceof IClassFileEditorInput) {
+						IClassFileEditorInput classInput = (IClassFileEditorInput) editorInput;
+						focusAction.accept(makeResourceItem(classInput.getClassFile()));
+					}
 				} catch (PartInitException e) {
 					throw new RuntimeException(e);
 				}

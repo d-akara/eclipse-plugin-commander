@@ -1,6 +1,7 @@
 package dakara.eclipse.finder.plugin.handlers;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -111,9 +112,6 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		
 		final int locationOfSeparator = jarPathAndClass.indexOf("|");
 		if (locationOfSeparator >= 0) startLocation = locationOfSeparator + 1;
-		
-		final int locationOfClass = jarPathAndClass.lastIndexOf(("/"));
-		if (locationOfClass >=0 ) endLocation = locationOfClass;
 
 		return jarPathAndClass.substring(startLocation, endLocation);
 	}
@@ -132,7 +130,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 				if (resourceItem.name.endsWith(".class"))
 					try {
 						HandleFactory factory = new HandleFactory();
-						Openable openable = factory.createOpenable(resourceItem.path, null);
+						Openable openable = factory.createOpenable(resourceItem.path + "/" + resourceItem.name, null);
 						IType classFile = ((IClassFile)openable).getType();
 						JavaUI.openInEditor(classFile, true, true);
 					} catch (JavaModelException e) {
@@ -156,16 +154,28 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 	}
 	
 	public static Function<InputState, List<RankedItem<ResourceItem>>> listContentProviderWorkingSet(ListRankAndFilter<ResourceItem> listRankAndFilter, PersistedWorkingSet<ResourceItem> historyStore, List<ResourceItem> workspaceResources) {
-		// TODO need to refresh 'workingFiles' when history changes
-		List<ResourceItem> workingFiles = historyStore.getHistory().stream()
+		AtomicReference<List<PersistedWorkingSet<ResourceItem>.HistoryEntry>> historyItems = new AtomicReference(historyStore.getHistory());
+		AtomicReference<List<ResourceItem>> workingFiles = new AtomicReference(getCurrentHistoryItems(historyItems.get(), workspaceResources));
+		return (inputState) -> {
+			List<PersistedWorkingSet<ResourceItem>.HistoryEntry> currentHistoryItems = historyStore.getHistory();
+			// Has the history changed since last time
+			if (currentHistoryItems != historyItems.get()) {
+				historyItems.set(currentHistoryItems);
+				workingFiles.set(getCurrentHistoryItems(historyItems.get(), workspaceResources));
+			}
+
+			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilterOrdered(inputState.inputCommand, workingFiles.get());
+			return filteredList;
+		};
+	}
+
+	private static List<ResourceItem> getCurrentHistoryItems(List<PersistedWorkingSet<ResourceItem>.HistoryEntry> historyItems, List<ResourceItem> workspaceResources) {
+		List<ResourceItem> workingFiles = historyItems.stream().parallel()
 				.map(historyItem -> historyItem.getHistoryItem())
 				// TODO need a faster method to determine if we should show this resource
 				.filter(resourceItem -> workspaceResources.contains(resourceItem))
 				.collect(Collectors.toList());
-		return (inputState) -> {
-			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilterOrdered(inputState.inputCommand, workingFiles);
-			return filteredList;
-		};
+		return workingFiles;
 	}
 	
 	public static ListRankAndFilter<ResourceItem> listRankAndFilter(FieldResolver<ResourceItem> nameField, FieldResolver<ResourceItem> pathField, FieldResolver<ResourceItem> projectField) {

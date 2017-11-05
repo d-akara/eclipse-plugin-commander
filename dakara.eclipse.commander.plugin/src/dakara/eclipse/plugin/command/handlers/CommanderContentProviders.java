@@ -21,11 +21,6 @@ public class CommanderContentProviders {
 	public static Function<InputState, List<RankedItem<QuickAccessElement>>> listContentDiscoveryProvider(ListRankAndFilter<QuickAccessElement> listRankAndFilter, PersistedWorkingSet<QuickAccessElement> historyStore, EclipseCommandProvider eclipseCommandProvider) {
 		
 		return (inputState) -> {
-			List<QuickAccessElement> historyItems = new ArrayList<>();
-			for (HistoryEntry entry : historyStore.getHistory()) {
-				historyItems.add((QuickAccessElement) entry.getHistoryItem());
-			}
-			
 			List<RankedItem<QuickAccessElement>> filteredList = listRankAndFilter.rankAndFilter(inputState.inputCommand, eclipseCommandProvider.getAllCommands());
 			return filteredList;
 		};

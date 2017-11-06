@@ -103,6 +103,14 @@ public class EclipseWorkbench {
 		
 		final int locationOfClass = pathWithClass.lastIndexOf(("/"));
 		if (locationOfClass >=0 ) startLocation = locationOfClass + 1;
+		int locationOfInnerClass = pathWithClass.lastIndexOf("$");
+		if (locationOfInnerClass >=0 ) {
+			startLocation = locationOfInnerClass + 1;
+			if (Character.isDigit(pathWithClass.charAt(startLocation))) {
+				// anonymous inner class
+				return null;
+			}
+		}
 
 		return pathWithClass.substring(startLocation, endLocation);
 	}
@@ -117,10 +125,24 @@ public class EclipseWorkbench {
 		return pathWithClass.substring(startLocation, endLocation);
 	}
 	
+	private static String nameOrInnerNameOrNull(String classname) {
+		int locationOfInner = classname.indexOf("$") + 1;
+		if (locationOfInner >=0) {
+			if (Character.isDigit(classname.charAt(locationOfInner))) {
+				// anonymous inner class
+				return null;
+			}
+			// set to inner class name portion
+			//classname = classname.substring(locationOfInner);
+		}
+		return classname;
+	}
+	
 	private static List<ResourceItem> addResourceForIndexEntry(List<String> names, Index index) {
 		List<ResourceItem> files = new ArrayList();
 		for (String name : names) {
-			if (!name.contains("$") && !name.endsWith(".java")) {
+			name = nameOrInnerNameOrNull(name);
+			if (name != null && !name.endsWith(".java")) {
 				//IPath filePath = Path.fromPortableString(name);
 				final String fullResourcePath = index.containerPath + "|" + name;
 				
@@ -128,8 +150,8 @@ public class EclipseWorkbench {
 				if (!hasSourceAttachment(index.containerPath, fullResourcePath)) return files;
 				
 				String fileName = extractName(name);
-				//String pathName = filePath.uptoSegment(filePath.segmentCount() - 1).toString();
-				files.add(new ResourceItem(fileName, index.containerPath + "|" + extractPath(name), "[class]"));
+				if (fileName != null) // will be null if anonymous inner class
+					files.add(new ResourceItem(fileName, index.containerPath + "|" + name, "[class]"));
 			}
 		} 
 		
@@ -145,8 +167,8 @@ public class EclipseWorkbench {
 	}
 	
 	private static ResourceItem makeResourceItem(IClassFile file) {
-		String resourcePath = file.getPath() + "|" + file.getParent().getElementName().replaceAll("\\.", "/");
-		return new ResourceItem(file.getElementName(), resourcePath, "[class]");
+		String resourcePath = file.getPath() + "|" + file.getParent().getElementName().replaceAll("\\.", "/") + "/" + file.getElementName();
+		return new ResourceItem(extractName(file.getElementName()), resourcePath, "[class]");
 	}
 	
 	public static void createListenerForEditorFocusChanges(IWorkbenchPage page, Consumer<ResourceItem> focusAction) {

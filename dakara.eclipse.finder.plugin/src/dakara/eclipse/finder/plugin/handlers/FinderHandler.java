@@ -130,7 +130,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 				if (resourceItem.name.endsWith(".class"))
 					try {
 						HandleFactory factory = new HandleFactory();
-						Openable openable = factory.createOpenable(resourceItem.path + "/" + resourceItem.name, null);
+						Openable openable = factory.createOpenable(resourceItem.path, null);
 						IType classFile = ((IClassFile)openable).getType();
 						JavaUI.openInEditor(classFile, true, true);
 					} catch (JavaModelException e) {
@@ -138,7 +138,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 						e.printStackTrace();
 					}
 				else
-					IDE.openEditor(workbenchPage, workspace.getFile(Path.fromPortableString(resourceItem.project + "/" + resourceItem.path + "/" + resourceItem.name)));
+					IDE.openEditor(workbenchPage, workspace.getFile(Path.fromPortableString(resourceItem.project + "/" + resourceItem.path)));
 			}
 		} catch (PartInitException e) {
 			throw new RuntimeException(e);

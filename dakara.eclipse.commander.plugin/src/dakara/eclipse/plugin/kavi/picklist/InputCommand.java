@@ -38,6 +38,14 @@ public class InputCommand {
 		return columnFilters.get(column);
 	}
 	
+	public int countFilterableCharacters() {
+		int chars = 0;
+		for (ScoreFilterOptions option : columnFilters) {
+			chars += option.filterTextCursorPrimitive.length();
+		}
+		return chars;
+	}
+	
 	public static InputCommand parse(String inputText) {
 		return InputCommand.makeInputCommand(inputText);
 	}

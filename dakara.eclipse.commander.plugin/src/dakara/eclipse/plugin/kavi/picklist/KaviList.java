@@ -22,7 +22,6 @@ import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
@@ -35,6 +34,7 @@ import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
 import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.log.EclipsePluginLogger;
 import dakara.eclipse.plugin.stringscore.RankedItem;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
 
 public class KaviList<T> {
@@ -58,6 +58,8 @@ public class KaviList<T> {
 	private LocalResourceManager resourceManager = new LocalResourceManager(JFaceResources.getResources());
 	
 	private PublishSubject<String> subjectFilter = PublishSubject.create();
+	private Disposable subscriber;
+	private int debounceTime = -1;
 
 	public KaviList(KaviPickListDialog<T> rapidInputPickList) {
 		this.rapidInputPickList = rapidInputPickList;
@@ -79,7 +81,27 @@ public class KaviList<T> {
 	}
 
 	public void requestRefresh(String filter) {
+		int newDebounceTime = determineDebounceTime(filter);
+		if (debounceTime != newDebounceTime) {
+			if (subscriber != null) subscriber.dispose();
+			subscriber = subjectFilter.debounce(newDebounceTime, TimeUnit.MILLISECONDS).subscribe(f -> handleRefresh(f));		
+			debounceTime = newDebounceTime;
+		}
+
 		subjectFilter.onNext(filter);
+	}
+	
+	private int determineDebounceTime(String filter) {
+		final InputCommand inputCommand = InputCommand.parse(filter);
+		int newDebounceTime = 0;
+		
+		// TODO we don't want to hard code the name here
+		// need to get hints of size or determine debounce on/off during setup
+		if (contentProvider().name.equals("working")) return 0;
+		if (inputCommand.countFilterableCharacters() > 2) newDebounceTime = 0;
+		else newDebounceTime = 200;
+		
+		return newDebounceTime;
 	}
 	
 	public void setFastSelectAction(BiConsumer<Set<RankedItem<T>>, InputCommand> fastSelectAction) {
@@ -91,13 +113,15 @@ public class KaviList<T> {
 	 * We will handle the computations of filtering on the background thread
 	 * and must let SWT handle the table updates on the UI thread.
 	 */
-	private void handleRefresh(String filter) {
+	private synchronized void handleRefresh(String filter) {
+		System.out.println("handleRefresh - " + filter);
 		try {
 			if (table == null) return;
 			final InputCommand inputCommand = InputCommand.parse(filter);
 			InputState inputState = new InputState(inputCommand, contentProvider(), previousProvider);
 			List<RankedItem<T>> tableEntries = contentProvider().updateTableEntries(inputState).getTableEntries();
 			if (contentChanged(tableEntries)) {
+				System.out.println("Content changed - " + filter);
 				alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 				display.asyncExec(() -> doTableRefresh(tableEntries));
 			}
@@ -211,7 +235,9 @@ public class KaviList<T> {
 		});
 		composite.getShell().addListener(SWT.Resize, event ->  autoAdjustColumnWidths(composite));
 		
-		subjectFilter.debounce(0, TimeUnit.MILLISECONDS).subscribe( filter -> handleRefresh(filter));
+		// TODO try throttleLast or custom scheduler
+		//subjectFilter.debounce(0, TimeUnit.MILLISECONDS).subscribe( filter -> handleRefresh(filter));
+
 	}
 
 	private void autoAdjustColumnWidths(Composite composite) {

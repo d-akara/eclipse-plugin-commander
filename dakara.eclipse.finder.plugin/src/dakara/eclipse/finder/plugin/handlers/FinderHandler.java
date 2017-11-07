@@ -112,6 +112,9 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		
 		final int locationOfSeparator = jarPathAndClass.indexOf("|");
 		if (locationOfSeparator >= 0) startLocation = locationOfSeparator + 1;
+		
+		final int locationOfClass = jarPathAndClass.lastIndexOf(("/"));
+		if (locationOfClass >=0 ) endLocation = locationOfClass;
 
 		return jarPathAndClass.substring(startLocation, endLocation);
 	}
@@ -138,7 +141,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 						e.printStackTrace();
 					}
 				else
-					IDE.openEditor(workbenchPage, workspace.getFile(Path.fromPortableString(resourceItem.project + "/" + resourceItem.path)));
+					IDE.openEditor(workbenchPage, workspace.getFile(Path.fromPortableString(resourceItem.project + "/" + resourceItem.path + "/" + resourceItem.name)));
 			}
 		} catch (PartInitException e) {
 			throw new RuntimeException(e);

@@ -431,7 +431,7 @@ public class KaviList<T> {
 	}
 	
 	protected void close() {
-		rapidInputPickList.close();
+		rapidInputPickList.dismiss();
 	}
 	
 	private void dispose(DisposeEvent e) {

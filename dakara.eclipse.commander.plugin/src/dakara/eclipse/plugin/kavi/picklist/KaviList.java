@@ -81,27 +81,19 @@ public class KaviList<T> {
 	}
 
 	public void requestRefresh(String filter) {
-		int newDebounceTime = determineDebounceTime(filter);
+		int newDebounceTime = contentProvider().calculateDebounceTime(InputCommand.parse(filter));
 		if (debounceTime != newDebounceTime) {
+			// TODO - when we dispose, there might have been work in progress by the subscriber
+			// creating a new subscriber will not know about the unfinished work
+			// so an event will get sent to the subscriber possibly causing parallel execution
+			// work around is to synchronize the calling method handleRefresh
+			// but I would like to find out if there is a better rxJava way of handling this.
 			if (subscriber != null) subscriber.dispose();
 			subscriber = subjectFilter.debounce(newDebounceTime, TimeUnit.MILLISECONDS).subscribe(f -> handleRefresh(f));		
 			debounceTime = newDebounceTime;
 		}
 
 		subjectFilter.onNext(filter);
-	}
-	
-	private int determineDebounceTime(String filter) {
-		final InputCommand inputCommand = InputCommand.parse(filter);
-		int newDebounceTime = 0;
-		
-		// TODO we don't want to hard code the name here
-		// need to get hints of size or determine debounce on/off during setup
-		if (contentProvider().name.equals("working")) return 0;
-		if (inputCommand.countFilterableCharacters() > 2) newDebounceTime = 0;
-		else newDebounceTime = 200;
-		
-		return newDebounceTime;
 	}
 	
 	public void setFastSelectAction(BiConsumer<Set<RankedItem<T>>, InputCommand> fastSelectAction) {
@@ -112,16 +104,17 @@ public class KaviList<T> {
 	 * This will be executed on rxJava thread due to debouncing
 	 * We will handle the computations of filtering on the background thread
 	 * and must let SWT handle the table updates on the UI thread.
+	 * 
+	 * This is synchronized due to disposing of the rxJava subscriber can result
+	 * in the new subscriber getting called before the previous subscriber has finished work.
 	 */
 	private synchronized void handleRefresh(String filter) {
-		System.out.println("handleRefresh - " + filter);
 		try {
 			if (table == null) return;
 			final InputCommand inputCommand = InputCommand.parse(filter);
 			InputState inputState = new InputState(inputCommand, contentProvider(), previousProvider);
 			List<RankedItem<T>> tableEntries = contentProvider().updateTableEntries(inputState).getTableEntries();
 			if (contentChanged(tableEntries)) {
-				System.out.println("Content changed - " + filter);
 				alphaColumnConverter = new Base26AlphaBijectiveConverter(tableEntries.size());
 				display.asyncExec(() -> doTableRefresh(tableEntries));
 			}

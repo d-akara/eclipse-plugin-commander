@@ -41,6 +41,7 @@ public class InternalContentProviderProxy<U> {
 	private boolean showAllWhenNoFilter = true;
 	private Function<Stream<RankedItem<U>>, Stream<RankedItem<U>>> sortResolverFn;
 	private final Map<String, Function<Stream<RankedItem<U>>, Stream<RankedItem<U>>>> filterResolvers = new HashMap<>();
+	private Function<InputCommand, Integer> debounceTimeProvider;
 
 	public InternalContentProviderProxy(@SuppressWarnings("rawtypes") KaviList kaviList, String name,	Function<InputState, List<RankedItem<U>>> listContentProvider) {
 		this.name = name;
@@ -64,6 +65,16 @@ public class InternalContentProviderProxy<U> {
 	public InternalContentProviderProxy<U> setMultiResolvedAction(Consumer<List<U>> setResolvedAction) {
 		this.setMultiResolvedAction = setResolvedAction;
 		return this;
+	}
+	
+	public InternalContentProviderProxy<U> setDebounceTimeProvider(Function<InputCommand, Integer> debounceTimeProvider) {
+		this.debounceTimeProvider = debounceTimeProvider;
+		return this;
+	}
+	
+	public int calculateDebounceTime(InputCommand command) {
+		if (debounceTimeProvider == null) return 0;
+		return debounceTimeProvider.apply(command);
 	}
 
 	public InternalContentProviderProxy<U> setRestoreFilterTextOnProviderChange(boolean restoreOnChange) {

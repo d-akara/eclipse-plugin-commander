@@ -64,15 +64,14 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		files.addAll(EclipseWorkbench.collectAllWorkspaceTypes());
 		
 		FieldResolver<ResourceItem> nameResolver    = new FieldResolver<>("name",    resource -> resource.name);
-		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> {
-			return extractPath(resource.path);
-		});
+		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> extractPath(resource.path));
 		FieldResolver<ResourceItem> projectResolver = new FieldResolver<>("project", resource -> resource.project);
 		
 		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
 		finder.setListContentProvider("discovery", listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), files))
 			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(historyStore, workbenchPage, workspace, resourceItems))
 			  .setShowAllWhenNoFilter(false)
+			  .setDebounceTimeProvider(inputCommand -> inputCommand.countFilterableCharacters() > 2 ? 50:200)
 			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30)
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);

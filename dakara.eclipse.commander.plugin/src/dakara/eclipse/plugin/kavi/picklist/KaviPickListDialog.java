@@ -83,12 +83,15 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		listFilterInputControl.setFocus();
 	}
 	
-//	@Override
-//	public boolean close() {
-//		// This is to prevent workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=152010
-//		// closing when we hide the dialog
-//		return false;
-//	}
+	@Override
+	public boolean close() {
+		// override so that losing focus does not close dialog
+		return false;
+	}
+	
+	public void dismiss() {
+		super.close();
+	}
 	
 	@Override
 	protected void initializeBounds() {

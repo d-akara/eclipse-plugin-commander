@@ -8,5 +8,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.ide,
  org.eclipse.core.runtime,
  org.eclipse.debug.core,
+ org.eclipse.core.resources,
+ org.eclipse.jdt.ui,
+ org.eclipse.jdt.core,
  dakara.eclipse.commander.plugin
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

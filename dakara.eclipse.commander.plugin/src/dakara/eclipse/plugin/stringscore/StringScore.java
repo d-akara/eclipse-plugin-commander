@@ -55,10 +55,16 @@ public class StringScore {
 		return parseMatchAndScore(new ScoreFilterOptions(match), target);
 	}
 	
-	public Score parseMatchAndScore(final ScoreFilterOptions filterOptions, final String target) {
-		final StringCursorPrimitive match = filterOptions.filterTextCursorPrimitive;
+	public Score parseMatchAndScore(final ScoreFilterOptions filterOptions, String target) {
 		if ((target == null) || (target.length() == 0)) return NOT_FOUND_SCORE;
 		final StringCursorPrimitive targetCursorPrimitive = new StringCursorPrimitive(target.trim());
+		return parseMatchAndScore(filterOptions, targetCursorPrimitive);
+	}
+	
+	// TODO - need to accept a StringCursorPrimitive for target
+	// the initialization costs shows up in profiling
+	public Score parseMatchAndScore(final ScoreFilterOptions filterOptions, final StringCursorPrimitive targetCursorPrimitive) {
+		final StringCursorPrimitive match = filterOptions.filterTextCursorPrimitive;
 		
 		if (filterOptions.inverseMatch) { 
 			if (containsString(targetCursorPrimitive, filterOptions.inverseFilters)) return EMPTY_SCORE;

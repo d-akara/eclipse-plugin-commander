@@ -22,7 +22,6 @@ import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
@@ -35,6 +34,7 @@ import dakara.eclipse.plugin.baseconverter.Base26AlphaBijectiveConverter;
 import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.log.EclipsePluginLogger;
 import dakara.eclipse.plugin.stringscore.RankedItem;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
 
 public class KaviList<T> {
@@ -58,6 +58,8 @@ public class KaviList<T> {
 	private LocalResourceManager resourceManager = new LocalResourceManager(JFaceResources.getResources());
 	
 	private PublishSubject<String> subjectFilter = PublishSubject.create();
+	private Disposable subscriber;
+	private int debounceTime = -1;
 
 	public KaviList(KaviPickListDialog<T> rapidInputPickList) {
 		this.rapidInputPickList = rapidInputPickList;
@@ -79,6 +81,18 @@ public class KaviList<T> {
 	}
 
 	public void requestRefresh(String filter) {
+		int newDebounceTime = contentProvider().calculateDebounceTime(InputCommand.parse(filter));
+		if (debounceTime != newDebounceTime) {
+			// TODO - when we dispose, there might have been work in progress by the subscriber
+			// creating a new subscriber will not know about the unfinished work
+			// so an event will get sent to the subscriber possibly causing parallel execution
+			// work around is to synchronize the calling method handleRefresh
+			// but I would like to find out if there is a better rxJava way of handling this.
+			if (subscriber != null) subscriber.dispose();
+			subscriber = subjectFilter.debounce(newDebounceTime, TimeUnit.MILLISECONDS).subscribe(f -> handleRefresh(f));		
+			debounceTime = newDebounceTime;
+		}
+
 		subjectFilter.onNext(filter);
 	}
 	
@@ -90,8 +104,11 @@ public class KaviList<T> {
 	 * This will be executed on rxJava thread due to debouncing
 	 * We will handle the computations of filtering on the background thread
 	 * and must let SWT handle the table updates on the UI thread.
+	 * 
+	 * This is synchronized due to disposing of the rxJava subscriber can result
+	 * in the new subscriber getting called before the previous subscriber has finished work.
 	 */
-	private void handleRefresh(String filter) {
+	private synchronized void handleRefresh(String filter) {
 		try {
 			if (table == null) return;
 			final InputCommand inputCommand = InputCommand.parse(filter);
@@ -211,7 +228,9 @@ public class KaviList<T> {
 		});
 		composite.getShell().addListener(SWT.Resize, event ->  autoAdjustColumnWidths(composite));
 		
-		subjectFilter.debounce(0, TimeUnit.MILLISECONDS).subscribe( filter -> handleRefresh(filter));
+		// TODO try throttleLast or custom scheduler
+		//subjectFilter.debounce(0, TimeUnit.MILLISECONDS).subscribe( filter -> handleRefresh(filter));
+
 	}
 
 	private void autoAdjustColumnWidths(Composite composite) {
@@ -412,7 +431,7 @@ public class KaviList<T> {
 	}
 	
 	protected void close() {
-		rapidInputPickList.hide();
+		rapidInputPickList.dismiss();
 	}
 	
 	private void dispose(DisposeEvent e) {

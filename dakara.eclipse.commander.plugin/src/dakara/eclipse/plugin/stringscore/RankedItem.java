@@ -10,6 +10,9 @@ public final class RankedItem<T> {
 	private Map<String, Score> scores = new HashMap<>();
 	private boolean scorePerColumn = false;
 	public int order = 0;
+	private int totalScoreValue = 0;
+	private boolean scoreComputed = false;
+	
 	public RankedItem(T dataItem) {
 		this.dataItem = dataItem;
 	}
@@ -32,22 +35,27 @@ public final class RankedItem<T> {
 	}
 	
 	public int totalScore() {
-		int sum = 0;
+		// This method becomes very hot when sorting large lists
+		// profiling reveals getting values() of the hashmap is expensive
+		if (scoreComputed) return totalScoreValue;
+		scoreComputed = true;
+		
 		if (scorePerColumn) {
 			for (Score score : scores.values()) {
 				if (score.rank == 0) return 0;
 				if (score.rank < 0) continue;
-				sum += score.rank;
+				totalScoreValue += score.rank;
 			}
 
-			return sum;
+			return totalScoreValue;
 		}
 
 		// Each score has the same rank when not scoring per column.  It the the score of the entire row.
 		for (Score score : scores.values()) {
-			return score.rank;
+			totalScoreValue = score.rank;
+			break;
 		}
-		return sum;
+		return totalScoreValue;
 	}
 	
 	@SuppressWarnings("rawtypes")

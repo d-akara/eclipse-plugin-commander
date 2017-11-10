@@ -30,7 +30,6 @@ public class InputCommand {
 	
 	public ScoreFilterOptions getColumnFilterOptions(final int column) {
 		// When we only have 1 filter it should be applied to all columns
-		// TODO - we can improve performance here by making a StringCursorPrimitive once that will be reused for all of the row matches
 		if (!isColumnFiltering) return columnFilters.get(0);
 		
 		if (column >= columnFilters.size()) return ScoreFilterOptions.EMPTY;

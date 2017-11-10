@@ -30,8 +30,13 @@ public class ScoreFilterOptions {
 		String trimmedInput = rawInputText.trim();
 		
 		if (rawInputText.charAt(0) == ' ') scoreAsAcronym = true;
-		if (rawInputText.charAt(rawInputText.length() - 1) == ' ') scoreAsLiteral = true;
-		trimmedInput = parseInverseFilters(trimmedInput);
+		trimmedInput = parseInverseFilters(trimmedInput);  // will remove inverse tokens
+		if (inverseMatch == true) {
+			if (trimmedInput.length() > 0 && trimmedInput.charAt(trimmedInput.length() - 1) == ' ') scoreAsLiteral = true;
+			trimmedInput = trimmedInput.trim();
+		} else {
+			if (rawInputText.charAt(rawInputText.length() - 1) == ' ') scoreAsLiteral = true;
+		}
 		
 	    filterTextCursorPrimitive  = new StringCursorPrimitive(trimmedInput);
 	}
@@ -39,7 +44,7 @@ public class ScoreFilterOptions {
 	private String parseInverseFilters(String input) {
 		if (input.length() == 0) return input;
 		String[] filters = input.split("!");
-		if (filters.length == 0) return input;
+		if (filters.length == 1) return filters[0];  // no split token or split token at end of string
 		
 		inverseMatch = true;
 		inverseFilters = new ArrayList<>();

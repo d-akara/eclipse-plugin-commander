@@ -37,4 +37,26 @@ public class InputCommandTest {
 		Assert.assertEquals("", inputCommand.getColumnFilterOptions(0).rawInputText);
 		Assert.assertEquals("def", inputCommand.getColumnFilterOptions(1).rawInputText);
 	}
+	
+	@Test
+	public void filterLiteralMatching() {
+		InputCommand inputCommand = InputCommand.parse("abc ");
+		Assert.assertEquals("abc", inputCommand.getColumnFilterOptions(0).filterTextCursorPrimitive.asString());
+		Assert.assertEquals(true, inputCommand.getColumnFilterOptions(0).scoreAsLiteral);
+	}
+	
+	@Test
+	public void filterLiteralMatchingWithNoInverseText() {
+		InputCommand inputCommand = InputCommand.parse("abc!");
+		Assert.assertEquals("abc", inputCommand.getColumnFilterOptions(0).filterTextCursorPrimitive.asString());
+		Assert.assertEquals(false, inputCommand.getColumnFilterOptions(0).scoreAsLiteral);
+	}
+	
+	@Test
+	public void filterOptionsLiteralWithInverse() {
+		InputCommand inputCommand = InputCommand.parse("abc !xyz");
+		Assert.assertEquals("abc !xyz", inputCommand.getColumnFilterOptions(0).rawInputText);
+		Assert.assertEquals("abc", inputCommand.getColumnFilterOptions(0).filterTextCursorPrimitive.asString());
+		Assert.assertEquals(true, inputCommand.getColumnFilterOptions(0).inverseMatch);
+	}
 }

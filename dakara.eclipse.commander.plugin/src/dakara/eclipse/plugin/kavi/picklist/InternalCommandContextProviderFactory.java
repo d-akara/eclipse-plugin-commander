@@ -1,5 +1,8 @@
 package dakara.eclipse.plugin.kavi.picklist;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -32,13 +35,17 @@ public class InternalCommandContextProviderFactory {
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 		});
 		
-		// TODO - align column output.  Include all 'searchable' columns
 		provider.addCommand("list: selected to clipboard", (currentProvider) -> {
+			
 			Clipboard clipboard = new Clipboard(kaviPickList.getShell().getDisplay());
-			StringBuilder builder = new StringBuilder();
-			BiFunction<Object, Integer, String> columnContentFn = currentProvider.getKaviListColumns().getColumnOptions().get(1).getColumnContentFn();
-			currentProvider.getSelectedEntriesImplied().stream().forEach(item -> builder.append(columnContentFn.apply(item.dataItem, 0) + "\n"));
-			clipboard.setContents(new Object[] { builder.toString() },	new Transfer[] { TextTransfer.getInstance() });
+			final List<BiFunction<Object, Integer, String>> fieldResolvers = currentProvider.getKaviListColumns().getColumnOptions().stream()
+					   .filter(column -> column.isSearchable())
+					   .map(column -> column.getColumnContentFn())
+					   .collect(Collectors.toList());
+			
+			FieldCollectorTransform transform = new FieldCollectorTransform(fieldResolvers, currentProvider.getSelectedEntriesImplied().stream().map(rankedItem -> rankedItem.dataItem).collect(Collectors.toList()));
+
+			clipboard.setContents(new Object[] { transform.asAlignedColumns() },	new Transfer[] { TextTransfer.getInstance() });
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 			clipboard.dispose();
 		});

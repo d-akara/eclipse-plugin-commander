@@ -5,6 +5,10 @@ public class ResourceItem {
 	public final String path;
 	public final String project;
 	public ResourceItem(String name, String path, String project) {
+		if (name == null) name = "";
+		if (path == null) path = "";
+		if (project == null) project = "";
+		
 		this.name = name;
 		this.path = path;
 		this.project = project;

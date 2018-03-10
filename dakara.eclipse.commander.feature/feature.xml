@@ -2,7 +2,7 @@
 <feature
       id="dakara.eclipse.commander.feature"
       label="Commander Feature"
-      version="1.1.1">
+      version="1.1.2">
 
    <description url="https://github.com/dakaraphi/eclipse-plugin-commander">
       1) Commander - a more powerful version of quick access
@@ -11,7 +11,7 @@ Assign your preferred key bindings to use these new command features.
    </description>
 
    <license url="http://www.example.com/license">
-      Copyright 2017 Chad Meadows
+      Copyright 2017, 2018 Chad Meadows
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

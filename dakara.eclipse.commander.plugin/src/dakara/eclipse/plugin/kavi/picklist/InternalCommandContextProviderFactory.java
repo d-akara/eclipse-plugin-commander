@@ -1,13 +1,19 @@
 package dakara.eclipse.plugin.kavi.picklist;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.widgets.FileDialog;
 
+import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
 /*
  * TODO - copy to clipboard commands
@@ -22,12 +28,29 @@ import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
  * - create alias: prepend alias name to command name or replace name entirely.
  * - show state or status of properties in a 2nd column.
  */
+import dakara.eclipse.plugin.log.EclipsePluginLogger;
+
 public class InternalCommandContextProviderFactory {
+	private static EclipsePluginLogger logger = new EclipsePluginLogger(Constants.BUNDLE_ID);	
+	
 	public static InternalCommandContextProvider makeProvider(KaviPickListDialog kaviPickList) {
 		InternalCommandContextProvider provider = new InternalCommandContextProvider();
 		addDefaultInternalCommands(provider, kaviPickList);
 		return provider;
 	}
+	
+	private static void placeOnClipboard(KaviPickListDialog kaviPickList, String contents) {
+		Clipboard clipboard = new Clipboard(kaviPickList.getShell().getDisplay());
+		clipboard.setContents(new Object[] { contents },	new Transfer[] { TextTransfer.getInstance() });
+		clipboard.dispose();
+	}
+	
+	private static String receiveFromClipboard(KaviPickListDialog kaviPickList) {
+		Clipboard clipboard = new Clipboard(kaviPickList.getShell().getDisplay());
+		String contents = (String) clipboard.getContents(TextTransfer.getInstance());
+		clipboard.dispose();
+		return contents;
+	}	
 	
 	private static void addDefaultInternalCommands(InternalCommandContextProvider provider, KaviPickListDialog kaviPickList) {
 		provider.addCommand("list: toggle view selected", (currentProvider) -> {
@@ -37,7 +60,6 @@ public class InternalCommandContextProviderFactory {
 		
 		provider.addCommand("list: selected to clipboard", (currentProvider) -> {
 			
-			Clipboard clipboard = new Clipboard(kaviPickList.getShell().getDisplay());
 			final List<BiFunction<Object, Integer, String>> fieldResolvers = currentProvider.getKaviListColumns().getColumnOptions().stream()
 					   .filter(column -> column.isSearchable())
 					   .map(column -> column.getColumnContentFn())
@@ -45,9 +67,8 @@ public class InternalCommandContextProviderFactory {
 			
 			FieldCollectorTransform transform = new FieldCollectorTransform(fieldResolvers, currentProvider.getSelectedEntriesImplied().stream().map(rankedItem -> rankedItem.dataItem).collect(Collectors.toList()));
 
-			clipboard.setContents(new Object[] { transform.asAlignedColumns() },	new Transfer[] { TextTransfer.getInstance() });
+			placeOnClipboard(kaviPickList, transform.asAlignedColumns());
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
-			clipboard.dispose();
 		});
 		
 		provider.addCommand("working", "list: toggle sort name", (currentProvider) -> {
@@ -70,6 +91,37 @@ public class InternalCommandContextProviderFactory {
 			kaviPickList.setCurrentProvider("working").refreshFromContentProvider();
 			historyStore.save();
 		});
+		
+		contextProvider.addCommand("working", "export: settings as JSON to file", (currentProvider) -> {
+		    FileDialog dialog = new FileDialog(kaviPickList.getShell(), SWT.SAVE);
+		    dialog.setFilterExtensions(new String [] {"*.json"});
+		    dialog.setFileName("commander-settings.json");
+		    String filename = dialog.open();
+		    try {
+				Files.write(Paths.get(filename), historyStore.settingsAsJson().getBytes(StandardCharsets.UTF_8));
+				kaviPickList.togglePreviousProvider().refreshFromContentProvider();
+			} catch (IOException e) {
+				logger.error("unable to save JSON", e);
+			}
+		});		
+		
+		// TODO - add a version of import which will merge settings
+		contextProvider.addCommand("working", "import: settings as JSON from file", (currentProvider) -> {
+		    FileDialog dialog = new FileDialog(kaviPickList.getShell(), SWT.OPEN);
+		    dialog.setFilterExtensions(new String [] {"*.json"});
+		    dialog.setFileName("commander-settings.json");
+		    String filename = dialog.open();
+		    try {
+				String json = new String(Files.readAllBytes(Paths.get(filename)), StandardCharsets.UTF_8);
+				historyStore.setSettingsFromJson(json);
+				historyStore.save();
+				currentProvider.clearSelections();
+				currentProvider.clearCursor();
+				kaviPickList.togglePreviousProvider().refreshFromContentProvider();
+			} catch (IOException e) {
+				logger.error("unable to save JSON", e);
+			}
+		});			
 	}
 	
 	public static void installProvider(InternalCommandContextProvider contextProvider, KaviPickListDialog<? extends Object> kaviPickList) {

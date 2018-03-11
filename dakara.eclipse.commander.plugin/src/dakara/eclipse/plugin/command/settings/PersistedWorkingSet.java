@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import dakara.eclipse.plugin.command.Constants;
-import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryEntry;
 import dakara.eclipse.plugin.log.EclipsePluginLogger;
 
 public class PersistedWorkingSet<T> {
@@ -25,7 +24,7 @@ public class PersistedWorkingSet<T> {
 		this.historyLimit = historyLimit;
 		this.historyItemIdResolver = historyItemIdResolver;
 		this.historyItemResolver = historyItemResolver;
-		this.eclipsePreferencesSerializer = new EclipsePreferencesSerializer<>(id, HISTORY_KEY);
+		this.eclipsePreferencesSerializer = new EclipsePreferencesSerializer<>(id, HISTORY_KEY, CommanderSettings.class);
 	}
 
 	public PersistedWorkingSet<T> save() {
@@ -39,12 +38,21 @@ public class PersistedWorkingSet<T> {
 
 	public PersistedWorkingSet<T> load() {
 		try {
-			commanderSettings = eclipsePreferencesSerializer.loadSettings(CommanderSettings.class);
+			commanderSettings = eclipsePreferencesSerializer.loadSettings();
 		} catch (Throwable e) {
 			logger.error("Unable to restore settings and history", e);
 		}
 		if (commanderSettings == null) commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
 		return this;
+	}
+	
+	public String settingsAsJson() {
+		return eclipsePreferencesSerializer.settingsAsJsonFormatted(commanderSettings);
+	}
+	
+	public void setSettingsFromJson(String jsonSettings) {
+		commanderSettings = eclipsePreferencesSerializer.jsonAsSettings(jsonSettings);
+		historyChangedSinceCheck = true;
 	}
 
 	private void checkAndClearOnChanged() {
@@ -123,6 +131,8 @@ public class PersistedWorkingSet<T> {
 		commanderSettings.entries.remove(makeEntry(historyItem));
 		return this;
 	}
+	
+	// TODO - need a dialog id saved with settings to distinguish Finder vs. Commander etc.
 	
 	public class CommanderSettings {
 		private final List<HistoryEntry> entries;

@@ -2,7 +2,7 @@
 <feature
       id="dakara.eclipse.commander.feature"
       label="Commander Feature"
-      version="1.1.1">
+      version="1.2.0">
 
    <description url="https://github.com/dakaraphi/eclipse-plugin-commander">
       1) Commander - a more powerful version of quick access

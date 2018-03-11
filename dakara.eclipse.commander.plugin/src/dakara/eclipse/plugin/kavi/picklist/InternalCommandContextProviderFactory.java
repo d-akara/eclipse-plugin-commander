@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -90,26 +91,37 @@ public class InternalCommandContextProviderFactory {
 			provider.clearCursor();
 			kaviPickList.setCurrentProvider("working").refreshFromContentProvider();
 			historyStore.save();
-		});
-		
+		});		
+	}
+	
+	public static void addExportImportCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore, String settingsFilename) {
 		contextProvider.addCommand("working", "export: settings as JSON to file", (currentProvider) -> {
 		    FileDialog dialog = new FileDialog(kaviPickList.getShell(), SWT.SAVE);
 		    dialog.setFilterExtensions(new String [] {"*.json"});
-		    dialog.setFileName("commander-settings.json");
+		    dialog.setFileName(settingsFilename);
 		    String filename = dialog.open();
+		    if (filename == null) return;
+		    
 		    try {
 				Files.write(Paths.get(filename), historyStore.settingsAsJson().getBytes(StandardCharsets.UTF_8));
 				kaviPickList.togglePreviousProvider().refreshFromContentProvider();
+				MessageDialog.openInformation(kaviPickList.getShell(), "Export Settings", "Saved settings as " + dialog.getFileName());
 			} catch (IOException e) {
 				logger.error("unable to save JSON", e);
 			}
-		});		
+		});	
 		
 		// TODO - add a version of import which will merge settings
+		// This may remove the need to keep files across workspaces since a user can easily export and merge.
+		// That would solve our startup performance problem on ultra large workspaces as well.
+		// This means that the history items will need to be per workspace, but only for Finder.
+		// I think across workspace for Commands is still appropriate
+		// Also, we may need to then disable the builtin eclipse preferences export and import.
+		// Otherwise we will overwrite our settings on import, defeating our merge capability.  Need to consider carefully
 		contextProvider.addCommand("working", "import: settings as JSON from file", (currentProvider) -> {
 		    FileDialog dialog = new FileDialog(kaviPickList.getShell(), SWT.OPEN);
 		    dialog.setFilterExtensions(new String [] {"*.json"});
-		    dialog.setFileName("commander-settings.json");
+		    dialog.setFileName(settingsFilename);
 		    String filename = dialog.open();
 		    try {
 				String json = new String(Files.readAllBytes(Paths.get(filename)), StandardCharsets.UTF_8);
@@ -118,8 +130,9 @@ public class InternalCommandContextProviderFactory {
 				currentProvider.clearSelections();
 				currentProvider.clearCursor();
 				kaviPickList.togglePreviousProvider().refreshFromContentProvider();
-			} catch (IOException e) {
-				logger.error("unable to save JSON", e);
+			} catch (Throwable e) {
+				logger.error("unable to import JSON", e);
+				MessageDialog.openError(kaviPickList.getShell(), "Import Failed", e.getMessage());
 			}
 		});			
 	}

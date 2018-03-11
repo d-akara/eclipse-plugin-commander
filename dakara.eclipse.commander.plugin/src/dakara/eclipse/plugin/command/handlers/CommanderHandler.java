@@ -65,6 +65,7 @@ public class CommanderHandler extends AbstractHandler {
 		
 		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(kaviPickList);
 		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, kaviPickList, historyStore);
+		InternalCommandContextProviderFactory.addExportImportCommands(contextProvider, kaviPickList, historyStore, "commander-settings.json");
 		InternalCommandContextProviderFactory.installProvider(contextProvider, kaviPickList);
 		
 		kaviPickList.setBounds(600, 400);

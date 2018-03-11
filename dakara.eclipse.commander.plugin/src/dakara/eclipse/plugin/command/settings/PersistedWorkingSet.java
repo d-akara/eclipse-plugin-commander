@@ -16,15 +16,18 @@ public class PersistedWorkingSet<T> {
 	
 	public final Function<T, HistoryKey> historyItemIdResolver;
 	public final Function<HistoryKey, T> historyItemResolver;
-	private CommanderSettings commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
+	private CommanderSettings commanderSettings;
 	private EclipsePreferencesSerializer<CommanderSettings> eclipsePreferencesSerializer;
+	private final String featureId;
 	static final String HISTORY_KEY = "HISTORY";
 	
-	public PersistedWorkingSet(String id, int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
+	public PersistedWorkingSet(String featureId, int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
+		this.featureId = featureId;
 		this.historyLimit = historyLimit;
 		this.historyItemIdResolver = historyItemIdResolver;
 		this.historyItemResolver = historyItemResolver;
-		this.eclipsePreferencesSerializer = new EclipsePreferencesSerializer<>(id, HISTORY_KEY, CommanderSettings.class);
+		this.eclipsePreferencesSerializer = new EclipsePreferencesSerializer<>(featureId, HISTORY_KEY, CommanderSettings.class);
+		this.commanderSettings = new CommanderSettings(featureId, new ArrayList<HistoryEntry>());
 	}
 
 	public PersistedWorkingSet<T> save() {
@@ -38,11 +41,11 @@ public class PersistedWorkingSet<T> {
 
 	public PersistedWorkingSet<T> load() {
 		try {
-			commanderSettings = eclipsePreferencesSerializer.loadSettings();
+			commanderSettings = migrateSettings(eclipsePreferencesSerializer.loadSettings());
 		} catch (Throwable e) {
 			logger.error("Unable to restore settings and history", e);
 		}
-		if (commanderSettings == null) commanderSettings = new CommanderSettings(new ArrayList<HistoryEntry>());
+		if (commanderSettings == null) commanderSettings = new CommanderSettings(featureId, new ArrayList<HistoryEntry>());
 		return this;
 	}
 	
@@ -51,7 +54,7 @@ public class PersistedWorkingSet<T> {
 	}
 	
 	public void setSettingsFromJson(String jsonSettings) {
-		commanderSettings = eclipsePreferencesSerializer.jsonAsSettings(jsonSettings);
+		commanderSettings = migrateSettings(eclipsePreferencesSerializer.jsonAsSettings(jsonSettings));
 		historyChangedSinceCheck = true;
 	}
 
@@ -133,11 +136,13 @@ public class PersistedWorkingSet<T> {
 	}
 	
 	// TODO - need a dialog id saved with settings to distinguish Finder vs. Commander etc.
-	
 	public class CommanderSettings {
+		private String featureId;
+		private int version = 1;
 		private final List<HistoryEntry> entries;
 		private String contentMode;
-		public CommanderSettings(List<HistoryEntry> entries) {
+		public CommanderSettings(String featureId, List<HistoryEntry> entries) {
+			this.featureId = featureId;
 			this.entries = entries;
 		}
 	}
@@ -194,5 +199,18 @@ public class PersistedWorkingSet<T> {
 		public int hashCode() {
 			return entryId.hashCode();
 		}
+	}
+	
+	private CommanderSettings migrateSettings(CommanderSettings settings) {
+		if (settings == null) return null;
+		
+		if (settings.version == 0) {
+			settings.featureId = this.featureId;
+			settings.version = 1;
+		}
+		if (!settings.featureId.equals(this.featureId)) {
+			throw new RuntimeException("Settings featureId [" + settings.featureId + "] does not match [" + this.featureId + "]");
+		}
+		return settings;
 	}
 }

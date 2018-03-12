@@ -63,13 +63,13 @@ public class CommanderHandler extends AbstractHandler {
 					})
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(kaviPickList);
+		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(kaviPickList, historyStore);
 		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, kaviPickList, historyStore);
 		InternalCommandContextProviderFactory.addExportImportCommands(contextProvider, kaviPickList, historyStore, "commander-settings.json");
 		InternalCommandContextProviderFactory.installProvider(contextProvider, kaviPickList);
 		
 		kaviPickList.setBounds(600, 400);
-		kaviPickList.setCurrentProvider("working");
+		kaviPickList.setCurrentProvider(historyStore.getContentMode());
 		kaviPickList.open();	
 	}
 

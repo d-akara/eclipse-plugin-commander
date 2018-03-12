@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.FileDialog;
 
 import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
+import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider.ContextCommand;
 /*
  * TODO - copy to clipboard commands
  * - export/import history/preferences as JSON.  maybe just export/import from clipboard as first option.  Import would add to existing, not replace.
@@ -30,13 +31,14 @@ import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
  * - show state or status of properties in a 2nd column.
  */
 import dakara.eclipse.plugin.log.EclipsePluginLogger;
+import dakara.eclipse.plugin.stringscore.FieldResolver;
 
 public class InternalCommandContextProviderFactory {
 	private static EclipsePluginLogger logger = new EclipsePluginLogger(Constants.BUNDLE_ID);	
 	
-	public static InternalCommandContextProvider makeProvider(KaviPickListDialog kaviPickList) {
+	public static InternalCommandContextProvider makeProvider(KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore) {
 		InternalCommandContextProvider provider = new InternalCommandContextProvider();
-		addDefaultInternalCommands(provider, kaviPickList);
+		addDefaultInternalCommands(provider, kaviPickList, historyStore);
 		return provider;
 	}
 	
@@ -53,13 +55,13 @@ public class InternalCommandContextProviderFactory {
 		return contents;
 	}	
 	
-	private static void addDefaultInternalCommands(InternalCommandContextProvider provider, KaviPickListDialog kaviPickList) {
-		provider.addCommand("list: toggle view selected", (currentProvider) -> {
+	private static void addDefaultInternalCommands(InternalCommandContextProvider provider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore) {
+		provider.addCommand("List: Toggle View Selected", (currentProvider, command) -> {
 			currentProvider.toggleViewOnlySelected();
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 		});
 		
-		provider.addCommand("list: selected to clipboard", (currentProvider) -> {
+		provider.addCommand("List: Selected to Clipboard", (currentProvider, command) -> {
 			
 			final List<BiFunction<Object, Integer, String>> fieldResolvers = currentProvider.getKaviListColumns().getColumnOptions().stream()
 					   .filter(column -> column.isSearchable())
@@ -72,20 +74,34 @@ public class InternalCommandContextProviderFactory {
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 		});
 		
-		provider.addCommand("working", "list: toggle sort name", (currentProvider) -> {
+		provider.addCommand("Working", "List: Toggle Sort Name", (currentProvider, command) -> {
 			kaviPickList.togglePreviousProvider().sortDefault().refreshFromContentProvider();
 		});		
+		
+		provider.addCommand(command -> {
+			return "Preference: Toggle Default View Mode: " + historyStore.getContentMode();
+		    },
+			(currentProvider, command) -> {
+				String mode = "working";
+				if ("working".equals(historyStore.getContentMode())) {
+					mode = "discovery";
+				}
+				historyStore.setContentMode(mode);
+				historyStore.save();
+				currentProvider.refreshFromContentProvider();
+				kaviPickList.refresh();
+		});	
 	}
 	
 	public static void addWorkingSetCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore) {
-		contextProvider.addCommand("working", "working: remove", (provider) -> {
+		contextProvider.addCommand("Working", "Working: Remove", (provider, command) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
 			provider.clearSelections();
 			provider.clearCursor();
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 			historyStore.save();
 		});
-		contextProvider.addCommand("working: set favorite", (provider) -> {
+		contextProvider.addCommand("Working: Set Favorite", (provider, command) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
 			provider.clearSelections();
 			provider.clearCursor();
@@ -95,7 +111,7 @@ public class InternalCommandContextProviderFactory {
 	}
 	
 	public static void addExportImportCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore, String settingsFilename) {
-		contextProvider.addCommand("working", "export: settings as JSON to file", (currentProvider) -> {
+		contextProvider.addCommand("working", "Export: Settings as JSON to File", (currentProvider, command) -> {
 		    FileDialog dialog = new FileDialog(kaviPickList.getShell(), SWT.SAVE);
 		    dialog.setFilterExtensions(new String [] {"*.json"});
 		    dialog.setFileName(settingsFilename);
@@ -118,7 +134,7 @@ public class InternalCommandContextProviderFactory {
 		// I think across workspace for Commands is still appropriate
 		// Also, we may need to then disable the builtin eclipse preferences export and import.
 		// Otherwise we will overwrite our settings on import, defeating our merge capability.  Need to consider carefully
-		contextProvider.addCommand("working", "import: settings as JSON from file", (currentProvider) -> {
+		contextProvider.addCommand("working", "Import: Settings as JSON from File", (currentProvider, command) -> {
 		    FileDialog dialog = new FileDialog(kaviPickList.getShell(), SWT.OPEN);
 		    dialog.setFilterExtensions(new String [] {"*.json"});
 		    dialog.setFileName(settingsFilename);
@@ -138,10 +154,12 @@ public class InternalCommandContextProviderFactory {
 	}
 	
 	public static void installProvider(InternalCommandContextProvider contextProvider, KaviPickListDialog<? extends Object> kaviPickList) {
-		kaviPickList.setListContentProvider("context", contextProvider.makeProviderFunction()).setRestoreFilterTextOnProviderChange(true)
+		FieldResolver fieldResolver = new FieldResolver<ContextCommand>("name", command -> command.nameResolver.apply(command));
+		kaviPickList.setListContentProvider("context", contextProvider.makeProviderFunction(fieldResolver))
+		            .setRestoreFilterTextOnProviderChange(true)
         				.setResolvedContextAction(( command, provider) -> {
-        					command.commandAction.accept(provider);
+        					command.commandAction.accept(provider, command);
         				})
-        				.addColumn("name", item -> item.name).widthPercent(100);
+        				.addColumn(fieldResolver.fieldId, fieldResolver.fieldResolver).widthPercent(100);
 	}
 }

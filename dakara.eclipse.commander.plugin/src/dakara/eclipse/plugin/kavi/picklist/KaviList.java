@@ -368,6 +368,10 @@ public class KaviList<T> {
 		composite.getShell().setRedraw(true);
 	}
 	
+	public void refresh() {
+		tableViewer.refresh();
+	}
+	
 	private void nextContentMode() {
 		String[] keys = listContentProviders.keySet().toArray(new String[] {});
 		if (keys.length == 0) return;
@@ -421,6 +425,7 @@ public class KaviList<T> {
 		display.asyncExec(() -> composite.getShell().setRedraw(true));
 		return contentProvider();
 	}
+
 	
 	private boolean providerExists(String mode) {
 		if (listContentProviders.containsKey(mode)) return true;

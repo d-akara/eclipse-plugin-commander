@@ -3,6 +3,7 @@ package dakara.eclipse.plugin.kavi.picklist;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -14,8 +15,8 @@ import dakara.eclipse.plugin.stringscore.RankedItem;
 public class InternalCommandContextProvider {
 	private final List<ContextCommand> commands = new ArrayList<>();
 	
-	public Function<InputState, List<RankedItem<ContextCommand>>> makeProviderFunction() {
-		ListRankAndFilter<ContextCommand> listRankAndFilter = listRankAndFilter(new FieldResolver<ContextCommand>("name", item -> item.name ));
+	public Function<InputState, List<RankedItem<ContextCommand>>> makeProviderFunction(FieldResolver fieldResolver) {
+		ListRankAndFilter<ContextCommand> listRankAndFilter = listRankAndFilter(fieldResolver);
 		return (inputState) -> {
 			List<RankedItem<ContextCommand>> filteredList = listRankAndFilter.rankAndFilter(inputState.inputCommand, commands );
 			return filteredList.stream().filter(command -> includeCommand(command, inputState)).collect(Collectors.toList());
@@ -34,15 +35,20 @@ public class InternalCommandContextProvider {
 		return listRankAndFilter;
 	}
 	
-	public <T> InternalCommandContextProvider addCommand(String mode, String name, Consumer<InternalContentProviderProxy<T>> handleSelections) {
+	public <T> InternalCommandContextProvider addCommand(String mode, String name, BiConsumer<InternalContentProviderProxy<T>, ContextCommand> handleSelections) {
 		commands.add(new ContextCommand(name, mode, handleSelections));
 		return this;
 	}
 	
-	public <T> InternalCommandContextProvider addCommand(String name, Consumer<InternalContentProviderProxy<T>> handleSelections) {
+	public <T> InternalCommandContextProvider addCommand(String name, BiConsumer<InternalContentProviderProxy<T>, ContextCommand> handleSelections) {
 		commands.add(new ContextCommand(name, null, handleSelections));
 		return this;
 	}
+	
+	public <T> InternalCommandContextProvider addCommand(Function<ContextCommand, String> nameResolver, BiConsumer<InternalContentProviderProxy<T>, ContextCommand> handleSelections) {
+		commands.add(new ContextCommand(nameResolver, null, handleSelections));
+		return this;
+	}	
 	
 	public <T> InternalCommandContextProvider addChoice(String parentName, String name, Consumer<List<T>> handleSelections) {
 		// TODO find parent, add choice as child
@@ -52,10 +58,15 @@ public class InternalCommandContextProvider {
 	
 	public static class ContextCommand {
 		public final String mode;
-		public final String name;
-		public final Consumer commandAction;
-		public ContextCommand(String name, String mode, Consumer commandAction) {
-			this.name = name;
+		public Function<ContextCommand, String> nameResolver;
+		public final BiConsumer commandAction;
+		public ContextCommand(String name, String mode, BiConsumer commandAction) {
+			this.nameResolver = (command) -> name;
+			this.mode = mode;
+			this.commandAction = commandAction;
+		}
+		public ContextCommand(Function<ContextCommand, String> nameResolver, String mode, BiConsumer commandAction) {
+			this.nameResolver = nameResolver;
 			this.mode = mode;
 			this.commandAction = commandAction;
 		}

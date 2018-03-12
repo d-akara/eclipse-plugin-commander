@@ -135,6 +135,10 @@ public class KaviPickListDialog<T> extends PopupDialog {
 		return kaviList.togglePreviousProvider();
 	}
 	
+	public void refresh() {
+		kaviList.refresh();
+	}
+	
 	private class StatusDisplayInfo {
 		public String mode;
 		public int itemCount;

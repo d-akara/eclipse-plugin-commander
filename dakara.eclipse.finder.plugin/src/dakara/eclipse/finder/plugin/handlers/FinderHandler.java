@@ -87,12 +87,12 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 
 		
-		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(finder);
+		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(finder, historyStore);
 		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, finder, historyStore);
 		InternalCommandContextProviderFactory.addExportImportCommands(contextProvider, finder, historyStore, "finder-settings.json");
 		InternalCommandContextProviderFactory.installProvider(contextProvider, finder);
 		
-		finder.setCurrentProvider("working");
+		finder.setCurrentProvider(historyStore.getContentMode());
 		finder.setBounds(800, 400);
 		finder.open();	
 		return null;

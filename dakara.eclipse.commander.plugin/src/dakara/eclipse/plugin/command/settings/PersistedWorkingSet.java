@@ -112,7 +112,10 @@ public class PersistedWorkingSet<T> {
 	}
 	
 	public String getContentMode() {
-		return commanderSettings.contentMode;
+		String contentMode = "discovery"; // default for first time users
+		if (commanderSettings.contentMode != null) 
+			contentMode = commanderSettings.contentMode;
+		return contentMode;
 	}
 	
 	public PersistedWorkingSet<T> setHistoryPermanent(T historyItem, boolean permanent) {
@@ -135,12 +138,11 @@ public class PersistedWorkingSet<T> {
 		return this;
 	}
 	
-	// TODO - need a dialog id saved with settings to distinguish Finder vs. Commander etc.
 	public class CommanderSettings {
 		private String featureId;
 		private int version = 1;
-		private final List<HistoryEntry> entries;
 		private String contentMode;
+		private final List<HistoryEntry> entries;
 		public CommanderSettings(String featureId, List<HistoryEntry> entries) {
 			this.featureId = featureId;
 			this.entries = entries;
@@ -207,6 +209,7 @@ public class PersistedWorkingSet<T> {
 		if (settings.version == 0) {
 			settings.featureId = this.featureId;
 			settings.version = 1;
+			settings.contentMode = "working";  // assume those who have already been using Commander are already expect his behavior
 		}
 		if (!settings.featureId.equals(this.featureId)) {
 			throw new RuntimeException("Settings featureId [" + settings.featureId + "] does not match [" + this.featureId + "]");

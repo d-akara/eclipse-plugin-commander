@@ -112,7 +112,7 @@ public class PersistedWorkingSet<T> {
 	}
 	
 	public String getContentMode() {
-		String contentMode = "discovery"; // default for first time users
+		String contentMode = "working";
 		if (commanderSettings.contentMode != null) 
 			contentMode = commanderSettings.contentMode;
 		return contentMode;

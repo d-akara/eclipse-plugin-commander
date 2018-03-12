@@ -74,7 +74,7 @@ public class InternalCommandContextProviderFactory {
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 		});
 		
-		provider.addCommand("Working", "List: Toggle Sort Name", (currentProvider, command) -> {
+		provider.addCommand("working", "List: Toggle Sort Name", (currentProvider, command) -> {
 			kaviPickList.togglePreviousProvider().sortDefault().refreshFromContentProvider();
 		});		
 		
@@ -94,7 +94,7 @@ public class InternalCommandContextProviderFactory {
 	}
 	
 	public static void addWorkingSetCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore) {
-		contextProvider.addCommand("Working", "Working: Remove", (provider, command) -> {
+		contextProvider.addCommand("working", "Working: Remove", (provider, command) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
 			provider.clearSelections();
 			provider.clearCursor();

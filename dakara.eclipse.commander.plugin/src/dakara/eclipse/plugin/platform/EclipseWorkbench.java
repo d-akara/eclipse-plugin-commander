@@ -11,12 +11,13 @@ import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceProxy;
 import org.eclipse.core.resources.IResourceProxyVisitor;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
@@ -38,7 +39,8 @@ import org.eclipse.ui.PartInitException;
 
 public class EclipseWorkbench {
 	private static Map<String, IndexInfoCache> indexCacheMap = new HashMap();
-	public static List<ResourceItem> collectAllWorkspaceFiles(IWorkspaceRoot workspace) {
+	public static List<ResourceItem> collectAllWorkspaceFiles() {
+		IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
 		List<ResourceItem> files = new ArrayList<>();
 		
 		IResourceProxyVisitor visitor = new IResourceProxyVisitor() {
@@ -55,6 +57,7 @@ public class EclipseWorkbench {
 		
 		try {
 			IResource[] resources = workspace.members();
+			
 			for(IResource resource : resources) {
 				if (!resource.getProject().isOpen()) continue;
 				resource.accept(visitor, 0);
@@ -63,6 +66,21 @@ public class EclipseWorkbench {
 			throw new RuntimeException(e);
 		}
 		return files;
+	}
+	
+	public static void notifyResourceAddedOrRemoved(Runnable onResourceAddedOrRemoved) {
+		ResourcesPlugin.getWorkspace().addResourceChangeListener(changeEvent -> {
+			try {
+				changeEvent.getDelta().accept((IResourceDelta change) -> {
+					if (change.getKind() == IResourceDelta.ADDED || change.getKind() == IResourceDelta.REMOVED) {
+						onResourceAddedOrRemoved.run();
+					}
+					return true;
+				});
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 	
 	/*
@@ -74,11 +92,21 @@ public class EclipseWorkbench {
 		PatternSearchJob job = new PatternSearchJob(null, SearchEngine.getDefaultSearchParticipant(), scope, null);
 		List<Index> selectedIndexes = new ArrayList<>(Arrays.asList(job.getIndexes(null)));
 		List<ResourceItem> files = selectedIndexes.stream().parallel()
-			.flatMap(index -> {
-				return addResourceForIndexEntry(getIndexEntries(index), index).stream();
-			}).collect(Collectors.toList());
-
+				.flatMap(index -> {
+					return addResourceForIndexEntry(getIndexEntries(index), index).stream();
+				}).collect(Collectors.toList());
+		
 		return files;
+	}
+	
+	public static boolean hasWorkspaceTypesChanged(long sinceTime) {
+		IJavaSearchScope scope = BasicSearchEngine.createWorkspaceScope();
+		PatternSearchJob job = new PatternSearchJob(null, SearchEngine.getDefaultSearchParticipant(), scope, null);
+		List<Index> selectedIndexes = new ArrayList<>(Arrays.asList(job.getIndexes(null)));
+		boolean isChanged = selectedIndexes.stream().parallel()
+			.anyMatch(index -> index.getIndexLastModified() > sinceTime);
+
+		return isChanged;
 	}
 	
 	private static List<String> getIndexEntries(Index index) {

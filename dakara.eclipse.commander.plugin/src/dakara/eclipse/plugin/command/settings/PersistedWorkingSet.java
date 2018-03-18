@@ -21,12 +21,12 @@ public class PersistedWorkingSet<T> {
 	private final String featureId;
 	static final String HISTORY_KEY = "HISTORY";
 	
-	public PersistedWorkingSet(String featureId, int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
+	public PersistedWorkingSet(String featureId, boolean workspaceScope, int historyLimit, Function<T, HistoryKey> historyItemIdResolver, Function<HistoryKey, T> historyItemResolver) {
 		this.featureId = featureId;
 		this.historyLimit = historyLimit;
 		this.historyItemIdResolver = historyItemIdResolver;
 		this.historyItemResolver = historyItemResolver;
-		this.eclipsePreferencesSerializer = new EclipsePreferencesSerializer<>(featureId, HISTORY_KEY, CommanderSettings.class);
+		this.eclipsePreferencesSerializer = new EclipsePreferencesSerializer<>(featureId, workspaceScope, HISTORY_KEY, CommanderSettings.class);
 		this.commanderSettings = new CommanderSettings(featureId, new ArrayList<HistoryEntry>());
 	}
 

@@ -2,6 +2,8 @@ package dakara.eclipse.plugin.command.settings;
 
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IScopeContext;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.gson.Gson;
@@ -12,11 +14,16 @@ public class EclipsePreferencesSerializer<T> {
 	private final String preferenceKey;
 	private final Class<?> settingsTypeClass;
 	private final Gson gson;
-	public EclipsePreferencesSerializer(String preferenceId, String preferenceKey, final Class<?> settingsTypeClass) {
+	private final IScopeContext scopeContext;
+	public EclipsePreferencesSerializer(String preferenceId, boolean workspaceScope, String preferenceKey, final Class<?> settingsTypeClass) {
 		this.prefereneceId = preferenceId;
 		this.preferenceKey = preferenceKey;
 		this.settingsTypeClass = settingsTypeClass;
 		this.gson = new Gson();
+		if (workspaceScope)
+			scopeContext = InstanceScope.INSTANCE;
+		else
+			scopeContext = ConfigurationScope.INSTANCE;
 	}
 	
 	public String settingsAsJson(final T settings) {
@@ -33,7 +40,7 @@ public class EclipsePreferencesSerializer<T> {
 	}
 	
 	public EclipsePreferencesSerializer<T> saveSettings(final T settings) {
-		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(prefereneceId);
+		IEclipsePreferences preferences = scopeContext.getNode(prefereneceId);
 		preferences.put(preferenceKey, settingsAsJson(settings));
 		try {
 			preferences.flush();
@@ -44,7 +51,7 @@ public class EclipsePreferencesSerializer<T> {
 	}
 
 	public T loadSettings() {
-		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(prefereneceId);
+		IEclipsePreferences preferences = scopeContext.getNode(prefereneceId);
 		String keyValue = preferences.get(preferenceKey, null);
 		if (keyValue != null) {
 			return jsonAsSettings(keyValue);

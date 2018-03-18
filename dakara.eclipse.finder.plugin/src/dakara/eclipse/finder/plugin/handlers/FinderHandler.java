@@ -3,6 +3,7 @@ package dakara.eclipse.finder.plugin.handlers;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -31,6 +32,7 @@ import dakara.eclipse.plugin.kavi.picklist.InputState;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProvider;
 import dakara.eclipse.plugin.kavi.picklist.InternalCommandContextProviderFactory;
 import dakara.eclipse.plugin.kavi.picklist.KaviPickListDialog;
+import dakara.eclipse.plugin.log.EclipsePluginLogger;
 import dakara.eclipse.plugin.platform.EclipseWorkbench;
 import dakara.eclipse.plugin.platform.ResourceItem;
 import dakara.eclipse.plugin.stringscore.FieldResolver;
@@ -47,28 +49,45 @@ import dakara.eclipse.plugin.stringscore.RankedItem;
  * org.eclipse.jdt.core.search.TypeNameMatchRequestor
  */
 public class FinderHandler extends AbstractHandler implements IStartup {
-	private static PersistedWorkingSet<ResourceItem> historyStore = null;
+	private static EclipsePluginLogger logger = new EclipsePluginLogger(Constants.BUNDLE_ID);
+	private boolean initialized = false;
+	private PersistedWorkingSet<ResourceItem> historyStore = null;
+	private List<ResourceItem> files = null;
+	private long lastResourceRefresh = 0l;
 	
+	// NOTE: early startup creates another instance of this class separate from the instance used for execute
+	// we should do this differently
 	@Override
 	public void earlyStartup() {
-		historyStore = createSettingsStore();
-		IWorkbenchPage workbenchPage = PlatformUI.getWorkbench().getWorkbenchWindows()[0].getActivePage();
-		EclipseWorkbench.createListenerForEditorFocusChanges(workbenchPage, resourceItem -> historyStore.addToHistory(resourceItem).save());
+	}
+	
+	private void initialize() {
+		if (!initialized) {
+			initialized = true;
+			historyStore = createSettingsStore();
+			IWorkbenchPage workbenchPage = PlatformUI.getWorkbench().getWorkbenchWindows()[0].getActivePage();
+			EclipseWorkbench.createListenerForEditorFocusChanges(workbenchPage, resourceItem -> historyStore.addToHistory(resourceItem).save());
+			
+			EclipseWorkbench.notifyResourceAddedOrRemoved(() -> {
+				files = null;
+				logger.info("resource changed, clearing cache");
+			});		
+		}
 	}
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		initialize();
+		invalidateTypesIfNeeded();
 		IWorkbenchPage workbenchPage = HandlerUtil.getActiveWorkbenchWindowChecked(event).getActivePage();
 		IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
-		List<ResourceItem> files = EclipseWorkbench.collectAllWorkspaceFiles(workspace);	
-		files.addAll(EclipseWorkbench.collectAllWorkspaceTypes());
 		
 		FieldResolver<ResourceItem> nameResolver    = new FieldResolver<>("name",    resource -> resource.name);
 		FieldResolver<ResourceItem> pathResolver    = new FieldResolver<>("path",    resource -> extractPath(resource.path));
 		FieldResolver<ResourceItem> projectResolver = new FieldResolver<>("project", resource -> resource.project);
 		
 		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
-		finder.setListContentProvider("discovery", listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), files))
+		finder.setListContentProvider("discovery", listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), this::getAllFileAndTypeResources))
 			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(historyStore, workbenchPage, workspace, resourceItems))
 			  .setShowAllWhenNoFilter(false)
 			  .setDebounceTimeProvider(inputCommand -> inputCommand.countFilterableCharacters() > 2 ? 50:200)
@@ -76,7 +95,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		finder.setListContentProvider("working", listContentProviderWorkingSet(listRankAndFilter(nameResolver, pathResolver, projectResolver), historyStore, files))
+		finder.setListContentProvider("working", listContentProviderWorkingSet(listRankAndFilter(nameResolver, pathResolver, projectResolver), historyStore))
 			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(historyStore, workbenchPage, workspace, resourceItems))
 			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30).setMarkerIndicatorProvider(item -> { 
 					HistoryEntry historyEntry = historyStore.getHistoryEntry(item);
@@ -98,9 +117,25 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		return null;
 	}
 	
+	private List<ResourceItem> getAllFileAndTypeResources() {
+		if (files == null) {
+			lastResourceRefresh = System.currentTimeMillis();
+			logger.info("loading all resources and types from workspace");
+			files = EclipseWorkbench.collectAllWorkspaceFiles();	
+			files.addAll(EclipseWorkbench.collectAllWorkspaceTypes());
+		}
+		return files;
+	}
+	
+	private void invalidateTypesIfNeeded() {
+		if (!EclipseWorkbench.hasWorkspaceTypesChanged(lastResourceRefresh)) return;
+		logger.info("types have changed, invalidating cache");
+		files = null;
+	}
+	
 	private PersistedWorkingSet<ResourceItem> createSettingsStore() {
 		Function<HistoryKey, ResourceItem> historyItemResolver = historyKey -> new ResourceItem(historyKey.keys.get(0), historyKey.keys.get(2), historyKey.keys.get(1));
-		PersistedWorkingSet<ResourceItem> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, 100, item -> new HistoryKey(item.name, item.project, item.path), historyItemResolver);
+		PersistedWorkingSet<ResourceItem> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, true, 100, item -> new HistoryKey(item.name, item.project, item.path), historyItemResolver);
 		historyStore.load();
 		
 		return historyStore;
@@ -148,23 +183,26 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		}
 	}
 	
-	public static Function<InputState, List<RankedItem<ResourceItem>>> listContentProvider(ListRankAndFilter<ResourceItem> listRankAndFilter, List<ResourceItem> resources) {
+	public static Function<InputState, List<RankedItem<ResourceItem>>> listContentProvider(ListRankAndFilter<ResourceItem> listRankAndFilter, Supplier<List<ResourceItem>> resourceProvider) {
 		
 		return (inputState) -> {
-			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilter(inputState.inputCommand, resources );
+			// TODO pre filter lists based on scope
+			// but how do we update pre filter here when scope changes?
+			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilter(inputState.inputCommand, resourceProvider.get() );
 			return filteredList;
 		};
 	}
 	
-	public static Function<InputState, List<RankedItem<ResourceItem>>> listContentProviderWorkingSet(ListRankAndFilter<ResourceItem> listRankAndFilter, PersistedWorkingSet<ResourceItem> historyStore, List<ResourceItem> workspaceResources) {
+	public static Function<InputState, List<RankedItem<ResourceItem>>> listContentProviderWorkingSet(ListRankAndFilter<ResourceItem> listRankAndFilter, PersistedWorkingSet<ResourceItem> historyStore) {
 		AtomicReference<List<PersistedWorkingSet<ResourceItem>.HistoryEntry>> historyItems = new AtomicReference(historyStore.getHistory());
-		AtomicReference<List<ResourceItem>> workingFiles = new AtomicReference(getCurrentHistoryItems(historyItems.get(), workspaceResources));
+		AtomicReference<List<ResourceItem>> workingFiles = new AtomicReference(getCurrentHistoryItems(historyItems.get()));
 		return (inputState) -> {
 			List<PersistedWorkingSet<ResourceItem>.HistoryEntry> currentHistoryItems = historyStore.getHistory();
 			// Has the history changed since last time
 			if (currentHistoryItems != historyItems.get()) {
+				logger.info("history changed");
 				historyItems.set(currentHistoryItems);
-				workingFiles.set(getCurrentHistoryItems(historyItems.get(), workspaceResources));
+				workingFiles.set(getCurrentHistoryItems(historyItems.get()));
 			}
 
 			List<RankedItem<ResourceItem>> filteredList = listRankAndFilter.rankAndFilterOrdered(inputState.inputCommand, workingFiles.get());
@@ -172,11 +210,9 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		};
 	}
 
-	private static List<ResourceItem> getCurrentHistoryItems(List<PersistedWorkingSet<ResourceItem>.HistoryEntry> historyItems, List<ResourceItem> workspaceResources) {
-		List<ResourceItem> workingFiles = historyItems.stream().parallel()
+	private static List<ResourceItem> getCurrentHistoryItems(List<PersistedWorkingSet<ResourceItem>.HistoryEntry> historyItems) {
+		List<ResourceItem> workingFiles = historyItems.stream()
 				.map(historyItem -> historyItem.getHistoryItem())
-				// TODO need a faster method to determine if we should show this resource
-				.filter(resourceItem -> workspaceResources.contains(resourceItem))
 				.collect(Collectors.toList());
 		return workingFiles;
 	}

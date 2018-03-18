@@ -75,7 +75,7 @@ public class CommanderHandler extends AbstractHandler {
 
 	private PersistedWorkingSet<QuickAccessElement> createSettingsStore(EclipseCommandProvider eclipseCommandProvider) {
 		Function<HistoryKey, QuickAccessElement> historyItemResolver = historyKey -> eclipseCommandProvider.getCommand(historyKey.keys.get(0), historyKey.keys.get(1));
-		PersistedWorkingSet<QuickAccessElement> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, 20, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
+		PersistedWorkingSet<QuickAccessElement> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, false, 20, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
 		historyStore.load();
 		
 		return historyStore;

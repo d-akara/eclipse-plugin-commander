@@ -79,7 +79,7 @@ public class InternalCommandContextProviderFactory {
 		});		
 		
 		provider.addCommand(command -> {
-			return "Preference: Toggle Default View Mode: " + historyStore.getContentMode();
+			return "Settings: Toggle Default View Mode: " + historyStore.getContentMode();
 		    },
 			(currentProvider, command) -> {
 				String mode = "working";
@@ -94,14 +94,14 @@ public class InternalCommandContextProviderFactory {
 	}
 	
 	public static void addWorkingSetCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore) {
-		contextProvider.addCommand("working", "Working: Remove", (provider, command) -> {
+		contextProvider.addCommand("working", "Settings: Favorites Remove Selected", (provider, command) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
 			provider.clearSelections();
 			provider.clearCursor();
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 			historyStore.save();
 		});
-		contextProvider.addCommand("Working: Set Favorite", (provider, command) -> {
+		contextProvider.addCommand("Settings: Favorites Add Selected", (provider, command) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
 			provider.clearSelections();
 			provider.clearCursor();
@@ -111,7 +111,7 @@ public class InternalCommandContextProviderFactory {
 	}
 	
 	public static void addExportImportCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore, String settingsFilename) {
-		contextProvider.addCommand("working", "Export: Settings as JSON to File", (currentProvider, command) -> {
+		contextProvider.addCommand("working", "Settings: Export to File...", (currentProvider, command) -> {
 		    FileDialog dialog = new FileDialog(kaviPickList.getShell(), SWT.SAVE);
 		    dialog.setFilterExtensions(new String [] {"*.json"});
 		    dialog.setFileName(settingsFilename);
@@ -134,11 +134,13 @@ public class InternalCommandContextProviderFactory {
 		// I think across workspace for Commands is still appropriate
 		// Also, we may need to then disable the builtin eclipse preferences export and import.
 		// Otherwise we will overwrite our settings on import, defeating our merge capability.  Need to consider carefully
-		contextProvider.addCommand("working", "Import: Settings as JSON from File", (currentProvider, command) -> {
+		contextProvider.addCommand("working", "Settings: Import from File...", (currentProvider, command) -> {
 		    FileDialog dialog = new FileDialog(kaviPickList.getShell(), SWT.OPEN);
 		    dialog.setFilterExtensions(new String [] {"*.json"});
 		    dialog.setFileName(settingsFilename);
 		    String filename = dialog.open();
+		    if (filename == null) return;
+		    
 		    try {
 				String json = new String(Files.readAllBytes(Paths.get(filename)), StandardCharsets.UTF_8);
 				historyStore.setSettingsFromJson(json);

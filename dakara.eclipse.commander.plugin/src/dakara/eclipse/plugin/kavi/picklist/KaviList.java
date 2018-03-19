@@ -127,6 +127,8 @@ public class KaviList<T> {
 	
 	private void doTableRefresh(List<RankedItem<T>> tableEntries) {
 		if (tableEntries == null) return;
+		if (this.table.isDisposed()) return; // This can happen due to async exec.  Dialog closes before we get here.
+		
 		changedAction.accept(contentProvider().getTableEntries(), contentProvider().getSelectedEntries());
 		table.removeAll();
 		table.setItemCount(contentProvider().getTableEntries().size());	
@@ -145,6 +147,7 @@ public class KaviList<T> {
 	// hook into the display update from ILazyContentProvider to update the fast select on content change
 	// not sure if there is a scrolling hook
 	private void fastSelectItem(final InputCommand inputCommand) {
+		if (this.table.isDisposed()) return; // This can happen due to async exec.  Dialog closes before we get here.
 		List<ColumnOptions<T>> columnOptions = contentProvider().getKaviListColumns().getColumnOptions();
 		showOrHideFastSelectColumn(inputCommand, columnOptions);
 		

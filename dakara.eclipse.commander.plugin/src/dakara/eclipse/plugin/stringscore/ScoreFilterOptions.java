@@ -53,6 +53,6 @@ public class ScoreFilterOptions {
 		}
 		
 		// The first item in the split will be the positive filter text.  All other items are negative filters.
-		return inverseFilters.remove(0);
+		return inverseFilters.size() > 0 ? inverseFilters.remove(0) : "";
 	}
 }

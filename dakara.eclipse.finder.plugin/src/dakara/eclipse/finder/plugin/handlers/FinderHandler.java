@@ -108,7 +108,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		
 		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(finder, historyStore);
 		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, finder, historyStore);
-		InternalCommandContextProviderFactory.addExportImportCommands(contextProvider, finder, historyStore, "finder-settings.json");
+		InternalCommandContextProviderFactory.addExportImportCommands(contextProvider, finder, historyStore, "finder-settings_" + EclipseWorkbench.workspaceName() + ".json");
 		InternalCommandContextProviderFactory.installProvider(contextProvider, finder);
 		
 		finder.setCurrentProvider(historyStore.getContentMode());

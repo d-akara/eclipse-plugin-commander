@@ -36,8 +36,12 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PartInitException;
 
+import dakara.eclipse.plugin.command.Constants;
+import dakara.eclipse.plugin.log.EclipsePluginLogger;
+
 
 public class EclipseWorkbench {
+	private static EclipsePluginLogger logger = new EclipsePluginLogger(Constants.BUNDLE_ID);	
 	private static Map<String, IndexInfoCache> indexCacheMap = new HashMap();
 	public static List<ResourceItem> collectAllWorkspaceFiles() {
 		IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
@@ -229,8 +233,21 @@ public class EclipseWorkbench {
 		page.addPartListener(pl);
 	}
 	
+	public static String workspaceName() {
+		return ResourcesPlugin.getWorkspace().getRoot().getLocation().lastSegment();
+	}
+	
 	private static boolean hasSourceAttachment(String containerPath, String fullResourcePath) {
-		if (indexCacheMap.containsKey(containerPath)) return indexCacheMap.get(containerPath).hasSource;
+		try {
+			if (indexCacheMap.containsKey(containerPath)) return indexCacheMap.get(containerPath).hasSource;
+		} catch (Exception e1) {
+			// This is here to catch a strange excecption which I could not explain
+			// However, after rebuiling and installing the exception no longer occurs.
+			// Will leave for a while to see if reoccurs
+			logger.warn("containerPath " + containerPath);
+			logger.warn("indexCacheMap " + indexCacheMap);
+			return false;
+		}
 		
 		boolean hasSource = false;
 		try {

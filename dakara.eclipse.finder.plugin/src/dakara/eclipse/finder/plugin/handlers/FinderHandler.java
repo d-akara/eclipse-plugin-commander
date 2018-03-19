@@ -151,6 +151,8 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		final int locationOfClass = jarPathAndClass.lastIndexOf(("/"));
 		if (locationOfClass >=0 ) endLocation = locationOfClass;
 
+		if (endLocation < startLocation) return ""; // There was no path
+		
 		return jarPathAndClass.substring(startLocation, endLocation);
 	}
 	

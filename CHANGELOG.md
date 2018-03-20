@@ -1,3 +1,12 @@
+## 1.2.0 - 3.20.2018
+### Features
+- Finder dialog launch speed significantly improved for extremely large projects
+- Settings and history can now be directly exported and imported within Commander and Finder 
+    - Finder settings and history and now stored per workspace
+    - Due to per workspace storage change, previous Finder history will not be kept on update to this version
+- Default mode `working` or `discovery` can now be set as a setting
+### Fixes
+- Possibly NPE in Finder that prevented launch of dialog
 ## 1.1.1 - 11.13.2017
 ### Features
 - Types `Eclipse Open Type` have been added to Finder

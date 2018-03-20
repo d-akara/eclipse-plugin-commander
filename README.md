@@ -4,8 +4,61 @@ Next generation command palette using [KAVI](https://github.com/dakaraphi/kavi) 
 Current interfaces provided:
  * **Commander** - provides interface for selecting and executing all Eclipse commands.
  * **Finder** - provides interface for selecting and opening workspace resources.
- 
+
+* [Changelog](CHANGELOG.md)
+* [Background](#Background)
+    * [The problem](##The-problem)
+    * [Goals](##Goals)
+* [Optimum Experience](#Optimum-Experience)
+* [Installation](#Installation)
+    * [Eclipse Marketplace](##Eclipse-Marketplace)
+    * [Recommended setup](##Recommended-setup)
+* [KAVI implemented features for all interfaces ](#KAVI-implemented-features-for-all-interfaces )
+    * [Term Matching](##Term-Matching)
+        * [Multi column](###Multi-column)
+        * [Specific column](###Specific-column)
+        * [Literal](###Literal)
+        * [Fuzzy multi word out of order](###Fuzzy-multi-word-out-of-order)
+        * [Quality filtering](###Quality-filtering)
+        * [Acronym](###Acronym)
+    * [Ranking Sort](##Ranking-Sort)
+    * [Fast Select](##Fast-Select)
+        * [Immediate action invocation](###Immediate-action-invocation)
+        * [Multi select](###Multi-select)
+        * [Range select](###Range-select)
+        * [Inverse select](###Inverse-select)
+        * [All select/deselect](###All-select/deselect)
+    * [Navigation](##Navigation)
+        * [List paging](###List-paging)
+        * [Cursor movement in input field](###Cursor-movement-in-input-field)
+    * [Working and Discovery Modes](##Working-and-Discovery-Modes)
+        * [Switching modes](###Switching-modes)
+        * [Recent](###Recent)
+        * [Favorites](###Favorites)
+        * [Export/Import preferences](###Export/Import-preferences)
+        * [Across workspaces](###Across-workspaces)
+    * [Context Actions](##Context-Actions)
+        * [Copy selected to clipboard](###Copy-selected-to-clipboard)
+        * [View Selected](###View-Selected)
+        * [Favorites](###Favorites)
+        * [Sort](###Sort)
+        * [Export/Import](#Export/Import)
+        * [Default view mode](###Default-view-mode)
+* [Commander](#Commander)
+    * [Columns](##Columns)
+    * [Launchers](##Launchers)
+* [Finder](#Finder)
+    * [Columns](##Columns)
+    * [Working](##Working)
+* [Design and Technical Notes](#Design-and-Technical-Notes)
+    * [Fuzzy matching](##Fuzzy-matching)
+    * [Ranking](##Ranking)
+    * [User intention](##User-intention)
+    * [Software](##Software)
+    * [Building Plugin](##Building-Plugin)
+
 # Background
+
 ## The problem
 * In a very large complex application such as Eclipse, your workflow can be significantly slowed due to the massive complexity of the application.
 * Eclipse environments can easily have well over 2000 commands which are executed through menus, hot keys, custom dialogs or buttons.
@@ -169,6 +222,13 @@ Favorites can be added or removed through context actions.
 
 ### Sort
 Items which are normally sorted by rank or sorted by most recent can be sorted by name using this context action.
+
+### Export/Import
+All settings and history can be exported to and from a JSON file.
+Commander settings are per Eclipse configuration and Finder settings are per workspace.
+
+### Default view mode
+The default mode can be set that the dialog will open when launched.  This can be `working` or `discovery`
 
 ![acronym column](/readme-images/context-sort.gif)
 

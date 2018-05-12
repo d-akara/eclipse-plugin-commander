@@ -118,6 +118,15 @@ public class PersistedWorkingSet<T> {
 		return contentMode;
 	}
 	
+	public PersistedWorkingSet<T> setAutoCloseFocusLost(boolean autoClose) {
+		commanderSettings.autoCloseFocusLost = autoClose;
+		return this;
+	}
+	
+	public boolean getAutoCloseFocusLost() {
+		return commanderSettings.autoCloseFocusLost;
+	}
+	
 	public PersistedWorkingSet<T> setHistoryPermanent(T historyItem, boolean permanent) {
 		historyChangedSinceCheck = true;
 		HistoryEntry entry = makeEntry(historyItem);
@@ -140,8 +149,9 @@ public class PersistedWorkingSet<T> {
 	
 	public class CommanderSettings {
 		private String featureId;
-		private int version = 1;
+		private int version = 2;
 		private String contentMode;
+		private boolean autoCloseFocusLost = false;
 		private final List<HistoryEntry> entries;
 		public CommanderSettings(String featureId, List<HistoryEntry> entries) {
 			this.featureId = featureId;
@@ -210,6 +220,10 @@ public class PersistedWorkingSet<T> {
 			settings.featureId = this.featureId;
 			settings.version = 1;
 			settings.contentMode = "working";  // assume those who have already been using Commander are already expect his behavior
+		}
+		if (settings.version == 1) {
+			settings.version = 2;
+			settings.autoCloseFocusLost = false; // existing default behavior
 		}
 		if (!settings.featureId.equals(this.featureId)) {
 			throw new RuntimeException("Settings featureId [" + settings.featureId + "] does not match [" + this.featureId + "]");

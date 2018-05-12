@@ -30,6 +30,7 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	private final KaviList<T> kaviList;
 	private Text listFilterInputControl;
 	private final StatusDisplayInfo displayInfo = new StatusDisplayInfo();
+	private boolean autoCloseOnFocusLost = false;
 
 	public KaviPickListDialog() {
 		super(ProgressManagerUtil.getDefaultParent(), SWT.RESIZE | SWT.NO_BACKGROUND, true, true, false, true, true, null, "Central Command");
@@ -85,6 +86,8 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	
 	@Override
 	public boolean close() {
+		if (autoCloseOnFocusLost) return super.close();
+		
 		// override so that losing focus does not close dialog
 		return false;
 	}
@@ -137,6 +140,10 @@ public class KaviPickListDialog<T> extends PopupDialog {
 	
 	public void refresh() {
 		kaviList.refresh();
+	}
+	
+	public void setAutoCloseOnFocusLost(boolean autoClose) {
+		this.autoCloseOnFocusLost = autoClose;
 	}
 	
 	private class StatusDisplayInfo {

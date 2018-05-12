@@ -91,6 +91,17 @@ public class InternalCommandContextProviderFactory {
 				currentProvider.refreshFromContentProvider();
 				kaviPickList.refresh();
 		});	
+		
+		provider.addCommand(command -> {
+			return "Settings: Toggle Auto Close On Focus Lost: " + historyStore.getAutoCloseFocusLost();
+		    },
+			(currentProvider, command) -> {
+				historyStore.setAutoCloseFocusLost(!historyStore.getAutoCloseFocusLost());
+				historyStore.save();
+				currentProvider.refreshFromContentProvider();
+				kaviPickList.refresh();
+		});	
+		
 	}
 	
 	public static void addWorkingSetCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore) {

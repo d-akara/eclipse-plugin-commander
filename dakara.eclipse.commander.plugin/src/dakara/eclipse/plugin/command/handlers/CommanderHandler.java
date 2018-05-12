@@ -46,30 +46,31 @@ public class CommanderHandler extends AbstractHandler {
 		ListRankAndFilter<QuickAccessElement> listRankAndFilter = CommanderContentProviders.listRankAndFilter(labelField, providerField);
 		
 		eclipseCommandProvider = new EclipseCommandProvider();
-		PersistedWorkingSet<QuickAccessElement> historyStore = createSettingsStore(eclipseCommandProvider);
+		PersistedWorkingSet<QuickAccessElement> settingsStore = createSettingsStore(eclipseCommandProvider);
 		
 		kaviPickList = new KaviPickListDialog<>();
-		kaviPickList.setListContentProvider("discovery", CommanderContentProviders.listContentDiscoveryProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
-					.setResolvedAction(resolvedAction(display, historyStore))
+		kaviPickList.setListContentProvider("discovery", CommanderContentProviders.listContentDiscoveryProvider(listRankAndFilter, settingsStore, eclipseCommandProvider))
+					.setResolvedAction(resolvedAction(display, settingsStore))
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100)
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		kaviPickList.setListContentProvider("working",    CommanderContentProviders.listContentRecallProvider(listRankAndFilter, historyStore, eclipseCommandProvider))
-					.setResolvedAction(resolvedAction(display, historyStore))
+		kaviPickList.setListContentProvider("working",    CommanderContentProviders.listContentRecallProvider(listRankAndFilter, settingsStore, eclipseCommandProvider))
+					.setResolvedAction(resolvedAction(display, settingsStore))
 					.addColumn(labelField.fieldId, labelField.fieldResolver).widthPercent(100).setMarkerIndicatorProvider(item -> { 
-						HistoryEntry historyEntry = historyStore.getHistoryEntry(item);
+						HistoryEntry historyEntry = settingsStore.getHistoryEntry(item);
 						if (historyEntry == null) return false;
 						return historyEntry.keepForever;
 					})
 					.addColumn(providerField.fieldId, providerField.fieldResolver).width(85).right().italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(kaviPickList, historyStore);
-		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, kaviPickList, historyStore);
-		InternalCommandContextProviderFactory.addExportImportCommands(contextProvider, kaviPickList, historyStore, "commander-settings.json");
+		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(kaviPickList, settingsStore);
+		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, kaviPickList, settingsStore);
+		InternalCommandContextProviderFactory.addExportImportCommands(contextProvider, kaviPickList, settingsStore, "commander-settings.json");
 		InternalCommandContextProviderFactory.installProvider(contextProvider, kaviPickList);
 		
 		kaviPickList.setBounds(600, 400);
-		kaviPickList.setCurrentProvider(historyStore.getContentMode());
+		kaviPickList.setCurrentProvider(settingsStore.getContentMode());
+		kaviPickList.setAutoCloseOnFocusLost(settingsStore.getAutoCloseFocusLost());
 		kaviPickList.open();	
 	}
 

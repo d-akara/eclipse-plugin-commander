@@ -51,7 +51,7 @@ import dakara.eclipse.plugin.stringscore.RankedItem;
 public class FinderHandler extends AbstractHandler implements IStartup {
 	private static EclipsePluginLogger logger = new EclipsePluginLogger(Constants.BUNDLE_ID);
 	private boolean initialized = false;
-	private PersistedWorkingSet<ResourceItem> historyStore = null;
+	private PersistedWorkingSet<ResourceItem> settingsStore = null;
 	private List<ResourceItem> files = null;
 	private long lastResourceRefresh = 0l;
 	
@@ -64,9 +64,9 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 	private void initialize() {
 		if (!initialized) {
 			initialized = true;
-			historyStore = createSettingsStore();
+			settingsStore = createSettingsStore();
 			IWorkbenchPage workbenchPage = PlatformUI.getWorkbench().getWorkbenchWindows()[0].getActivePage();
-			EclipseWorkbench.createListenerForEditorFocusChanges(workbenchPage, resourceItem -> historyStore.addToHistory(resourceItem).save());
+			EclipseWorkbench.createListenerForEditorFocusChanges(workbenchPage, resourceItem -> settingsStore.addToHistory(resourceItem).save());
 			
 			EclipseWorkbench.notifyResourceAddedOrRemoved(() -> {
 				files = null;
@@ -88,17 +88,17 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		
 		KaviPickListDialog<ResourceItem> finder = new KaviPickListDialog<>();
 		finder.setListContentProvider("discovery", listContentProvider(listRankAndFilter(nameResolver, pathResolver, projectResolver), this::getAllFileAndTypeResources))
-			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(historyStore, workbenchPage, workspace, resourceItems))
+			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(settingsStore, workbenchPage, workspace, resourceItems))
 			  .setShowAllWhenNoFilter(false)
 			  .setDebounceTimeProvider(inputCommand -> inputCommand.countFilterableCharacters() > 2 ? 50:200)
 			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30)
 			  .addColumn(projectResolver.fieldId, projectResolver.fieldResolver).widthPercent(30).fontColor(155, 103, 4)
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 		
-		finder.setListContentProvider("working", listContentProviderWorkingSet(listRankAndFilter(nameResolver, pathResolver, projectResolver), historyStore))
-			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(historyStore, workbenchPage, workspace, resourceItems))
+		finder.setListContentProvider("working", listContentProviderWorkingSet(listRankAndFilter(nameResolver, pathResolver, projectResolver), settingsStore))
+			  .setMultiResolvedAction(resourceItems -> handleSelectionAction(settingsStore, workbenchPage, workspace, resourceItems))
 			  .addColumn(nameResolver.fieldId, nameResolver.fieldResolver).widthPercent(30).setMarkerIndicatorProvider(item -> { 
-					HistoryEntry historyEntry = historyStore.getHistoryEntry(item);
+					HistoryEntry historyEntry = settingsStore.getHistoryEntry(item);
 					if (historyEntry == null) return false;
 					return historyEntry.keepForever;
 				})
@@ -106,12 +106,12 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 			  .addColumn(pathResolver.fieldId, pathResolver.fieldResolver).widthPercent(40).italic().fontColor(100, 100, 100).backgroundColor(250, 250, 250);
 
 		
-		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(finder, historyStore);
-		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, finder, historyStore);
-		InternalCommandContextProviderFactory.addExportImportCommands(contextProvider, finder, historyStore, "finder-settings_" + EclipseWorkbench.workspaceName() + ".json");
+		InternalCommandContextProvider contextProvider = InternalCommandContextProviderFactory.makeProvider(finder, settingsStore);
+		InternalCommandContextProviderFactory.addWorkingSetCommands(contextProvider, finder, settingsStore);
+		InternalCommandContextProviderFactory.addExportImportCommands(contextProvider, finder, settingsStore, "finder-settings_" + EclipseWorkbench.workspaceName() + ".json");
 		InternalCommandContextProviderFactory.installProvider(contextProvider, finder);
 		
-		finder.setCurrentProvider(historyStore.getContentMode());
+		finder.setCurrentProvider(settingsStore.getContentMode());
 		finder.setBounds(800, 400);
 		finder.open();	
 		return null;

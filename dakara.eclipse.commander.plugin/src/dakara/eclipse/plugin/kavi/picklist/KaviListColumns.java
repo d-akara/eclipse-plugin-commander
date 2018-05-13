@@ -70,7 +70,7 @@ public class KaviListColumns<T> {
 					
 					gc.setForeground(fromRegistry(markerColor));
 					gc.setBackground(fromRegistry(markerColor));
-					gc.fillRectangle(bounds.x, bounds.y + 2, 3, bounds.height - 4);
+					gc.fillRectangle(bounds.x, bounds.y + 2, getAdjustmentForMarkerWidth(), bounds.height - 4);
 				}
 				super.paint(event, element);
 			}
@@ -182,10 +182,12 @@ public class KaviListColumns<T> {
 	}
 	
     private StyleRange[] createStyles(List<Integer> matches) {
-    	List<StyleRange> styles = new ArrayList<StyleRange>();
-    	for (Integer match : matches) {
-    		styles.add(new StyleRange(match, 1, null, fromRegistry(new RGB(150,190,255))));
-    	}
-    	return styles.toArray(new StyleRange[]{});
+	    	List<StyleRange> styles = new ArrayList<StyleRange>();
+	    	for (Integer match : matches) {
+	    		styles.add(new StyleRange(match, 1, null, fromRegistry(new RGB(150,190,255))));
+	    	}
+	    	return styles.toArray(new StyleRange[]{});
     }
+    
+    private int getAdjustmentForMarkerWidth() 	{return SWT.getPlatform().equals("win32") ? 3  : 2;}
 }

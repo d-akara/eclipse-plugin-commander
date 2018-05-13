@@ -48,14 +48,14 @@ public class KaviListColumns<T> {
 		final ColumnOptions<T> options = new ColumnOptions<T>(this, columnId, columnContentFn, columnOptions.size());
 		StyledCellLabelProvider labelProvider = new StyledCellLabelProvider(StyledCellLabelProvider.COLORS_ON_SELECTION) {
 			@Override
-        	public void update(ViewerCell cell) {
-        		// TODO reuse and manage SWT resources
-        		final RankedItem<T> rankedItem = applyCellDefaultStyles(options, cell);
-        		resolveCellTextValue(columnContentFn, cell, rankedItem);
-        		if (options.isSearchable())
-        			applyCellScoreMatchStyles(cell, rankedItem);
-        		super.update(cell);
-        	}
+	        	public void update(ViewerCell cell) {
+	        		// TODO reuse and manage SWT resources
+	        		final RankedItem<T> rankedItem = applyCellDefaultStyles(options, cell);
+	        		resolveCellTextValue(columnContentFn, cell, rankedItem);
+	        		if (options.isSearchable())
+	        			applyCellScoreMatchStyles(cell, rankedItem);
+	        		super.update(cell);
+	        	}
 			@Override
 			protected void paint(Event event, Object element) {
 				Function<T, Boolean> markerIndicatorProvider = options.getMarkerIndicatorProvider();
@@ -66,9 +66,10 @@ public class KaviListColumns<T> {
 					GC gc = event.gc;
 					ViewerCell cell = getViewer().getCell(new Point(event.x, event.y));
 					Rectangle bounds = cell.getBounds();
+					RGB markerColor = new RGB(49, 196, 121);
 					
-					gc.setForeground(fromRegistry(new RGB(242, 215, 135)));
-					gc.setBackground(fromRegistry(new RGB(242, 215, 135)));
+					gc.setForeground(fromRegistry(markerColor));
+					gc.setBackground(fromRegistry(markerColor));
 					gc.fillRectangle(bounds.x, bounds.y + 2, 3, bounds.height - 4);
 				}
 				super.paint(event, element);

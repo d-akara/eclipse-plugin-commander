@@ -128,6 +128,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 	}
 	
 	private void invalidateTypesIfNeeded() {
+		if (files == null) return; // no need to do anything if files haven't been cached
 		if (!EclipseWorkbench.hasWorkspaceTypesChanged(lastResourceRefresh)) return;
 		logger.info("types have changed, invalidating cache");
 		files = null;

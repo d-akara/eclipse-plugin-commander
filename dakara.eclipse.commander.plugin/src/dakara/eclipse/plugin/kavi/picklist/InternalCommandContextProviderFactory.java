@@ -112,6 +112,13 @@ public class InternalCommandContextProviderFactory {
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 			historyStore.save();
 		});
+		contextProvider.addCommand("working", "Settings: Favorites Clear All Except Favorites From Working View", (provider, command) -> {
+			historyStore.removeAllNonPermanentHistory();
+			provider.clearSelections();
+			provider.clearCursor();
+			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
+			historyStore.save();
+		});
 		contextProvider.addCommand("Settings: Favorites Add Selected", (provider, command) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
 			provider.clearSelections();

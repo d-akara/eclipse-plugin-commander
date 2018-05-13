@@ -147,6 +147,12 @@ public class PersistedWorkingSet<T> {
 		return this;
 	}
 	
+	public PersistedWorkingSet<T> removeAllNonPermanentHistory() {
+		historyChangedSinceCheck = true;
+		commanderSettings.entries.removeIf(item -> !item.keepForever);
+		return this;
+	}
+	
 	public class CommanderSettings {
 		private String featureId;
 		private int version = 2;

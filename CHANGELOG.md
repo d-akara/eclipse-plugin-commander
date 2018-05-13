@@ -1,3 +1,12 @@
+## 1.3.0 - 5.13.2018
+### Features
+- New Settings Preference: Auto close dialog on focus lost
+    - When set, the dialog will now auto close when clicking outside the dialog
+- New Settings Command: Favorites Unset Selected As Favorite
+    - Remove `Favorite` attribute from item in `working`, but leave item in `working` view
+- New Settings Command: Favorites Clear All Except Favorites From Working View
+    - Removes all items in `working` excpet those marked as favorites
+- Improved color distinction the `Favorite` marker to be more visible
 ## 1.2.0 - 3.20.2018
 ### Features
 - Finder dialog launch speed significantly improved for extremely large projects

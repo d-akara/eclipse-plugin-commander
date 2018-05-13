@@ -105,7 +105,7 @@ public class InternalCommandContextProviderFactory {
 	}
 	
 	public static void addWorkingSetCommands(InternalCommandContextProvider contextProvider, KaviPickListDialog kaviPickList, PersistedWorkingSet historyStore) {
-		contextProvider.addCommand("working", "Settings: Favorites Remove Selected", (provider, command) -> {
+		contextProvider.addCommand("working", "Settings: Favorites Remove Selected From Working View", (provider, command) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.removeHistory(item));
 			provider.clearSelections();
 			provider.clearCursor();
@@ -119,6 +119,13 @@ public class InternalCommandContextProviderFactory {
 			kaviPickList.togglePreviousProvider().refreshFromContentProvider();
 			historyStore.save();
 		});
+		contextProvider.addCommand("working", "Settings: Favorites Unset Selected As Favorite", (provider, command) -> {
+			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, false));
+			provider.clearSelections();
+			provider.clearCursor();
+			kaviPickList.setCurrentProvider("working").refreshFromContentProvider();
+			historyStore.save();
+		});		
 		contextProvider.addCommand("Settings: Favorites Add Selected", (provider, command) -> {
 			provider.getSelectedEntriesImplied().stream().map(item -> item.dataItem).forEach(item -> historyStore.setHistoryPermanent(item, true));
 			provider.clearSelections();

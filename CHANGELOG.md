@@ -1,3 +1,6 @@
+## 1.3.1 - 5.22.2018
+### Fixes
+- Auto close setting not working in `Finder`
 ## 1.3.0 - 5.13.2018
 ### Features
 - New Settings Preference: Auto close dialog on focus lost

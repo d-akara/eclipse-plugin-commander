@@ -112,6 +112,7 @@ public class FinderHandler extends AbstractHandler implements IStartup {
 		InternalCommandContextProviderFactory.installProvider(contextProvider, finder);
 		
 		finder.setCurrentProvider(settingsStore.getContentMode());
+		finder.setAutoCloseOnFocusLost(settingsStore.getAutoCloseFocusLost());
 		finder.setBounds(800, 400);
 		finder.open();	
 		return null;

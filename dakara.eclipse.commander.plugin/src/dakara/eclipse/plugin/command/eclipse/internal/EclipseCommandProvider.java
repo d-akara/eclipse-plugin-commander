@@ -1,7 +1,6 @@
 package dakara.eclipse.plugin.command.eclipse.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,20 +9,20 @@ import org.eclipse.e4.core.commands.ExpressionContext;
 import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.WorkbenchWindow;
-import org.eclipse.ui.internal.quickaccess.ActionProvider;
-import org.eclipse.ui.internal.quickaccess.PerspectiveProvider;
-import org.eclipse.ui.internal.quickaccess.PreferenceProvider;
-import org.eclipse.ui.internal.quickaccess.PropertiesProvider;
-import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 import org.eclipse.ui.internal.quickaccess.QuickAccessProvider;
-import org.eclipse.ui.internal.quickaccess.ViewProvider;
-import org.eclipse.ui.internal.quickaccess.WizardProvider;
+import org.eclipse.ui.internal.quickaccess.providers.ActionProvider;
+import org.eclipse.ui.internal.quickaccess.providers.PerspectiveProvider;
+import org.eclipse.ui.internal.quickaccess.providers.PreferenceProvider;
+import org.eclipse.ui.internal.quickaccess.providers.PropertiesProvider;
+import org.eclipse.ui.internal.quickaccess.providers.ViewProvider;
+import org.eclipse.ui.internal.quickaccess.providers.WizardProvider;
+import org.eclipse.ui.quickaccess.QuickAccessElement;
 
 @SuppressWarnings("restriction")
 public class EclipseCommandProvider {
 	private List<QuickAccessProvider> providers;
-	private List<QuickAccessElement> commandsAvailableWithCurrentContext = new ArrayList<>();
-	private Map<String, QuickAccessElement> commandLookupByProviderAndId = new HashMap<>();
+	private List<QuickAccessElementWithProvider> commandsAvailableWithCurrentContext = new ArrayList<>();
+	private Map<String, QuickAccessElementWithProvider> commandLookupByProviderAndId = new HashMap<>();
 	
 	public EclipseCommandProvider() {
 		initializeWithCurrentContext();
@@ -51,19 +50,28 @@ public class EclipseCommandProvider {
 		return this;
 	}
 
-	public List<QuickAccessElement> getAllCommands() {
+	public List<QuickAccessElementWithProvider> getAllCommands() {
 		if (commandsAvailableWithCurrentContext.isEmpty()) {
 			for (QuickAccessProvider provider : providers) {
-				commandsAvailableWithCurrentContext.addAll(Arrays.asList(provider.getElements()));
-			}
-			for (QuickAccessElement command: commandsAvailableWithCurrentContext) {
-				commandLookupByProviderAndId.put(command.getProvider().getId() + command.getId(), command);
+				commandsAvailableWithCurrentContext.addAll(makeElementsWithProvider(provider));
+				for (QuickAccessElementWithProvider command: commandsAvailableWithCurrentContext) {
+					commandLookupByProviderAndId.put(provider.getId() + command.getId(), command);
+				}
 			}
 		}
 		return commandsAvailableWithCurrentContext;
 	}
 	
-	public QuickAccessElement getCommand(String providerId, String commandId) {
+	private List<QuickAccessElementWithProvider> makeElementsWithProvider(QuickAccessProvider provider) {
+		QuickAccessElement[] elements = provider.getElements();
+		List<QuickAccessElementWithProvider> elementsWithProvider = new ArrayList<>();
+		for (final QuickAccessElement element : elements) {
+			elementsWithProvider.add(new QuickAccessElementWithProvider(element, provider));
+		}
+		return elementsWithProvider;
+	}
+	
+	public QuickAccessElementWithProvider getCommand(String providerId, String commandId) {
 		return commandLookupByProviderAndId.get(providerId + commandId);
 	}
 }

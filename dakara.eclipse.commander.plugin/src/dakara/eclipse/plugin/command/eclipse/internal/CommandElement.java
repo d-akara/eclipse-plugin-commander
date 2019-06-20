@@ -5,7 +5,7 @@ import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.internal.misc.StatusUtil;
-import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
+import org.eclipse.ui.quickaccess.QuickAccessElement;
 import org.eclipse.ui.statushandlers.StatusManager;
 
 @SuppressWarnings("restriction")
@@ -14,12 +14,13 @@ public class CommandElement extends QuickAccessElement {
 	private ParameterizedCommand parameterizedCommand;
 	private final String id;
 	private final int hashCode;
+	private final CommandProvider provider;
 
 	public CommandElement(ParameterizedCommand command, CommandProvider commandProvider) {
-		super(commandProvider);
+		this.provider = commandProvider;
 		this.id = command.serialize();
 		this.parameterizedCommand = command;
-		hashCode = id.hashCode() ^ getProvider().getId().hashCode();
+		hashCode = id.hashCode() ^ provider.getId().hashCode();
 	}
 
 	public ParameterizedCommand getParameterizedCommand() {
@@ -28,7 +29,6 @@ public class CommandElement extends QuickAccessElement {
 
 	@Override
 	public void execute() {
-		CommandProvider provider = (CommandProvider) getProvider();
 		try {
 			provider.executeCommand(parameterizedCommand);
 		} catch (Exception e) {
@@ -49,7 +49,7 @@ public class CommandElement extends QuickAccessElement {
 		CommandElement element = (CommandElement) object;
 		
 		if (!element.id.equals(id)) return false;
-		return (element.getProvider().getId().equals(getProvider().getId()));
+		return (element.provider.getId().equals(provider.getId()));
 	}
 	
 	@Override

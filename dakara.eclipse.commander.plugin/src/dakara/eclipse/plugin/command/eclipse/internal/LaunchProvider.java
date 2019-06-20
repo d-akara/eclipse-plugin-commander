@@ -9,8 +9,8 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 import org.eclipse.ui.internal.quickaccess.QuickAccessProvider;
+import org.eclipse.ui.quickaccess.QuickAccessElement;
 
 // TODO - provide an extension point so that 3rd parties can contribute providers
 public class LaunchProvider extends QuickAccessProvider {

@@ -19,9 +19,9 @@ import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.handlers.IHandlerService;
-import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 import org.eclipse.ui.internal.quickaccess.QuickAccessMessages;
 import org.eclipse.ui.internal.quickaccess.QuickAccessProvider;
+import org.eclipse.ui.quickaccess.QuickAccessElement;
 
 @SuppressWarnings("restriction")
 public class CommandProvider extends QuickAccessProvider {

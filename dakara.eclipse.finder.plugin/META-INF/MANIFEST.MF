@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Finder
 Bundle-SymbolicName: dakara.eclipse.finder.plugin;singleton:=true
-Bundle-Version: 1.0.1.qualifier
+Bundle-Version: 1.4.0.qualifier
 Bundle-Vendor: Dakara
 Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.ide,

@@ -9,8 +9,8 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 import org.eclipse.ui.internal.quickaccess.QuickAccessProvider;
+import org.eclipse.ui.quickaccess.QuickAccessElement;
 
 // TODO - provide an extension point so that 3rd parties can contribute providers
 public class LaunchProvider extends QuickAccessProvider {
@@ -30,7 +30,6 @@ public class LaunchProvider extends QuickAccessProvider {
 		return null;
 	}
 
-	@SuppressWarnings("restriction")
 	@Override
 	public QuickAccessElement[] getElements() {
 		List<QuickAccessElement> elements = new ArrayList<QuickAccessElement>();
@@ -55,7 +54,7 @@ public class LaunchProvider extends QuickAccessProvider {
 	}
 	
 	@Override
-	public QuickAccessElement getElementForId(String id) {
+	public QuickAccessElement findElement(String id, String filterText) {
 		try {
 			ILaunchConfiguration configuration = DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(id);
 			return new LauncherElement(this, configuration.getMemento(), configuration.getName(), configuration.getType().getName());

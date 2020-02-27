@@ -19,11 +19,10 @@ import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.handlers.IHandlerService;
-import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 import org.eclipse.ui.internal.quickaccess.QuickAccessMessages;
 import org.eclipse.ui.internal.quickaccess.QuickAccessProvider;
+import org.eclipse.ui.quickaccess.QuickAccessElement;
 
-@SuppressWarnings("restriction")
 public class CommandProvider extends QuickAccessProvider {
 	private final IEvaluationContext evaluationContext;
 	private final IHandlerService handlerService;
@@ -46,7 +45,7 @@ public class CommandProvider extends QuickAccessProvider {
 	}
 
 	@Override
-	public QuickAccessElement getElementForId(String id) {
+	public QuickAccessElement findElement(String id, String filter) {
 		getElements();
 		return commandById.get(id);
 	}

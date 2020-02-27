@@ -1,15 +1,16 @@
 package dakara.eclipse.plugin.command.eclipse.internal;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
+import org.eclipse.ui.quickaccess.QuickAccessElement;
 
 public class LauncherElement extends QuickAccessElement {
 	private final String name;
 	private final String typeName;
 	private final String id;
+	private final LaunchProvider provider;
 	
 	public LauncherElement(LaunchProvider provider, String id, String name, String typeName) {
-		super(provider);
+		this.provider = provider;
 		this.id = id;
 		this.name = name;
 		this.typeName = typeName;
@@ -32,7 +33,6 @@ public class LauncherElement extends QuickAccessElement {
 
 	@Override
 	public void execute() {
-		LaunchProvider provider = (LaunchProvider) getProvider();
 		provider.execute(this);
 	}
 	

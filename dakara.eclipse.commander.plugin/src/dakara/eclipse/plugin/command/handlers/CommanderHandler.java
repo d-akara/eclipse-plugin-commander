@@ -8,10 +8,10 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.handlers.HandlerUtil;
-import org.eclipse.ui.internal.quickaccess.QuickAccessElement;
 
 import dakara.eclipse.plugin.command.Constants;
 import dakara.eclipse.plugin.command.eclipse.internal.EclipseCommandProvider;
+import dakara.eclipse.plugin.command.eclipse.internal.QuickAccessElementWithProvider;
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet;
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryEntry;
 import dakara.eclipse.plugin.command.settings.PersistedWorkingSet.HistoryKey;
@@ -22,10 +22,9 @@ import dakara.eclipse.plugin.stringscore.FieldResolver;
 import dakara.eclipse.plugin.stringscore.ListRankAndFilter;
 
 
-@SuppressWarnings("restriction")
 public class CommanderHandler extends AbstractHandler {
 	private EclipseCommandProvider eclipseCommandProvider;
-	private KaviPickListDialog<QuickAccessElement> kaviPickList;
+	private KaviPickListDialog<QuickAccessElementWithProvider> kaviPickList;
 
 	/* TODO's
 	 * - allow other commands to reuse dialog to show other lists for faster speed
@@ -41,12 +40,12 @@ public class CommanderHandler extends AbstractHandler {
 	}
 	
 	public void initialize(Display display) throws ExecutionException {
-		FieldResolver<QuickAccessElement> providerField = new FieldResolver<>("provider",  item -> item.getProvider().getName());
-		FieldResolver<QuickAccessElement> labelField = new FieldResolver<>("label",  item -> item.getLabel());
-		ListRankAndFilter<QuickAccessElement> listRankAndFilter = CommanderContentProviders.listRankAndFilter(labelField, providerField);
+		FieldResolver<QuickAccessElementWithProvider> providerField = new FieldResolver<>("provider",  item -> item.getProvider().getName());
+		FieldResolver<QuickAccessElementWithProvider> labelField = new FieldResolver<>("label",  item -> item.getLabel());
+		ListRankAndFilter<QuickAccessElementWithProvider> listRankAndFilter = CommanderContentProviders.listRankAndFilter(labelField, providerField);
 		
 		eclipseCommandProvider = new EclipseCommandProvider();
-		PersistedWorkingSet<QuickAccessElement> settingsStore = createSettingsStore(eclipseCommandProvider);
+		PersistedWorkingSet<QuickAccessElementWithProvider> settingsStore = createSettingsStore(eclipseCommandProvider);
 		
 		kaviPickList = new KaviPickListDialog<>();
 		kaviPickList.setListContentProvider("discovery", CommanderContentProviders.listContentDiscoveryProvider(listRankAndFilter, settingsStore, eclipseCommandProvider))
@@ -74,15 +73,15 @@ public class CommanderHandler extends AbstractHandler {
 		kaviPickList.open();	
 	}
 
-	private PersistedWorkingSet<QuickAccessElement> createSettingsStore(EclipseCommandProvider eclipseCommandProvider) {
-		Function<HistoryKey, QuickAccessElement> historyItemResolver = historyKey -> eclipseCommandProvider.getCommand(historyKey.keys.get(0), historyKey.keys.get(1));
-		PersistedWorkingSet<QuickAccessElement> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, false, 20, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
+	private PersistedWorkingSet<QuickAccessElementWithProvider> createSettingsStore(EclipseCommandProvider eclipseCommandProvider) {
+		Function<HistoryKey, QuickAccessElementWithProvider> historyItemResolver = historyKey -> eclipseCommandProvider.getCommand(historyKey.keys.get(0), historyKey.keys.get(1));
+		PersistedWorkingSet<QuickAccessElementWithProvider> historyStore = new PersistedWorkingSet<>(Constants.BUNDLE_ID, false, 20, item -> new HistoryKey(item.getProvider().getId(), item.getId()), historyItemResolver);
 		historyStore.load();
 		
 		return historyStore;
 	}
 
-	private Consumer<QuickAccessElement> resolvedAction(Display display, PersistedWorkingSet<QuickAccessElement> historyStore) {
+	private Consumer<QuickAccessElementWithProvider> resolvedAction(Display display, PersistedWorkingSet<QuickAccessElementWithProvider> historyStore) {
 		return (item) -> {
 			display.asyncExec(item::execute);
 			historyStore.addToHistory(item);

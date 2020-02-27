@@ -1,3 +1,6 @@
+## 1.4.0 - 2.27.2020
+### Fixes
+- Compatibility for Eclipse 4.13+ (2019-09)
 ## 1.3.1 - 5.22.2018
 ### Fixes
 - Auto close setting not working in `Finder`
